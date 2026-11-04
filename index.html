@@ -128,6 +128,15 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .menu .primary{padding:14px;font-size:16px}
 .linkrow{display:flex;justify-content:center;gap:8px}
 .linkrow .btn{background:transparent}
+.field{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:12px;font:600 16px var(--body);width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+.field:focus{outline:3px solid var(--p1);outline-offset:1px}
+.linkbox{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font:600 14px var(--body);word-break:break-all;-webkit-user-select:all;user-select:all;background:var(--bg)}
+.card .tip{margin:0;font-size:13px;color:var(--muted);text-align:center}
+.status{display:flex;align-items:center;justify-content:center;gap:8px;margin:0;font-weight:800;color:var(--ink)}
+.status .pulse{width:10px;height:10px;border-radius:50%;background:var(--p1);animation:blink 1.2s infinite}
+.status.ok .pulse{background:#2fa36b;animation:none}
+.status.err{color:var(--warn)}.status.err .pulse{background:var(--warn);animation:none}
+.net{font-weight:800}.net.off{color:var(--warn)}
 .install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
@@ -185,9 +194,9 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 16h6"/></svg></span>
         <span><b>Gegen den Bot</b><small>Leicht, Mittel oder Schwer</small></span>
       </button>
-      <button class="mode" id="mOnline" disabled>
+      <button class="mode" id="mOnline" role="radio" data-mode="online">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
-        <span><b>Online<span class="soon">bald</span></b><small>Einladungslink an Freunde schicken</small></span>
+        <span><b>Online gegen Freunde</b><small id="onlineSub">Link schicken, Freund tippt drauf, los geht's</small></span>
       </button>
     </div>
     <div class="opts" id="botOpts">
@@ -195,6 +204,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <div class="seg" id="segLevel"><button class="btn" data-v="easy">Leicht</button><button class="btn" data-v="medium">Mittel</button><button class="btn" data-v="hard">Schwer</button></div>
       <span class="lbl">Du spielst</span>
       <div class="seg" id="segColor"><button class="btn p0" data-v="0">Rot · fängt an</button><button class="btn p1" data-v="1">Blau</button></div>
+    </div>
+    <div class="opts" id="onlineOpts">
+      <label class="lbl" for="nameInput">Dein Name</label>
+      <input class="field" id="nameInput" maxlength="16" autocomplete="nickname" placeholder="z. B. Jonas">
     </div>
     <div class="opts">
       <span class="lbl">Spielfeld</span>
@@ -206,6 +219,25 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <p class="tip" id="installTip"></p>
     </div>
     <div class="linkrow"><button class="btn" id="resumeBtn" hidden>Weiterspielen</button><button class="btn" id="menuRules">Regeln</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="lobby" hidden>
+  <div class="card">
+    <h2 id="lobbyTitle">Duell erstellt</h2>
+    <p id="lobbyText"></p>
+    <div id="lobbyHost" class="opts">
+      <div class="linkbox" id="lobbyLink"></div>
+      <div class="row"><button class="btn" id="copyBtn">Link kopieren</button><button class="btn primary" id="shareBtn">Teilen</button></div>
+      <p class="tip">Code: <b id="lobbyCode"></b></p>
+    </div>
+    <div id="lobbyJoin" class="opts" hidden>
+      <label class="lbl" for="joinName">Dein Name</label>
+      <input class="field" id="joinName" maxlength="16" autocomplete="nickname" placeholder="z. B. Lena">
+      <button class="btn primary" id="joinBtn">Beitreten</button>
+    </div>
+    <p class="status" id="lobbyStatus"><span class="pulse"></span><span id="lobbyStatusText">Warte auf deinen Gegner …</span></p>
+    <button class="btn" id="lobbyCancel">Zurück zum Menü</button>
   </div>
 </div>
 
@@ -239,6 +271,11 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
   </div>
 </div>
 
+<script id="config">
+// Online-Duelle: Adresse der Firebase Realtime Database (ohne Schrägstrich am Ende).
+// Leer = Online-Modus ausgeschaltet. Einrichtung: docs/ONLINE.md
+const KIPPE_CONFIG={dbUrl:""};
+</script>
 <script id="logic-src">
 // ===== LOGIC START =====
 const RULES={noDoubleBuild:true}; // after building you must tilt before you may build again
@@ -741,9 +778,13 @@ let bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
 let bot={thinking:false,token:0,style:null};
 const geo={size:300,cs:40,F:14,dpr:1};
 const isBot=p=>mode.kind==="bot"&&p!==mode.human;
-const name=p=>mode.kind==="bot"?(p===mode.human?"Du":"Bot"):(p?"Blau":"Rot");
-const wins=p=>mode.kind==="bot"&&p===mode.human?"gewinnst":"gewinnt";
-const inputLocked=()=>!!anim||bot.thinking||isBot(S.turn)||!$("result").hidden||!$("menu").hidden;
+const meSide=()=>mode.kind==="bot"?mode.human:mode.kind==="online"&&net?net.side:-1;
+const isMe=p=>p===meSide();
+const isRemote=p=>mode.kind==="online"&&!!net&&p!==net.side;
+const oppName=()=>net&&net.names[1-net.side]||"Gegner";
+const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":oppName();
+const wins=p=>isMe(p)?"gewinnst":"gewinnt";
+const inputLocked=()=>!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
@@ -834,6 +875,7 @@ function tryTilt(dir){
   preview={type:"tilt",dir,res:L.res};render();
 }
 function doTilt(dir,res){
+  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"tilt",dir,by:net.side});
   preview=null;closePop();history.push(S);
   const pre=S,out=applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
   const vis=cloneState(pre);
@@ -880,7 +922,7 @@ function afterMove(out){
   if(out.passed)flash=(flash?flash+"<br>":"")+`${name(1-S.turn)} kann nicht ziehen und setzt aus.`;
   render();flash="";
   if(out.outcome){setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
-  maybeBot();
+  maybeBot();netPump();
 }
 function onCellTap(r,c){
   if(inputLocked())return;
@@ -896,6 +938,7 @@ function onCellTap(r,c){
   preview=null;openPop(r,c,rs,rh);render();
 }
 function doBuild(r,c,kind){
+  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side});
   closePop();preview=null;history.push(S);
   const out=applyBuild(S,r,c,kind);S=out.state;
   const [x,y]=px(r,c);
@@ -974,9 +1017,10 @@ function render(){
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
   const t=$("turn"),botTurn=isBot(S.turn);
   t.className="turn p"+S.turn+(bot.thinking?" thinking":"");
-  $("turnText").textContent=botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):mode.kind==="bot"?"Du bist dran":name(S.turn)+" ist dran";
-  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:MAPS[S.mapIdx].name;
-  $("roundInfo").textContent=`Runde ${match.round+1} · ${what}${mode.kind==="bot"&&S.mapIdx!==STANDARD?" · "+MAPS[S.mapIdx].name:""}`;
+  if(mode.kind==="online")t.classList.toggle("thinking",isRemote(S.turn)&&!preview);
+  $("turnText").textContent=botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
+  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:MAPS[S.mapIdx].name;
+  $("roundInfo").innerHTML=`Runde ${match.round+1} · ${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+MAPS[S.mapIdx].name:""}${netBadge()}`;
   const m=S.moves,left=upcoming(S,1).length;
   let mi;
   if(m<SHRINK_START)mi=`Zug ${m} · Rand bricht ab Zug ${SHRINK_START}`;
@@ -990,16 +1034,23 @@ function render(){
     b.className="dir"+(preview&&preview.type==="tilt"&&preview.dir===d?" armed p"+S.turn:"");
     b.title=L.ok?"":L.why==="gesperrt"?"Gesperrt: nicht direkt zurückkippen":"In diese Richtung rollt nichts";
   });
-  const show=mode.kind==="bot"?mode.human:S.turn;
-  const st=$("builds");st.innerHTML=`<b style="color:var(--p${show})">${name(show)}</b> ${mode.kind==="bot"?"baust":"baut"} noch:`;
+  const show=meSide()>=0?meSide():S.turn;
+  const st=$("builds");st.innerHTML=`<b style="color:var(--p${show})">${esc(name(show))}</b> ${isMe(show)?"baust":"baut"} noch:`;
   for(let k=0;k<BUILDS;k++){const sp=document.createElement("span");sp.className=(k<S.builds[show]?"on ":"")+"p"+show;st.appendChild(sp);}
-  $("undoBtn").disabled=!history.length||!!anim;
+  $("undoBtn").disabled=!history.length||!!anim;$("undoBtn").hidden=mode.kind==="online";
   updatePop();renderHint();kick();
 }
 function renderHint(){
   const h=$("hint");
   if(flash){h.innerHTML=flash;return;}
   if(anim){h.innerHTML="&nbsp;";return;}
+  if(isRemote(S.turn)){
+    const n=esc(oppName());
+    if(preview&&preview.type==="tilt")h.innerHTML=`${n} kippt <b>${ARW[preview.dir]}</b>`;
+    else if(preview&&preview.type==="build")h.innerHTML=`${n} setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
+    else h.innerHTML=net&&net.oppOffline?`<span class="warn">${n} ist gerade nicht verbunden.</span> Das Spiel geht weiter, sobald ${n} zurück ist.`:`${n} überlegt …`;
+    return;
+  }
   if(isBot(S.turn)){
     if(preview&&preview.type==="tilt")h.innerHTML=`Bot kippt <b>${ARW[preview.dir]}</b>`;
     else if(preview&&preview.type==="build")h.innerHTML=`Bot setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
@@ -1016,7 +1067,7 @@ function renderHint(){
   let msg=`Vorschau · <b>${ARW[preview.dir]} nochmal tippen</b> zum Kippen`;
   if(me.fell&&op.fell)msg+=`<br><span class="warn">Beide fallen, du verlierst!</span>`;
   else if(me.fell)msg+=`<br><span class="warn">Achtung: Du fällst selbst!</span>`;
-  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":name(1-S.turn)}.</b>`;
+  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":esc(name(1-S.turn))}.</b>`;
   else if(preview.res.some(b=>b.hit))msg+=`<br>Ein Treffer an einem Stein.`;
   h.innerHTML=msg;
 }
@@ -1034,30 +1085,32 @@ function endRound(o){
     next.onclick=()=>{$("result").hidden=true;startRound(S.mapIdx,1-roundStarter);};
   }else{
     match.score[o.winner]++;
-    const w=o.winner,l=1-w,where=o.off?"über die Kante":"ins Loch",bm=mode.kind==="bot";
+    const w=o.winner,l=1-w,where=o.off?"über die Kante":"ins Loch",bm=meSide()>=0;
     big.className="big p"+w;
     big.textContent=o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":"EIGENTOR!";
     title.textContent=`${name(w)} ${wins(w)} die Runde`;
-    const lName=bm&&l===mode.human?"Du bist":`${name(l)} ist`;
-    text.textContent=o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${bm&&l===mode.human?"Du hast":name(l)+" hat"} gekippt und verliert.`:`${bm&&l===mode.human?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
+    const lName=isMe(l)?"Du bist":`${name(l)} ist`;
+    text.textContent=o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${isMe(l)?"Du hast":name(l)+" hat"} gekippt und ${isMe(l)?"verlierst":"verliert"}.`:`${isMe(l)?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
     if(match.score[w]>=2){
       title.textContent=`${name(w)} ${wins(w)} das Duell ${match.score[w]}:${match.score[l]}`;
-      if(bm)big.textContent=w===mode.human?"GEWONNEN!":"VERLOREN";
+      if(bm)big.textContent=isMe(w)?"GEWONNEN!":"VERLOREN";
       next.textContent="Revanche";
       next.onclick=()=>{$("result").hidden=true;newMatch(l);};
     }else{
       next.textContent="Nächste Runde";
-      text.textContent+=` ${bm&&l===mode.human?"Du fängst":name(l)+" fängt"} die nächste Runde an.`;
+      text.textContent+=` ${isMe(l)?"Du fängst":name(l)+" fängt"} die nächste Runde an.`;
       if(mode.field==="pool"){
         const cur=POOL.indexOf(S.mapIdx);pickMap=POOL[(cur+1)%POOL.length];
-        if(!isBot(l)){$("pickWho").textContent=`${bm?"Du wählst":name(l)+" wählt"} die nächste Karte`;pick.hidden=false;buildPicker();}
+        if(!isBot(l)&&!isRemote(l)){$("pickWho").textContent=`${isMe(l)?"Du wählst":name(l)+" wählt"} die nächste Karte`;pick.hidden=false;buildPicker();}
       }
       next.onclick=()=>{$("result").hidden=true;match.round++;startRound(mode.field==="pool"?pickMap:STANDARD,l);};
     }
   }
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
-  if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
-  $("result").hidden=false;next.focus();
+  if(mode.kind==="online"&&net)netResultButtons(o);
+  else if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
+  $("result").hidden=false;next.disabled||next.focus();
+  netPump();
 }
 function buildPicker(){
   const box=$("maps");box.innerHTML="";
@@ -1076,6 +1129,7 @@ function drawThumb(c,i,size){
 }
 function startRound(mapIdx,starter){
   cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);
+  $("resNext").disabled=false;
   const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every roundhistory=[];preview=null;flash="";closePop();
   gameActive=true;render();maybeBot();
 }
@@ -1086,6 +1140,11 @@ function drawHero(){const c=$("heroCv");if(c.clientWidth)drawThumb(c,STANDARD,c.
 function syncMenu(){
   for(const b of document.querySelectorAll(".mode[data-mode]")){const on=b.dataset.mode===mode.kind;b.classList.toggle("sel",on);b.setAttribute("aria-checked",on);}
   $("botOpts").hidden=mode.kind!=="bot";
+  $("onlineOpts").hidden=mode.kind!=="online";
+  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":"Spielen";
+  $("playBtn").disabled=mode.kind==="online"&&!onlineReady();
+  $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
+  if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
   seg("segLevel",mode.level);seg("segColor",mode.human);seg("segField",mode.field);
   $("resumeBtn").hidden=!gameActive;
@@ -1096,10 +1155,12 @@ for(const [id,key,num] of [["segLevel","level"],["segColor","human",true],["segF
   for(const b of $(id).children)b.onclick=()=>{mode[key]=num?+b.dataset.v:b.dataset.v;syncMenu();};
 $("playBtn").onclick=()=>{
   try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
+  if(mode.kind==="online"){netCreate();return;}
+  netClose();
   $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
   newMatch(0);
 };
-$("resumeBtn").onclick=()=>{$("menu").hidden=true;render();maybeBot();};
+$("resumeBtn").onclick=()=>{$("menu").hidden=true;render();maybeBot();netPump();};
 $("menuRules").onclick=()=>{$("rules").hidden=false;$("rulesOk").focus();};
 $("resMenu").onclick=()=>{$("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
 $("menuBtn").onclick=openMenu;
@@ -1139,6 +1200,254 @@ document.addEventListener("keydown",e=>{
   if(m){e.preventDefault();tryTilt(m);}
   if(e.key==="Escape"&&!inputLocked()){preview=null;closePop();render();}
 });
+/* ---------- online ---------- */
+// Transport: Firebase Realtime Database over plain REST + EventSource streaming, no SDK.
+// The game is deterministic, so a room only stores the players and an append-only log:
+// moves {k:"m",t:"tilt"|"build",...,by} and round switches {k:"next",map?} / {k:"rematch"}.
+// Only the player whose turn it is writes a move, so log slots never collide.
+const DB=(()=>{let u=KIPPE_CONFIG.dbUrl;try{u=localStorage.getItem("kippe-db")||u;}catch(e){}return (u||"").replace(/\/+$/,"");})();
+const IN_ARTIFACT=/claude\.ai|claudeusercontent|claude\.site/.test(location.host);
+const onlineReady=()=>!!DB&&!IN_ARTIFACT&&location.protocol!=="file:";
+const onlineWhy=()=>IN_ARTIFACT?"Online geht nur auf der Spielseite a28j09j02.github.io/kippe":!DB?"Noch nicht eingerichtet: Firebase fehlt":"Nur über die Spielseite im Internet";
+let net=null;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const slot=i=>"m"+String(i).padStart(4,"0");
+const CODE_CHARS="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function newCode(){let c="";const a=new Uint32Array(6);crypto.getRandomValues(a);for(const x of a)c+=CODE_CHARS[x%CODE_CHARS.length];return c;}
+function myName(){try{return localStorage.getItem("kippe-name")||"";}catch(e){return "";}}
+function saveName(n){try{localStorage.setItem("kippe-name",n);}catch(e){}}
+function cleanName(v){return (v||"").replace(/\s+/g," ").trim().slice(0,16)||"Spieler";}
+function seatGet(code){try{return JSON.parse(localStorage.getItem("kippe-room-"+code)||"null");}catch(e){return null;}}
+function seatSet(code,v){try{localStorage.setItem("kippe-room-"+code,JSON.stringify(v));}catch(e){}}
+async function dbReq(method,path,body){
+  let err;
+  for(let i=0;i<3;i++){
+    try{
+      const r=await fetch(`${DB}/${path}.json`,{method,headers:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      return await r.json();
+    }catch(e){err=e;await sleep(500*(i+1));}
+  }
+  throw err;
+}
+const NOW={".sv":"timestamp"};
+function setPath(root,path,data){
+  const parts=path.split("/").filter(Boolean);
+  if(!parts.length)return data;
+  if(!root||typeof root!=="object")root={};
+  let o=root;
+  for(let i=0;i<parts.length-1;i++){if(!o[parts[i]]||typeof o[parts[i]]!=="object")o[parts[i]]={};o=o[parts[i]];}
+  const k=parts[parts.length-1];
+  if(data===null)delete o[k];else o[k]=data;
+  return root;
+}
+function shareUrl(code){return location.origin+location.pathname+"#r-"+code;}
+function lobbyStatus(text,cls){const st=$("lobbyStatus");st.className="status"+(cls?" "+cls:"");$("lobbyStatusText").textContent=text;}
+function showLobby(kind){
+  $("menu").hidden=true;$("lobby").hidden=false;
+  $("lobbyHost").hidden=kind!=="host";$("lobbyJoin").hidden=kind!=="join";
+}
+async function netCreate(){
+  const nm=cleanName($("nameInput").value);saveName(nm);
+  netClose();
+  const code=newCode();
+  showLobby("host");
+  $("lobbyTitle").textContent="Duell erstellt";
+  $("lobbyText").textContent="Schick diesen Link an deinen Freund. Sobald er ihn öffnet, geht's los. Du spielst Rot, dein Freund fängt an.";
+  $("lobbyLink").textContent=shareUrl(code);$("lobbyCode").textContent=code;
+  lobbyStatus("Duell wird angelegt …");
+  try{
+    await dbReq("PUT",`rooms/${code}`,{v:1,created:NOW,field:mode.field,players:{p0:{name:nm,seen:NOW}}});
+  }catch(e){lobbyStatus("Keine Verbindung zum Server. Bitte nochmal versuchen.","err");return;}
+  seatSet(code,{side:0});
+  window.history.replaceState(null,"","#r-"+code);
+  lobbyStatus("Warte auf deinen Gegner …");
+  netOpen(code,0);
+}
+async function netJoinFlow(code){
+  netClose();
+  showLobby("join");
+  $("lobbyTitle").textContent="Einladung zu Kippe";
+  $("lobbyText").textContent="Duell wird geladen …";
+  if(!onlineReady()){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(onlineWhy(),"err");return;}
+  let room;
+  try{room=await dbReq("GET",`rooms/${code}`);}catch(e){$("lobbyJoin").hidden=true;lobbyStatus("Keine Verbindung zum Server.","err");return;}
+  if(!room||!room.players||!room.players.p0){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(`Kein Duell mit dem Code ${code} gefunden.`,"err");return;}
+  const seat=seatGet(code);
+  if(seat){$("lobby").hidden=true;netOpen(code,seat.side);return;} // rejoin after reload
+  if(room.players.p1){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus("Dieses Duell ist schon voll.","err");return;}
+  $("lobbyText").textContent=`${room.players.p0.name} fordert dich heraus. Du spielst Blau und fängst an.`;
+  lobbyStatus("Namen eingeben und beitreten","ok");
+  $("joinName").value=myName();
+  $("joinBtn").onclick=async()=>{
+    const nm=cleanName($("joinName").value);saveName(nm);
+    $("joinBtn").disabled=true;lobbyStatus("Trete bei …");
+    try{
+      const cur=await dbReq("GET",`rooms/${code}/players/p1`);
+      if(cur){lobbyStatus("Dieses Duell ist schon voll.","err");return;}
+      await dbReq("PUT",`rooms/${code}/players/p1`,{name:nm,seen:NOW});
+    }catch(e){lobbyStatus("Keine Verbindung zum Server.","err");$("joinBtn").disabled=false;return;}
+    seatSet(code,{side:1});
+    netOpen(code,1);
+  };
+}
+function netOpen(code,side){
+  net={code,side,room:null,applied:0,started:false,busy:false,names:["Rot","Blau"],oppSeen:0,oppSeenAt:Date.now(),oppOffline:false,lastOutcome:null,duelLoser:0,es:null,hb:null,queue:[]};
+  mode.kind="online";mode.human=side;
+  const es=new EventSource(`${DB}/rooms/${code}.json`);net.es=es;
+  const apply=(ev,fn)=>es.addEventListener(ev,e=>{if(!net||net.es!==es)return;let d;try{d=JSON.parse(e.data);}catch(x){return;}fn(d);netRoomChanged();});
+  apply("put",d=>{net.room=setPath(net.room,d.path,d.data);});
+  apply("patch",d=>{for(const k in d.data)net.room=setPath(net.room,(d.path==="/"?"":d.path)+"/"+k,d.data[k]);});
+  es.addEventListener("cancel",()=>{lobbyStatus("Zugriff verweigert.","err");});
+  es.onerror=()=>{if(net&&net.started){net.conn=false;render();}};
+  es.onopen=()=>{if(net){net.conn=true;render();}};
+  const beat=()=>dbReq("PUT",`rooms/${code}/players/p${side}/seen`,NOW).catch(()=>{});
+  beat();net.hb=setInterval(()=>{beat();netCheckOpp();},15000);
+}
+function netClose(){
+  if(!net)return;
+  try{net.es&&net.es.close();}catch(e){}
+  clearInterval(net.hb);net=null;
+  if(/^#r-/.test(location.hash))window.history.replaceState(null,"",location.pathname);
+  if(mode.kind==="online")mode.kind="local";
+}
+function netCheckOpp(){
+  if(!net)return;
+  const off=Date.now()-net.oppSeenAt>40000;
+  if(off!==net.oppOffline){net.oppOffline=off;render();}
+}
+function netBadge(){
+  if(mode.kind!=="online"||!net)return "";
+  if(net.conn===false)return ` · <span class="net off">Verbindung weg</span>`;
+  return net.oppOffline?` · <span class="net off">${esc(oppName())} offline</span>`:"";
+}
+function netRoomChanged(){
+  if(!net)return;
+  const room=net.room;
+  if(!room){if(!net.started)lobbyStatus("Das Duell gibt es nicht mehr.","err");return;}
+  const P=room.players||{};
+  if(P.p0)net.names[0]=P.p0.name;if(P.p1)net.names[1]=P.p1.name;
+  const opp=P["p"+(1-net.side)];
+  if(opp&&opp.seen!==net.oppSeen){net.oppSeen=opp.seen;net.oppSeenAt=Date.now();if(net.oppOffline){net.oppOffline=false;render();}}
+  if(!net.started){
+    if(P.p0&&P.p1)netStart();
+    else if(net.side===0)lobbyStatus("Warte auf deinen Gegner …");
+    return;
+  }
+  netPump();
+}
+// first sync: replay everything already in the log without animation, then follow live
+function netStart(){
+  net.started=true;
+  mode.field=net.room.field==="pool"?"pool":"std";
+  $("lobby").hidden=true;$("menu").hidden=true;$("result").hidden=true;
+  if(net.side===0){SFX.place();buzz(40);}
+  match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
+  startRound(firstMap(),1);
+  const log=net.room.log||{};
+  let shown=null;
+  while(log[slot(net.applied)]){
+    const e=log[slot(net.applied)];
+    if(e.k==="m"){
+      const out=netPlay(S,e);if(!out){net.applied++;continue;}
+      S=out.state;history.push(S);
+      if(out.outcome){if(!out.outcome.draw)match.score[out.outcome.winner]++;net.lastOutcome=out.outcome;shown=out.outcome;if(match.score[0]>=2||match.score[1]>=2)net.duelLoser=1-out.outcome.winner;}
+    }else{netNextRound(e,true);shown=null;}
+    net.applied++;
+  }
+  render();
+  if(shown){ // a round had just ended: show its result again
+    match.score[shown.winner]-=shown.draw?0:1;endRound(shown);
+  }
+  netPump();
+}
+function netPlay(st,e){
+  if(e.by!==st.turn)return null;
+  if(e.t==="tilt"){const L=tiltLegal(st,e.dir);return L.ok?applyTilt(st,e.dir,L.res):null;}
+  if(e.t==="build"&&!buildCheck(st,e.r,e.c,e.kind))return applyBuild(st,e.r,e.c,e.kind);
+  return null;
+}
+function netSend(e){
+  if(!net)return;
+  const at=slot(net.applied++);
+  const go=async(tries)=>{
+    try{await dbReq("PUT",`rooms/${net.code}/log/${at}`,e);if(net&&net.sendErr){net.sendErr=false;render();}}
+    catch(x){
+      // the slot may already hold the same entry (both pressed "next" at once): that counts as sent
+      try{const cur=await dbReq("GET",`rooms/${net.code}/log/${at}`);if(cur&&cur.k===e.k&&cur.k!=="m")return;}catch(y){}if(!net)return;net.sendErr=true;flash=`<span class="warn">Zug wird erneut gesendet …</span>`;render();flash="";setTimeout(()=>go(tries+1),2500);}
+  };
+  go(0);
+}
+async function netPump(){
+  if(!net||!net.started||net.busy||anim)return;
+  const e=net.room&&net.room.log&&net.room.log[slot(net.applied)];
+  if(!e)return;
+  net.busy=true;
+  try{
+    if(e.k==="m"){
+      if(!$("result").hidden){net.busy=false;return;}
+      if(e.by!==S.turn||e.by===net.side){net.applied++;return;} // stale or own echo
+      const mv=e.t==="tilt"?tiltLegal(S,e.dir):null;
+      if(e.t==="tilt"&&!mv.ok){net.applied++;return;}
+      if(e.t==="build"&&buildCheck(S,e.r,e.c,e.kind)){net.applied++;return;}
+      preview=e.t==="tilt"?{type:"tilt",dir:e.dir,res:mv.res}:{type:"build",r:e.r,c:e.c,kind:e.kind};
+      render();
+      await sleep(RM.matches?200:420);
+      if(!net)return;
+      net.applied++;
+      if(e.t==="tilt")doTilt(e.dir,mv.res);else doBuild(e.r,e.c,e.kind);
+    }else{
+      net.applied++;
+      netNextRound(e,false);
+    }
+  }finally{if(net)net.busy=false;}
+  render();
+  netPump();
+}
+function netNextRound(e,silent){
+  const o=net.lastOutcome;let map,starter;
+  if(e.k==="rematch"){match={score:[0,0],round:0};starter=net.duelLoser;map=firstMap();}
+  else if(!o||o.draw){map=S.mapIdx;starter=1-roundStarter;}
+  else{starter=1-o.winner;map=mode.field==="pool"&&POOL.includes(e.map)?e.map:STANDARD;match.round++;}
+  net.lastOutcome=null;
+  $("result").hidden=true;
+  startRound(map,starter);
+  if(!silent){SFX.place();}
+}
+function netResultButtons(o){
+  const next=$("resNext"),pick=$("pick");
+  net.lastOutcome=o;
+  const over=match.score[0]>=2||match.score[1]>=2;
+  if(over)net.duelLoser=1-o.winner;
+  const loser=o.draw?null:1-o.winner;
+  const mustPick=!over&&!o.draw&&mode.field==="pool";
+  const mine=!mustPick||loser===net.side;
+  next.disabled=!mine;
+  if(!mine){next.textContent=`${oppName()} wählt die Karte …`;pick.hidden=true;}
+  else next.textContent=over?"Revanche":o.draw?"Nochmal":"Nächste Runde";
+  next.onclick=()=>{
+    const e=over?{k:"rematch"}:mustPick?{k:"next",map:pickMap}:{k:"next"};
+    netSend(e);netNextRound(e,false);render();
+  };
+}
+function netBootFromHash(){
+  const m=/^#r-([A-Z0-9]{6})$/.exec(location.hash);
+  if(m){netJoinFlow(m[1]);return true;}
+  return false;
+}
+$("copyBtn").onclick=async()=>{
+  const url=$("lobbyLink").textContent;
+  try{await navigator.clipboard.writeText(url);$("copyBtn").textContent="Kopiert ✓";setTimeout(()=>$("copyBtn").textContent="Link kopieren",1800);}
+  catch(e){const r=document.createRange();r.selectNodeContents($("lobbyLink"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+};
+$("shareBtn").onclick=async()=>{
+  const url=$("lobbyLink").textContent;
+  if(navigator.share){try{await navigator.share({title:"Kippe",text:"Ich fordere dich zu Kippe heraus!",url});}catch(e){}}
+  else $("copyBtn").click();
+};
+$("lobbyCancel").onclick=()=>{netClose();$("lobby").hidden=true;gameActive=false;openMenu();};
+window.addEventListener("hashchange",()=>{if(!net||!location.hash.endsWith(net.code))netBootFromHash();});
+
 /* ---------- install as app ---------- */
 let installEvt=null;
 const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
@@ -1159,6 +1468,7 @@ if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostnam
 }
 installUI();
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
+netBootFromHash();
 </script>
 </body>
 </html>
