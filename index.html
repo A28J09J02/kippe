@@ -875,6 +875,7 @@ function tryTilt(dir){
   preview={type:"tilt",dir,res:L.res};render();
 }
 function doTilt(dir,res){
+  if(!res){const L=tiltLegal(S,dir);if(!L.ok)return;res=L.res;}
   if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"tilt",dir,by:net.side});
   preview=null;closePop();history.push(S);
   const pre=S,out=applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
@@ -938,6 +939,7 @@ function onCellTap(r,c){
   preview=null;openPop(r,c,rs,rh);render();
 }
 function doBuild(r,c,kind){
+  if(buildCheck(S,r,c,kind))return;
   if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side});
   closePop();preview=null;history.push(S);
   const out=applyBuild(S,r,c,kind);S=out.state;
@@ -1337,11 +1339,17 @@ function netRoomChanged(){
   netPump();
 }
 // first sync: replay everything already in the log without animation, then follow live
-function netStart(){
+function netResync(){
+  if(!net)return;
+  anim=null;preview=null;closePop();net.applied=0;net.busy=false;net.lastOutcome=null;
+  flash=`<span class="warn">Spielstand wurde neu abgeglichen.</span>`;
+  netStart(true);flash="";
+}
+function netStart(again){
   net.started=true;
   mode.field=net.room.field==="pool"?"pool":"std";
   $("lobby").hidden=true;$("menu").hidden=true;$("result").hidden=true;
-  if(net.side===0){SFX.place();buzz(40);}
+  if(net.side===0&&!again){SFX.place();buzz(40);}
   match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
   startRound(firstMap(),1);
   const log=net.room.log||{};
@@ -1374,7 +1382,11 @@ function netSend(e){
     try{await dbReq("PUT",`rooms/${net.code}/log/${at}`,e);if(net&&net.sendErr){net.sendErr=false;render();}}
     catch(x){
       // the slot may already hold the same entry (both pressed "next" at once): that counts as sent
-      try{const cur=await dbReq("GET",`rooms/${net.code}/log/${at}`);if(cur&&cur.k===e.k&&cur.k!=="m")return;}catch(y){}if(!net)return;net.sendErr=true;flash=`<span class="warn">Zug wird erneut gesendet …</span>`;render();flash="";setTimeout(()=>go(tries+1),2500);}
+      try{
+        const cur=await dbReq("GET",`rooms/${net.code}/log/${at}`);
+        if(cur&&cur.k===e.k&&cur.k!=="m")return;
+        if(cur){netResync();return;} // slot taken by something else: rebuild from the shared log
+      }catch(y){}if(!net)return;net.sendErr=true;flash=`<span class="warn">Zug wird erneut gesendet …</span>`;render();flash="";setTimeout(()=>go(tries+1),2500);}
   };
   go(0);
 }
