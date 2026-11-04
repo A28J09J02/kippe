@@ -22,7 +22,12 @@ Wer die Seite neu lädt oder die App kurz schließt, landet über denselben Link
 - Sicherheitsregeln: `docs/database.rules.json` (Räume nur über ihren Code erreichbar, Züge können nicht überschrieben werden).
 - Lokaler Test ohne Firebase: im Browser `localStorage.setItem("kippe-db","http://localhost:8766")` und einen Nachbau des Firebase-REST-Endpunkts starten.
 
-## Einrichtung (einmalig)
+## Eingerichtet
+- Firebase-Projekt `kippe-52256` (Konto jonas.koenig2017@gmx.de), Gratis-Tarif
+- Realtime Database `https://kippe-52256-default-rtdb.europe-west1.firebasedatabase.app` (Belgien)
+- Regeln aus `docs/database.rules.json` veröffentlicht und geprüft (Raum anlegen, beitreten, Zug schreiben erlaubt; Raum überschreiben, Zug überschreiben, ungültige Codes, Lesen der Wurzel abgelehnt)
+
+## Einrichtung (für ein neues Projekt)
 1. console.firebase.google.com → **Projekt hinzufügen** (z. B. „kippe“), Google Analytics kann aus bleiben.
 2. Im Projekt: **Build → Realtime Database → Datenbank erstellen**, Standort **Belgien (europe-west1)**, im **gesperrten Modus** starten.
 3. Tab **Regeln**: Inhalt von `docs/database.rules.json` einfügen → **Veröffentlichen**.
