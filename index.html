@@ -1,14 +1,20 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kippe</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#5b3d22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Figtree:wght@400;600;800&display=swap">
 <style>
-/* Layout: one-screen tabletop — score strip, turn banner, square tilt-board on canvas, d-pad underneath */
+/* Layout: one-screen tabletop — score strip, turn banner, square tilt-board on canvas, d-pad underneath; menu as a full-screen sheet */
 :root{
   --bg:#e7eaee; --panel:#f7f8fa; --ink:#1b2127; --muted:#5b6570; --line:#cfd5dc;
   --p0:#e2513b; --p0-hi:#ffd3c9; --p0-lo:#8e2416;
   --p1:#2a5fd6; --p1-hi:#d6e2ff; --p1-lo:#15306f;
-  --warn:#d8402b;
+  --warn:#d8402b; --rail:#5b3d22; --wood:#d4aa6e;
   --display:"Dela Gothic One","Arial Black",Impact,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -18,13 +24,18 @@
 :root[data-theme="dark"]{
   --bg:#13171c; --panel:#1c2229; --ink:#eef1f4; --muted:#9aa4ae; --line:#2e3640;
   --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; color-scheme:dark}
+[hidden]{display:none!important}
 html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;
   -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;overflow-x:hidden}
+button{font-family:var(--body)}
 .app{max-width:500px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:9px;
   padding-block:10px 14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
 header{display:flex;align-items:center;justify-content:space-between;gap:8px}
-h1{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em}
+h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spacing:.02em}
+.hl{display:flex;align-items:center;gap:8px}
 .score{display:flex;align-items:center;gap:8px;font-weight:800;font-variant-numeric:tabular-nums;font-size:18px}
 .chip{display:inline-flex;align-items:center;gap:6px}
 .dot{width:12px;height:12px;border-radius:50%}
@@ -32,14 +43,20 @@ h1{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spa
 .hbtns{display:flex;gap:6px}
 .iconbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:800 16px var(--body);cursor:pointer;display:grid;place-items:center;padding:0}
 .iconbtn svg{width:18px;height:18px}
-.turn{font-family:var(--display);font-size:20px;text-align:center;padding:8px 10px;border-radius:12px;color:#fff;transition:background .25s}
+.turn{font-family:var(--display);font-size:20px;text-align:center;padding:8px 10px;border-radius:12px;color:#fff;transition:background .25s;display:flex;align-items:center;justify-content:center;gap:10px}
 .turn.p0{background:var(--p0)}.turn.p1{background:var(--p1)}
+.think{display:none;gap:4px}
+.turn.thinking .think{display:inline-flex}
+.think i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+.think i:nth-child(2){animation-delay:.15s}.think i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
 .sub{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.sub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .sub .hot{color:var(--warn);font-weight:800}
 .stage{position:relative;display:flex;justify-content:center;perspective:900px}
 .tilt{position:relative;width:min(100%,470px,calc(100dvh - 320px));min-width:240px;max-width:100%;aspect-ratio:1;
   transition:transform .2s ease-out;transform-style:preserve-3d;border-radius:16px;box-shadow:0 12px 26px rgba(0,0,0,.28)}
-canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px}
 .pop{position:absolute;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;gap:6px;
   box-shadow:0 8px 20px rgba(0,0,0,.25);transform:translate(-50%,0)}
 .pop button{min-width:92px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);padding:8px 10px;font:800 14px var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -56,7 +73,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px
 .dir:disabled{opacity:.3;cursor:not-allowed}
 .dir.armed{color:#fff;border-color:transparent}
 .dir.armed.p0{background:var(--p0)}.dir.armed.p1{background:var(--p1)}
-.dir:focus-visible,.btn:focus-visible,.iconbtn:focus-visible,.pop button:focus-visible,.mapbtn:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
+button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .builds{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 .builds span{width:16px;height:16px;border-radius:4px;background:var(--line)}
@@ -77,22 +94,51 @@ canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px
 .mapbtn{border:2px solid var(--line);border-radius:12px;background:var(--bg);padding:6px;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;color:var(--ink);font:800 13px var(--body)}
 .mapbtn canvas{width:100%;aspect-ratio:1;height:auto;border-radius:8px}
 .mapbtn.sel{border-color:var(--ink)}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.seg .btn.sel.p0{background:var(--p0);color:#fff;border-color:transparent}
-.seg .btn.sel.p1{background:var(--p1);color:#fff;border-color:transparent}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.seg .btn{padding:9px 6px;font-weight:800}
+.seg .btn.sel{background:var(--ink);color:var(--bg);border-color:transparent}
+.seg .btn.sel.p0{background:var(--p0);color:#fff}
+.seg .btn.sel.p1{background:var(--p1);color:#fff}
+.row{display:flex;gap:8px}.row .btn{flex:1}
+/* menu */
+.menu{background:var(--bg);align-items:start}
+.menu .card{background:transparent;padding:6px 0 10px;gap:14px}
+.hero{display:flex;flex-direction:column;align-items:center;gap:8px;perspective:700px;padding-top:6px}
+.hero canvas{width:min(62vw,230px);aspect-ratio:1;max-width:100%;border-radius:14px;transform:rotateX(22deg) rotateZ(-8deg);box-shadow:0 22px 30px rgba(0,0,0,.28)}
+.card .logo{font-family:var(--display);font-size:46px;line-height:1;margin:6px 0 0;letter-spacing:.03em;color:var(--ink)}
+.tag{color:var(--muted);text-align:center;font-size:15px;margin:0}
+.modes{display:flex;flex-direction:column;gap:8px}
+.mode{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:12px;text-align:left;border:2px solid var(--line);background:var(--panel);color:var(--ink);border-radius:14px;padding:12px;cursor:pointer}
+.mode b{display:block;font-size:16px}
+.mode small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.mode .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--bg)}
+.mode .ic svg{width:24px;height:24px}
+.mode.sel{border-color:var(--ink)}
+.mode:disabled{opacity:.5;cursor:not-allowed}
+.soon{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.menu .primary{padding:14px;font-size:16px}
+.linkrow{display:flex;justify-content:center;gap:8px}
+.linkrow .btn{background:transparent}
+@media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
 </style>
+</head>
+<body>
 
 <div class="app">
   <header>
-    <h1>KIPPE</h1>
+    <div class="hl">
+      <button class="iconbtn" id="menuBtn" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <h1>KIPPE</h1>
+    </div>
     <div class="score"><span class="chip"><span class="dot p0"></span><span id="s0">0</span></span>:<span class="chip"><span id="s1">0</span><span class="dot p1"></span></span></div>
     <div class="hbtns">
       <button class="iconbtn" id="muteBtn" aria-label="Ton aus"></button>
       <button class="iconbtn" id="helpBtn" aria-label="Regeln">?</button>
     </div>
   </header>
-  <div class="turn p0" id="turn">Rot ist dran</div>
-  <div class="sub"><span id="roundInfo">Runde 1 · Kreuzung</span><span id="moveInfo">Zug 0</span></div>
+  <div class="turn p0" id="turn"><span id="turnText">Rot ist dran</span><span class="think" aria-hidden="true"><i></i><i></i><i></i></span></div>
+  <div class="sub"><span id="roundInfo">Runde 1 · Standard</span><span id="moveInfo" style="text-align:right">Zug 0</span></div>
   <div class="stage" id="stage">
     <div class="tilt" id="tilt"><canvas id="cv" aria-label="Spielbrett"></canvas></div>
     <div class="pop" id="pop" hidden>
@@ -113,20 +159,56 @@ canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px
   </div>
 </div>
 
-<div class="overlay" id="rules">
+<div class="overlay menu" id="menu">
+  <div class="card">
+    <div class="hero">
+      <canvas id="heroCv" aria-hidden="true"></canvas>
+      <p class="logo">KIPPE</p>
+      <p class="tag">Kipp das Brett. Leg deinen Gegner rein.</p>
+    </div>
+    <div class="modes" role="radiogroup" aria-label="Spielart">
+      <button class="mode" id="mLocal" role="radio" data-mode="local">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 19c0-3 2.5-5 5-5s5 2 5 5M11 19c0-3 2.5-5 5-5s5 2 5 5"/></svg></span>
+        <span><b>Zu zweit</b><small>Ein Handy, abwechselnd ziehen</small></span>
+      </button>
+      <button class="mode" id="mBot" role="radio" data-mode="bot">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 16h6"/></svg></span>
+        <span><b>Gegen den Bot</b><small>Leicht, Mittel oder Schwer</small></span>
+      </button>
+      <button class="mode" id="mOnline" disabled>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
+        <span><b>Online<span class="soon">bald</span></b><small>Einladungslink an Freunde schicken</small></span>
+      </button>
+    </div>
+    <div class="opts" id="botOpts">
+      <span class="lbl">Stufe</span>
+      <div class="seg" id="segLevel"><button class="btn" data-v="easy">Leicht</button><button class="btn" data-v="medium">Mittel</button><button class="btn" data-v="hard">Schwer</button></div>
+      <span class="lbl">Du spielst</span>
+      <div class="seg" id="segColor"><button class="btn p0" data-v="0">Rot · fängt an</button><button class="btn p1" data-v="1">Blau</button></div>
+    </div>
+    <div class="opts">
+      <span class="lbl">Spielfeld</span>
+      <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">Wechselnde Karten</button></div>
+    </div>
+    <button class="btn primary" id="playBtn">Spielen</button>
+    <div class="linkrow"><button class="btn" id="resumeBtn" hidden>Weiterspielen</button><button class="btn" id="menuRules">Regeln</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="rules" hidden>
   <div class="card">
     <h2>Kippe – so geht's</h2>
     <ul>
       <li>Pro Zug genau eins: <b>Brett kippen</b> oder <b>bauen</b>.</li>
       <li><b>Kippen</b> bewegt <b>beide</b> Kugeln. Sie rollen, bis sie gegen etwas stoßen.</li>
-      <li><b>Bauen:</b> Feld antippen, Stein oder Loch wählen. 3 Bauaktionen pro Runde.</li>
+      <li><b>Bauen:</b> Feld antippen, Stein oder Loch wählen. 3 Bauaktionen pro Runde. Nach einem Bauzug musst du erst wieder kippen.</li>
       <li>Nichts direkt neben die eigene Kugel bauen, Löcher neben keine Kugel. Keine Kugel darf eingemauert werden.</li>
-      <li>Helle Sandsteinwände und gesetzte Steine halten 3 Treffer. Bricht ein Randstück, entsteht dort ein Abgrund.</li>
+      <li>Die hellen Randsteine und gesetzte Steine halten 3 Treffer. Bricht ein Randstein, entsteht dort ein Abgrund.</li>
       <li>Fällt die gegnerische Kugel in ein Loch oder in den Abgrund, gewinnst du. Fallen beide, verliert, wer gekippt hat.</li>
-      <li>Nicht direkt zurückkippen. Ab Zug 24 bricht alle 2 Züge ein rot markiertes Randstück weg.</li>
+      <li>Nicht direkt zurückkippen. Ab Zug 20 bricht alle 2 Züge ein rot markierter Randstein weg.</li>
     </ul>
-    <p>Jeder Zug wird erst angezeigt, nochmal tippen führt ihn aus. Wer zuerst 2 Runden gewinnt, gewinnt das Duell. Der Verlierer wählt die nächste Karte.</p>
-    <button class="btn primary" id="rulesOk">Los geht's</button>
+    <p>Jeder Zug wird erst angezeigt, nochmal tippen führt ihn aus. Wer zuerst 2 Runden gewinnt, gewinnt das Duell. Wer eine Runde verliert, fängt die nächste an.</p>
+    <button class="btn primary" id="rulesOk">Verstanden</button>
   </div>
 </div>
 
@@ -138,16 +220,15 @@ canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px
     <div id="pick" hidden style="display:flex;flex-direction:column;gap:10px">
       <span class="lbl" id="pickWho">Blau wählt die nächste Karte</span>
       <div class="maps" id="maps"></div>
-      <span class="lbl">Wer fängt an?</span>
-      <div class="seg"><button class="btn p0" id="st0">Rot</button><button class="btn p1" id="st1">Blau</button></div>
     </div>
-    <button class="btn primary" id="resNext">Nächste Runde</button>
+    <div class="row"><button class="btn" id="resMenu">Menü</button><button class="btn primary" id="resNext">Nächste Runde</button></div>
   </div>
 </div>
 
-<script>
+<script id="logic-src">
 // ===== LOGIC START =====
-const N=7, BUILDS=3, HP=3, SHRINK_START=24, SHRINK_EVERY=2, MAX_MOVES=100;
+const RULES={noDoubleBuild:true}; // after building you must tilt before you may build again
+const N=7, BUILDS=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2, MAX_MOVES=100;
 const DIRS={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
 const OPP={up:"down",down:"up",left:"right",right:"left"};
 const SIDES=["top","right","bottom","left"];
@@ -155,6 +236,8 @@ const START=[[6,0],[0,6]];
 // grid: . Boden · H Loch · W feste Wand · C Bröckelwand ; edges: W fest · C bröckelnd · O offen
 // edges.top/bottom indexed by column, edges.left/right by row; point-symmetric: top[i]=bottom[6-i], left[i]=right[6-i]
 const MAPS=[
+  {name:"Standard",grid:[".......",".......","..W....","...H...","....W..",".......","......."],
+   edges:{top:"WCCCCCW",bottom:"WCCCCCW",left:"WCCCCCW",right:"WCCCCCW"}},
   {name:"Kreuzung",grid:["...C...",".H..H..","..W....","C..H..C","....W..","..H..H.","...C..."],
    edges:{top:"WCWWWWW",bottom:"WWWWWCW",left:"WCWWWWW",right:"WWWWWCW"}},
   {name:"Schleuse",grid:[".......","...WH..",".H...W.",".C.H.C.",".W...H.","..HW...","......."],
@@ -164,6 +247,7 @@ const MAPS=[
   {name:"Abbruch",grid:[".......",".C...H.","...H...",".W.C.W.","...H...",".H...C.","......."],
    edges:{top:"WWOOOWW",bottom:"WWOOOWW",left:"WWCWCWW",right:"WWCWCWW"}}
 ];
+const STANDARD=0;
 const SHRINK_ORDER=(()=>{const o=[],seen=new Set();
   for(let k=0;k<=3;k++)for(const [s,i] of [["top",k],["bottom",6-k],["right",k],["left",6-k],["top",6-k],["bottom",k],["left",k],["right",6-k]]){
     if(!seen.has(s+i)){seen.add(s+i);o.push([s,i]);}}
@@ -175,7 +259,7 @@ function newRound(mapIdx,starter){
   const m=MAPS[mapIdx];
   const cells=m.grid.map(row=>[...row].map(parseTile));
   const edges={};for(const s of SIDES)edges[s]=[...m.edges[s]].map(parseTile);
-  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,builds:[BUILDS,BUILDS],lastTilt:null,moves:0,shrinkIdx:0};
+  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,builds:[BUILDS,BUILDS],built:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
 }
 function slide(s,dir){
   const [dr,dc]=DIRS[dir];
@@ -207,9 +291,14 @@ function tiltLegal(s,dir){
   return {ok:true,res};
 }
 // damage a crumble wall, stone or edge segment; returns true if it broke
+// tiles are treated as immutable: changes replace the object, so states can share them
 function damage(n,h){
-  if(h.kind==="cell"){const c=n.cells[h.r][h.c];if(!c.hp)return false;c.hp--;if(c.hp<=0){n.cells[h.r][h.c]={t:"."};return true;}return false;}
-  const e=n.edges[h.side][h.i];if(!e.hp)return false;e.hp--;if(e.hp<=0){n.edges[h.side][h.i]={t:"O"};return true;}return false;
+  if(h.kind==="cell"){const c=n.cells[h.r][h.c];if(!c.hp)return false;if(c.hp<=1){n.cells[h.r][h.c]={t:"."};return true;}n.cells[h.r][h.c]={...c,hp:c.hp-1};return false;}
+  const e=n.edges[h.side][h.i];if(!e.hp)return false;if(e.hp<=1){n.edges[h.side][h.i]={t:"O"};return true;}n.edges[h.side][h.i]={...e,hp:e.hp-1};return false;
+}
+function cloneState(s){
+  return {mapIdx:s.mapIdx,cells:s.cells.map(r=>r.slice()),edges:{top:s.edges.top.slice(),right:s.edges.right.slice(),bottom:s.edges.bottom.slice(),left:s.edges.left.slice()},
+    balls:s.balls.map(b=>({r:b.r,c:b.c,alive:b.alive})),turn:s.turn,builds:s.builds.slice(),built:s.built.slice(),lastTilt:s.lastTilt,moves:s.moves,shrinkIdx:s.shrinkIdx};
 }
 function canRoll(s,b){
   for(const [dr,dc] of Object.values(DIRS)){
@@ -223,6 +312,7 @@ const adj=(b,r,c)=>Math.abs(b.r-r)+Math.abs(b.c-c)===1;
 // null = legal, otherwise a reason
 function buildCheck(s,r,c,kind){
   if(s.builds[s.turn]<=0)return "Keine Bauaktionen mehr";
+  if(RULES.noDoubleBuild&&s.built[s.turn])return "Erst kippen, dann wieder bauen";
   if(s.cells[r][c].t!==".")return "Feld ist nicht frei";
   if(s.balls.some(b=>b.alive&&b.r===r&&b.c===c))return "Hier liegt eine Kugel";
   const me=s.balls[s.turn],op=s.balls[1-s.turn];
@@ -238,7 +328,7 @@ function buildCheck(s,r,c,kind){
 }
 function hasAction(s){
   if(Object.keys(DIRS).some(d=>tiltLegal(s,d).ok))return true;
-  if(s.builds[s.turn]>0)for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!buildCheck(s,r,c,"S")||!buildCheck(s,r,c,"H"))return true;
+  if(s.builds[s.turn]>0&&!(RULES.noDoubleBuild&&s.built[s.turn]))for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!buildCheck(s,r,c,"S")||!buildCheck(s,r,c,"H"))return true;
   return false;
 }
 function upcoming(s,k){
@@ -252,20 +342,20 @@ function breakNext(n){
 }
 // returns {state, outcome, passed, broke}  outcome: null | {winner, reason, off} | {draw:true}
 function applyTilt(s,dir,res){
-  const n=structuredClone(s);
+  const n=cloneState(s);
   res=res||slide(s,dir);
   n.balls=res.map(b=>({r:b.r,c:b.c,alive:b.alive&&!b.fell}));
   for(const b of res)if(b.hit)damage(n,b.hit);
-  n.lastTilt=dir;n.moves++;
+  n.lastTilt=dir;n.moves++;n.built[s.turn]=false;
   const f=[res[0].fell,res[1].fell];
   if(f[0]&&f[1])return {state:n,outcome:{winner:1-s.turn,reason:"both"}};
   if(f[0]||f[1]){const l=f[0]?0:1;return {state:n,outcome:{winner:1-l,reason:l!==s.turn?"trap":"self",off:res[l].off}};}
   return finishTurn(n);
 }
 function applyBuild(s,r,c,kind){
-  const n=structuredClone(s);
+  const n=cloneState(s);
   n.cells[r][c]=kind==="S"?{t:"S",o:s.turn,hp:HP}:{t:"H"};
-  n.builds[s.turn]--;n.lastTilt=null;n.moves++;
+  n.builds[s.turn]--;n.built[s.turn]=true;n.lastTilt=null;n.moves++;
   return finishTurn(n);
 }
 function finishTurn(n){
@@ -288,7 +378,123 @@ function listMoves(s){
 }
 function playMove(s,m){return m.type==="tilt"?applyTilt(s,m.dir,m.res):applyBuild(s,m.r,m.c,m.kind);}
 // ===== LOGIC END =====
-
+</script>
+<script id="bot-src">
+// ===== BOT START =====
+// Minimax (negamax) with alpha-beta and iterative deepening. Pure: works in the page, a Web Worker and Node.
+const BOT_LEVELS={
+  easy:  {name:"Leicht",maxDepth:1,noise:35,blunder:.25,time:250},
+  medium:{name:"Mittel",maxDepth:2,noise:6, blunder:0,  time:700},
+  hard:  {name:"Schwer",maxDepth:6,noise:0, blunder:0,  time:1400}
+};
+const WIN=100000;
+// candidate moves: all tilts, builds only on lines the balls can use within the next tilt
+function botMoves(s){
+  const ms=[];
+  for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(L.ok)ms.push({type:"tilt",dir:d,res:L.res});}
+  if(s.builds[s.turn]>0&&!(RULES.noDoubleBuild&&s.built[s.turn])){
+    const rows=new Set(),cols=new Set();
+    for(const b of s.balls)if(b.alive){rows.add(b.r);cols.add(b.c);}
+    for(const m of ms)for(const b of m.res)if(!b.fell){rows.add(b.r);cols.add(b.c);}
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+      if(!rows.has(r)&&!cols.has(c))continue;
+      for(const k of ["H","S"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
+    }
+  }
+  return ms;
+}
+// hazard cells next to a ball: holes or open edges
+function exposure(s,b){
+  let n=0;
+  for(const [dr,dc] of Object.values(DIRS)){
+    const nr=b.r+dr,nc=b.c+dc;
+    if(nr<0||nr>=N||nc<0||nc>=N){const [sd,k]=edgeAt(b.r,b.c,dr,dc);const e=s.edges[sd][k];if(e.t==="O")n+=1;else if(e.t==="C"&&e.hp===1)n+=.3;continue;}
+    if(s.cells[nr][nc].t==="H")n+=1;
+  }
+  return n;
+}
+// static evaluation from the view of player p
+function evalState(s,p){
+  const o=1-p;let sc=0;
+  for(const d of Object.keys(DIRS)){
+    if(s.lastTilt&&d===OPP[s.lastTilt]&&s.turn===p)continue;
+    const res=slide(s,d),mf=res[p].fell,of=res[o].fell;
+    const w=s.turn===p?1:.6; // threats of the side to move are worth more
+    if(of&&!mf)sc+=60*w;
+    if(mf&&!of)sc-=60*(s.turn===o?1:.6);
+  }
+  sc+=7*(s.builds[p]-s.builds[o]);
+  sc+=9*(exposure(s,s.balls[o])-exposure(s,s.balls[p]));
+  return sc;
+}
+function outcomeValue(out,mover,ply){
+  if(out.outcome.draw)return 0;
+  return out.outcome.winner===mover?WIN-ply:-WIN+ply;
+}
+const ABORT={};
+function negamax(s,depth,alpha,beta,ply,ctx){
+  if((++ctx.nodes&255)===0&&Date.now()>ctx.deadline)throw ABORT;
+  if(depth<=0)return evalState(s,s.turn);
+  const ms=botMoves(s);
+  if(!ms.length)return evalState(s,s.turn);
+  let best=-Infinity;
+  for(const m of ms){
+    const out=playMove(s,m);let v;
+    if(out.outcome)v=outcomeValue(out,s.turn,ply);
+    else if(out.state.turn===s.turn)v=negamax(out.state,depth-1,alpha,beta,ply+1,ctx);
+    else v=-negamax(out.state,depth-1,-beta,-alpha,ply+1,ctx);
+    if(v>best)best=v;
+    if(v>alpha)alpha=v;
+    if(alpha>=beta)break;
+  }
+  return best;
+}
+// root: scores every move (needed for noise and ordering), deepens while time allows
+function chooseMove(s,level,rand=Math.random){
+  const L=BOT_LEVELS[level]||BOT_LEVELS.medium;
+  const ctx={nodes:0,deadline:Infinity},stop=Date.now()+L.time;
+  let moves=botMoves(s).map(m=>({m,v:0,k:rand()})).sort((a,b)=>a.k-b.k); // shuffled so equal moves vary between games
+  if(moves.length===0)return null;
+  if(L.blunder&&rand()<L.blunder){
+    // a casual move: anything that does not lose on the spot
+    const safe=moves.filter(x=>{const o=playMove(s,x.m);return !(o.outcome&&!o.outcome.draw&&o.outcome.winner!==s.turn);});
+    const pool=safe.length?safe:moves;
+    return pool[Math.floor(rand()*pool.length)].m;
+  }
+  let scored=null;
+  for(let depth=1;depth<=L.maxDepth;depth++){
+    ctx.deadline=depth<=2?Infinity:stop; // depth 1-2 always finish: never walk into a one-move trap
+    if(depth>2&&Date.now()>stop)break;
+    try{
+      const cur=[];let alpha=-Infinity,bestM=null;
+      for(const x of moves){
+        const out=playMove(s,x.m);let v;
+        if(out.outcome)v=outcomeValue(out,s.turn,0);
+        else if(L.noise){ // full window so every score is exact
+          v=out.state.turn===s.turn?negamax(out.state,depth-1,-Infinity,Infinity,1,ctx):-negamax(out.state,depth-1,-Infinity,Infinity,1,ctx);
+        }else{
+          v=out.state.turn===s.turn?negamax(out.state,depth-1,alpha,Infinity,1,ctx):-negamax(out.state,depth-1,-Infinity,-alpha,1,ctx);
+        }
+        if(v>alpha||!bestM){alpha=Math.max(alpha,v);bestM=x.m;}
+        cur.push({m:x.m,v,exact:x.m===bestM});
+      }
+      // with alpha-beta only the first move reaching the best value is exact; later ties are upper bounds
+      cur.sort((a,b)=>b.v-a.v||(a.m===bestM?-1:b.m===bestM?1:0));
+      scored=cur;moves=cur; // best-first ordering for the next depth
+      if(cur[0].v>=WIN-50)break; // forced win found
+      if(cur.every(x=>x.v<=-WIN+50))break; // everything loses, stop thinking
+    }catch(e){if(e!==ABORT)throw e;break;}
+  }
+  if(!scored)scored=moves;
+  if(L.noise){
+    const pick=scored.map(x=>({m:x.m,v:x.v+(Math.abs(x.v)>=WIN-50?0:(rand()-.5)*2*L.noise)}));
+    pick.sort((a,b)=>b.v-a.v);return pick[0].m;
+  }
+  return scored[0].m;
+}
+// ===== BOT END =====
+</script>
+<script>
 /* ---------- board rendering ---------- */
 const B={wood:"#d4aa6e",rail:"#5b3d22",railHi:"#7a5532",wall:"#5f4025",wallHi:"#80593a",wallLo:"#3a2513",
   sand:"#d9c39b",sandHi:"#ecdcbc",sandLo:"#a88d62",hole:"#140e08",abyss:"#050302"};
@@ -496,19 +702,28 @@ const SFX={
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}};
 
 /* ---------- UI state ---------- */
-const NAMES=["Rot","Blau"],ARW={up:"▲",down:"▼",left:"◀",right:"▶"},KIND={S:"Stein",H:"Loch"};
+const ARW={up:"▲",down:"▼",left:"◀",right:"▶"},KIND={S:"Stein",H:"Loch"};
+const POOL=MAPS.map((m,i)=>i).filter(i=>i!==STANDARD);
 const $=id=>document.getElementById(id);
 const cv=$("cv"),g=cv.getContext("2d"),tiltEl=$("tilt"),pop=$("pop"),stage=$("stage");
 const RM=matchMedia("(prefers-reduced-motion: reduce)");
-let match={score:[0,0],round:0},roundStarter=0;
-let S=newRound(0,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
+let mode={kind:"local",level:"medium",human:0,field:"std"};
+try{const m=JSON.parse(localStorage.getItem("kippe-mode")||"null");if(m&&m.kind)mode={...mode,...m};}catch(e){}
+let match={score:[0,0],round:0},roundStarter=0,gameActive=false;
+let S=newRound(STANDARD,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
 let bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
+let bot={thinking:false,token:0};
 const geo={size:300,cs:40,F:14,dpr:1};
+const isBot=p=>mode.kind==="bot"&&p!==mode.human;
+const name=p=>mode.kind==="bot"?(p===mode.human?"Du":"Bot"):(p?"Blau":"Rot");
+const wins=p=>mode.kind==="bot"&&p===mode.human?"gewinnst":"gewinnt";
+const inputLocked=()=>!!anim||bot.thinking||isBot(S.turn)||!$("result").hidden||!$("menu").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{PC=readColors();render();});
-new MutationObserver(()=>{PC=readColors();render();}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+function themeChanged(){PC=readColors();drawHero();render();}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",themeChanged);
+new MutationObserver(themeChanged).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 function layout(){
   const size=tiltEl.clientWidth;if(!size)return;
   geo.size=size;geo.dpr=Math.min(window.devicePixelRatio||1,3);
@@ -579,14 +794,13 @@ function burst(x,y,n,o){
 function segCenter(side,i){const [x,y,w,h]=segRect(side,i,geo.cs,geo.F);return [x+w/2,y+h/2];}
 function breakFx(hit,outward){
   const [x,y]=hit.kind==="cell"?px(hit.r,hit.c):segCenter(hit.side,hit.i);
-  const cell=hit.kind==="cell"&&anim?null:null;
   burst(x,y,16,{color:hit.owner!=null?PC[hit.owner].base:B.sand,sq:true,size:geo.cs*.16,sp:.16,g:.0009,life:420,dir:outward,spread:2.6});
   burst(x,y,10,{color:"rgba(240,225,195,.8)",size:geo.cs*.12,sp:.08,life:380});
 }
 
 /* ---------- actions ---------- */
 function tryTilt(dir){
-  if(anim||!resultHidden())return;
+  if(inputLocked())return;
   closePop();
   const L=tiltLegal(S,dir);
   if(!L.ok){flash=L.why==="gesperrt"?`<b>${ARW[dir]}</b> ist gesperrt, nicht direkt zurückkippen.`:"In diese Richtung rollt nichts.";preview=null;render();flash="";return;}
@@ -596,7 +810,7 @@ function tryTilt(dir){
 function doTilt(dir,res){
   preview=null;closePop();history.push(S);
   const pre=S,out=applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
-  const vis={cells:structuredClone(pre.cells),edges:structuredClone(pre.edges)};
+  const vis=cloneState(pre);
   const lead=RM.matches?0:LEAD;
   const bm=res.map(b=>{const steps=Math.max(0,b.path.length-1-(b.off?1:0));return {steps,T:rollT(steps)};});
   const events=[];let maxT=0,end=0;
@@ -636,21 +850,21 @@ function doTilt(dir,res){
 }
 function afterMove(out){
   if(out.broke){const [sd,i]=out.broke;SFX.shatter();buzz(25);breakFx({kind:"edge",side:sd,i},{top:-Math.PI/2,bottom:Math.PI/2,left:Math.PI,right:0}[sd]);
-    flash=`<span class="warn">Ein Randstück ist weggebrochen.</span>`;}
-  if(out.passed)flash=(flash?flash+"<br>":"")+`${NAMES[1-S.turn]} kann nicht ziehen und setzt aus.`;
+    flash=`<span class="warn">Ein Randstein ist weggebrochen.</span>`;}
+  if(out.passed)flash=(flash?flash+"<br>":"")+`${name(1-S.turn)} kann nicht ziehen und setzt aus.`;
   render();flash="";
-  if(out.outcome)setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);
+  if(out.outcome){setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
+  maybeBot();
 }
 function onCellTap(r,c){
-  if(anim)return;
+  if(inputLocked())return;
   const cell=S.cells[r][c],ball=S.balls.some(b=>b.alive&&b.r===r&&b.c===c);
   if(cell.t!=="."||ball){preview=null;closePop();render();return;}
   if(preview&&preview.type==="build"&&preview.r===r&&preview.c===c){doBuild(r,c,preview.kind);return;}
   const rs=buildCheck(S,r,c,"S"),rh=buildCheck(S,r,c,"H");
   if(rs&&rh){
     preview=null;closePop();flashCell={r,c,until:performance.now()+700};
-    flash=`<span class="warn">${rs===rh||rs==="Würde eine Kugel einmauern"&&rh?rh:rs}</span>`;
-    if(rs!==rh&&rs!=="Keine Bauaktionen mehr")flash=`<span class="warn">Stein: ${rs} · Loch: ${rh}</span>`;
+    flash=`<span class="warn">${rs===rh?rs:`Stein: ${rs} · Loch: ${rh}`}</span>`;
     render();flash="";return;
   }
   preview=null;openPop(r,c,rs,rh);render();
@@ -663,6 +877,45 @@ function doBuild(r,c,kind){
   else{SFX.dig();buzz(20);burst(x,y,12,{color:"rgba(70,45,20,.8)",sq:true,size:geo.cs*.08,sp:.11,g:.0005,life:380});}
   afterMove(out);
 }
+
+/* ---------- bot ---------- */
+let worker=null,botReq=0,botWait=null;
+function initWorker(){
+  try{
+    const src=$("logic-src").textContent+"\n"+$("bot-src").textContent+
+      "\nonmessage=e=>{const {id,state,level}=e.data;const m=chooseMove(state,level);postMessage({id,m:m&&{type:m.type,dir:m.dir,r:m.r,c:m.c,kind:m.kind}});};";
+    worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
+    worker.onmessage=e=>{if(botWait&&e.data.id===botWait.id){const w=botWait;botWait=null;w.resolve(e.data.m);}};
+    worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level));}};
+  }catch(e){worker=null;}
+}
+function askBot(state,level){
+  return new Promise(resolve=>{
+    const id=++botReq;
+    if(worker){botWait={id,resolve,state,level};worker.postMessage({id,state,level});}
+    else setTimeout(()=>resolve(chooseMove(state,level)),20);
+  });
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function maybeBot(){
+  if(!isBot(S.turn)||anim||bot.thinking||!$("result").hidden||!$("menu").hidden)return;
+  const token=++bot.token;bot.thinking=true;render();
+  const t0=performance.now();
+  const m=await askBot(S,mode.level);
+  const wait=Math.max(0,650-(performance.now()-t0));
+  if(wait)await sleep(wait);
+  if(token!==bot.token)return;
+  if(!m){bot.thinking=false;render();return;}
+  // show the move like a player would, then play it
+  if(m.type==="tilt"){const L=tiltLegal(S,m.dir);if(!L.ok){bot.thinking=false;render();return;}preview={type:"tilt",dir:m.dir,res:L.res};}
+  else preview={type:"build",r:m.r,c:m.c,kind:m.kind};
+  render();
+  await sleep(RM.matches?250:560);
+  if(token!==bot.token)return;
+  bot.thinking=false;
+  if(m.type==="tilt")doTilt(m.dir,preview.res);else doBuild(m.r,m.c,m.kind);
+}
+function cancelBot(){bot.token++;bot.thinking=false;}
 
 /* ---------- popover ---------- */
 let popCell=null;
@@ -685,7 +938,7 @@ function updatePop(){
 }
 function closePop(){pop.hidden=true;popCell=null;}
 for(const b of [$("popS"),$("popH")])b.addEventListener("click",e=>{
-  e.stopPropagation();if(!popCell||anim)return;const k=b.dataset.kind,{r,c}=popCell;
+  e.stopPropagation();if(!popCell||inputLocked())return;const k=b.dataset.kind,{r,c}=popCell;
   if(preview&&preview.type==="build"&&preview.kind===k&&preview.r===r&&preview.c===c){doBuild(r,c,k);return;}
   preview={type:"build",r,c,kind:k};render();
 });
@@ -693,22 +946,27 @@ for(const b of [$("popS"),$("popH")])b.addEventListener("click",e=>{
 /* ---------- DOM render ---------- */
 function render(){
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
-  const t=$("turn");t.className="turn p"+S.turn;t.textContent=NAMES[S.turn]+" ist dran";
-  $("roundInfo").textContent=`Runde ${match.round+1} · ${MAPS[S.mapIdx].name}`;
+  const t=$("turn"),botTurn=isBot(S.turn);
+  t.className="turn p"+S.turn+(bot.thinking?" thinking":"");
+  $("turnText").textContent=botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):mode.kind==="bot"?"Du bist dran":name(S.turn)+" ist dran";
+  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:MAPS[S.mapIdx].name;
+  $("roundInfo").textContent=`Runde ${match.round+1} · ${what}${mode.kind==="bot"&&S.mapIdx!==STANDARD?" · "+MAPS[S.mapIdx].name:""}`;
   const m=S.moves,left=upcoming(S,1).length;
   let mi;
   if(m<SHRINK_START)mi=`Zug ${m} · Rand bricht ab Zug ${SHRINK_START}`;
   else if(!left)mi=`Zug ${m} · Rand ganz offen`;
   else{const nx=(m-SHRINK_START)%SHRINK_EVERY===0?m+SHRINK_EVERY:m+1;mi=`Zug ${m} · <span class="hot">Abbruch nach Zug ${nx}</span>`;}
   $("moveInfo").innerHTML=mi;
+  const locked=inputLocked();
   document.querySelectorAll(".dir").forEach(b=>{
     const d=b.dataset.dir,L=tiltLegal(S,d);
-    b.disabled=!L.ok||!!anim;
+    b.disabled=!L.ok||locked;
     b.className="dir"+(preview&&preview.type==="tilt"&&preview.dir===d?" armed p"+S.turn:"");
     b.title=L.ok?"":L.why==="gesperrt"?"Gesperrt: nicht direkt zurückkippen":"In diese Richtung rollt nichts";
   });
-  const st=$("builds");st.innerHTML=`<b style="color:var(--p${S.turn})">${NAMES[S.turn]}</b> baut noch:`;
-  for(let k=0;k<BUILDS;k++){const sp=document.createElement("span");sp.className=(k<S.builds[S.turn]?"on ":"")+"p"+S.turn;st.appendChild(sp);}
+  const show=mode.kind==="bot"?mode.human:S.turn;
+  const st=$("builds");st.innerHTML=`<b style="color:var(--p${show})">${name(show)}</b> ${mode.kind==="bot"?"baust":"baut"} noch:`;
+  for(let k=0;k<BUILDS;k++){const sp=document.createElement("span");sp.className=(k<S.builds[show]?"on ":"")+"p"+show;st.appendChild(sp);}
   $("undoBtn").disabled=!history.length||!!anim;
   updatePop();renderHint();kick();
 }
@@ -716,72 +974,118 @@ function renderHint(){
   const h=$("hint");
   if(flash){h.innerHTML=flash;return;}
   if(anim){h.innerHTML="&nbsp;";return;}
+  if(isBot(S.turn)){
+    if(preview&&preview.type==="tilt")h.innerHTML=`Bot kippt <b>${ARW[preview.dir]}</b>`;
+    else if(preview&&preview.type==="build")h.innerHTML=`Bot setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
+    else h.innerHTML="Der Bot rechnet seine Züge durch …";
+    return;
+  }
   if(!preview){
     const blocked=S.lastTilt?` · <b>${ARW[OPP[S.lastTilt]]}</b> gesperrt`:"";
-    h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen oder Pfeil zum Kippen · Feld antippen zum Bauen${blocked}`;return;
+    const mustTilt=RULES.noDoubleBuild&&S.built[S.turn]&&S.builds[S.turn]>0?" · erst kippen, dann bauen":"";
+    h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen oder Pfeil zum Kippen · Feld antippen zum Bauen${blocked}${mustTilt}`;return;
   }
   if(preview.type==="build"){h.innerHTML=`${KIND[preview.kind]}-Vorschau · <b>nochmal tippen</b> zum Setzen`;return;}
   const me=preview.res[S.turn],op=preview.res[1-S.turn];
   let msg=`Vorschau · <b>${ARW[preview.dir]} nochmal tippen</b> zum Kippen`;
   if(me.fell&&op.fell)msg+=`<br><span class="warn">Beide fallen, du verlierst!</span>`;
   else if(me.fell)msg+=`<br><span class="warn">Achtung: Du fällst selbst!</span>`;
-  else if(op.fell)msg+=`<br><b>Damit fällt ${NAMES[1-S.turn]}.</b>`;
-  else if(preview.res.some(b=>b.hit))msg+=`<br>Ein Treffer an einem Stein oder einer Bröckelwand.`;
+  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":name(1-S.turn)}.</b>`;
+  else if(preview.res.some(b=>b.hit))msg+=`<br>Ein Treffer an einem Stein.`;
   h.innerHTML=msg;
 }
 
 /* ---------- rounds ---------- */
-const resultHidden=()=>$("result").hidden;
-let pickMap=0,pickStart=0;
+let pickMap=POOL[0];
+function firstMap(){return mode.field==="pool"?POOL[0]:STANDARD;}
 function endRound(o){
+  cancelBot();
   const big=$("resBig"),title=$("resTitle"),text=$("resText"),next=$("resNext"),pick=$("pick");
   pick.hidden=true;
   if(o.draw){
     big.className="big";big.textContent="PATT";title.textContent="Keiner kann mehr gewinnen";
-    text.textContent="Die Runde wird mit derselben Karte wiederholt, der andere fängt an.";next.textContent="Nochmal";
+    text.textContent="Die Runde wird wiederholt, der andere fängt an.";next.textContent="Nochmal";
     next.onclick=()=>{$("result").hidden=true;startRound(S.mapIdx,1-roundStarter);};
   }else{
     match.score[o.winner]++;
-    const w=NAMES[o.winner],l=NAMES[1-o.winner],where=o.off?"über die Kante":"ins Loch";
-    big.className="big p"+o.winner;
+    const w=o.winner,l=1-w,where=o.off?"über die Kante":"ins Loch",bm=mode.kind==="bot";
+    big.className="big p"+w;
     big.textContent=o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":"EIGENTOR!";
-    title.textContent=`${w} gewinnt die Runde`;
-    text.textContent=o.reason==="trap"?`${l} ist ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${l} hat gekippt und verliert.`:`${l} hat sich selbst ${where} gekippt.`;
-    if(match.score[o.winner]>=2){
-      title.textContent=`${w} gewinnt das Duell ${match.score[o.winner]}:${match.score[1-o.winner]}`;next.textContent="Revanche";
-      next.onclick=()=>{$("result").hidden=true;match={score:[0,0],round:0};startRound(0,1-o.winner);};
+    title.textContent=`${name(w)} ${wins(w)} die Runde`;
+    const lName=bm&&l===mode.human?"Du bist":`${name(l)} ist`;
+    text.textContent=o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${bm&&l===mode.human?"Du hast":name(l)+" hat"} gekippt und verliert.`:`${bm&&l===mode.human?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
+    if(match.score[w]>=2){
+      title.textContent=`${name(w)} ${wins(w)} das Duell ${match.score[w]}:${match.score[l]}`;
+      if(bm)big.textContent=w===mode.human?"GEWONNEN!":"VERLOREN";
+      next.textContent="Revanche";
+      next.onclick=()=>{$("result").hidden=true;newMatch(l);};
     }else{
-      const loser=1-o.winner;pickMap=(S.mapIdx+1)%MAPS.length;pickStart=loser;
-      $("pickWho").textContent=`${l} wählt die nächste Karte`;pick.hidden=false;buildPicker();
-      next.textContent="Runde starten";
-      next.onclick=()=>{$("result").hidden=true;match.round++;startRound(pickMap,pickStart);};
+      next.textContent="Nächste Runde";
+      text.textContent+=` ${bm&&l===mode.human?"Du fängst":name(l)+" fängt"} die nächste Runde an.`;
+      if(mode.field==="pool"){
+        const cur=POOL.indexOf(S.mapIdx);pickMap=POOL[(cur+1)%POOL.length];
+        if(!isBot(l)){$("pickWho").textContent=`${bm?"Du wählst":name(l)+" wählt"} die nächste Karte`;pick.hidden=false;buildPicker();}
+      }
+      next.onclick=()=>{$("result").hidden=true;match.round++;startRound(mode.field==="pool"?pickMap:STANDARD,l);};
     }
   }
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
+  if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
   $("result").hidden=false;next.focus();
 }
 function buildPicker(){
   const box=$("maps");box.innerHTML="";
-  MAPS.forEach((m,i)=>{
-    const b=document.createElement("button");b.className="mapbtn"+(i===pickMap?" sel":"");b.setAttribute("aria-pressed",i===pickMap);
+  POOL.forEach(i=>{
+    const m=MAPS[i],b=document.createElement("button");b.className="mapbtn"+(i===pickMap?" sel":"");b.setAttribute("aria-pressed",i===pickMap);
     const c=document.createElement("canvas");b.appendChild(c);const lab=document.createElement("span");lab.textContent=m.name;b.appendChild(lab);
     b.onclick=()=>{pickMap=i;buildPicker();};box.appendChild(b);
     requestAnimationFrame(()=>drawThumb(c,i));
   });
-  $("st0").className="btn p0"+(pickStart===0?" sel":"");$("st1").className="btn p1"+(pickStart===1?" sel":"");
 }
-function drawThumb(c,i){
-  const size=c.clientWidth||140,dpr=Math.min(window.devicePixelRatio||1,3);c.width=size*dpr;c.height=size*dpr;
+function drawThumb(c,i,size){
+  size=size||c.clientWidth||140;const dpr=Math.min(window.devicePixelRatio||1,3);c.width=size*dpr;c.height=size*dpr;
   const t=c.getContext("2d");t.setTransform(dpr,0,0,dpr,0,0);const cs=size/(N+2*FR),s=newRound(i,0);
   drawScene(t,cs,FR*cs,{cells:s.cells,edges:s.edges,pc:PC,active:-1,
     poses:s.balls.map((b,k)=>({r:b.r,c:b.c,scale:1,alpha:1,phase:k?2.2:.6,ax:0,ay:-1}))});
 }
-$("st0").onclick=()=>{pickStart=0;buildPicker();};$("st1").onclick=()=>{pickStart=1;buildPicker();};
-function startRound(mapIdx,starter){roundStarter=starter;S=newRound(mapIdx,starter);history=[];preview=null;flash="";closePop();render();}
+function startRound(mapIdx,starter){
+  cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);history=[];preview=null;flash="";closePop();
+  gameActive=true;render();maybeBot();
+}
+function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),starter);}
+
+/* ---------- menu ---------- */
+function drawHero(){const c=$("heroCv");if(c.clientWidth)drawThumb(c,STANDARD,c.clientWidth);}
+function syncMenu(){
+  for(const b of document.querySelectorAll(".mode[data-mode]")){const on=b.dataset.mode===mode.kind;b.classList.toggle("sel",on);b.setAttribute("aria-checked",on);}
+  $("botOpts").hidden=mode.kind!=="bot";
+  const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
+  seg("segLevel",mode.level);seg("segColor",mode.human);seg("segField",mode.field);
+  $("resumeBtn").hidden=!gameActive;
+}
+function openMenu(){cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
+for(const b of document.querySelectorAll(".mode[data-mode]"))b.onclick=()=>{mode.kind=b.dataset.mode;syncMenu();};
+for(const [id,key,num] of [["segLevel","level"],["segColor","human",true],["segField","field"]])
+  for(const b of $(id).children)b.onclick=()=>{mode[key]=num?+b.dataset.v:b.dataset.v;syncMenu();};
+$("playBtn").onclick=()=>{
+  try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
+  $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
+  newMatch(0);
+};
+$("resumeBtn").onclick=()=>{$("menu").hidden=true;render();maybeBot();};
+$("menuRules").onclick=()=>{$("rules").hidden=false;$("rulesOk").focus();};
+$("resMenu").onclick=()=>{$("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
+$("menuBtn").onclick=openMenu;
 
 /* ---------- input ---------- */
 document.querySelectorAll(".dir").forEach(b=>b.addEventListener("click",()=>tryTilt(b.dataset.dir)));
-$("undoBtn").addEventListener("click",()=>{if(anim||!history.length)return;S=history.pop();preview=null;closePop();render();});
+$("undoBtn").addEventListener("click",()=>{
+  if(anim||!history.length)return;
+  cancelBot();
+  S=history.pop();
+  if(mode.kind==="bot")while(isBot(S.turn)&&history.length)S=history.pop();
+  preview=null;closePop();render();maybeBot();
+});
 $("helpBtn").addEventListener("click",()=>{$("rules").hidden=false;$("rulesOk").focus();});
 $("rulesOk").addEventListener("click",()=>{$("rules").hidden=true;});
 const ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -798,15 +1102,17 @@ cv.addEventListener("pointerup",e=>{
   const rect=cv.getBoundingClientRect(),k=geo.size/rect.width;
   const x=(e.clientX-rect.left)*k-geo.F,y=(e.clientY-rect.top)*k-geo.F;
   const c=Math.floor(x/geo.cs),r=Math.floor(y/geo.cs);
-  if(r>=0&&r<N&&c>=0&&c<N)onCellTap(r,c);else{preview=null;closePop();render();}
+  if(r>=0&&r<N&&c>=0&&c<N)onCellTap(r,c);else if(!inputLocked()){preview=null;closePop();render();}
 });
 cv.addEventListener("pointercancel",()=>{p0=null;});
-document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!pop.contains(e.target)&&e.target!==cv){closePop();if(preview&&preview.type==="build")preview=null;render();}});
+document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!pop.contains(e.target)&&e.target!==cv){closePop();if(preview&&preview.type==="build"&&!isBot(S.turn))preview=null;render();}});
 document.addEventListener("keydown",e=>{
-  if(!$("rules").hidden||!resultHidden())return;
+  if(!$("rules").hidden||!$("result").hidden||!$("menu").hidden)return;
   const m={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"}[e.key];
   if(m){e.preventDefault();tryTilt(m);}
-  if(e.key==="Escape"){preview=null;closePop();render();}
+  if(e.key==="Escape"&&!inputLocked()){preview=null;closePop();render();}
 });
-muteUI();layout();render();
+initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
 </script>
+</body>
+</html>
