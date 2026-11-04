@@ -21,9 +21,10 @@ Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die 
 ## Regeln in Kürze
 - Pro Zug genau eins: **kippen** (beide Kugeln rollen bis zum Hindernis), **schubsen** (nur die eigene Kugel ein Feld; gegen einen hellen Stein = ein Treffer) oder **bauen**.
 - Jeder hat pro Runde 3 Steine und 3 Löcher. Man muss nie kippen.
-- Direkt zurückkippen (Gegenrichtung des letzten Kippens) ist gesperrt; tippt man trotzdem, erklärt das Spiel warum.
+- Kippen geht in jede Richtung, auch zurück.
 - Randsteine und gesetzte Steine halten 3 Treffer. Ein zerbrochener Randstein wird zum Abgrund.
-- Ab Zug 20 bricht alle 2 Züge ein Randstein weg (vorher rot markiert).
+- Ab Zug 20 bricht alle 2 Züge ein rot markiertes Stück weg: erst die 28 Randsteine, dann der Boden Ring für Ring von außen. Wer auf einem einstürzenden Feld steht, fällt. Damit endet jede Runde, ein Zuglimit gibt es nicht.
+- Bedenkzeit pro Runde wählbar: ohne, 1, 5 oder 10 Minuten (Schachuhr). Läuft die Uhr ab, ist die Runde verloren. Der Bot hat keine Uhr.
 - Best of 3, wer eine Runde verliert, fängt die nächste an.
 
 ## Spielfelder

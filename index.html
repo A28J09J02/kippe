@@ -59,6 +59,10 @@ h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spa
 .think i:nth-child(2){animation-delay:.15s}.think i:nth-child(3){animation-delay:.3s}
 @keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
 .sub{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.clocks{display:flex;justify-content:space-between;gap:8px;margin-top:-2px}
+.clk{font:800 16px var(--body);font-variant-numeric:tabular-nums;padding:4px 12px;border-radius:999px;border:2px solid var(--line);color:var(--muted);min-width:64px;text-align:center}
+.clk.on.p0{border-color:var(--p0);color:var(--p0)}.clk.on.p1{border-color:var(--p1);color:var(--p1)}
+.clk.low{background:var(--warn);color:#fff!important;border-color:transparent}
 .sub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .sub .hot{color:var(--warn);font-weight:800}
 .stage{position:relative;display:flex;justify-content:center;perspective:900px}
@@ -169,6 +173,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     </div>
   </header>
   <div class="turn p0" id="turn"><span id="turnText">Rot ist dran</span><span class="think" aria-hidden="true"><i></i><i></i><i></i></span></div>
+  <div class="clocks" id="clocks" hidden><span class="clk p0" id="clk0">5:00</span><span class="clk p1" id="clk1">5:00</span></div>
   <div class="sub"><span id="roundInfo">Runde 1 · Standard</span><span id="moveInfo" style="text-align:right">Zug 0</span></div>
   <div class="stage" id="stage">
     <div class="tilt" id="tilt"><canvas id="cv" aria-label="Spielbrett"></canvas></div>
@@ -225,6 +230,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <input class="field" id="nameInput" maxlength="16" autocomplete="nickname" placeholder="z. B. Jonas">
     </div>
     <div class="opts">
+      <span class="lbl">Bedenkzeit pro Runde</span>
+      <div class="seg" id="segTime"><button class="btn" data-v="0">Ohne</button><button class="btn" data-v="60">1 Min</button><button class="btn" data-v="300">5 Min</button><button class="btn" data-v="600">10 Min</button></div>
+    </div>
+    <div class="opts">
       <span class="lbl">Spielfeld</span>
       <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufallskarte</button></div>
       <p class="tip" id="fieldTip"></p>
@@ -270,7 +279,8 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <li>Nichts direkt neben die eigene Kugel bauen, Löcher neben keine Kugel. Keine Kugel darf eingemauert werden.</li>
       <li>Die hellen Randsteine und gesetzte Steine halten 3 Treffer. Bricht ein Randstein, entsteht dort ein Abgrund.</li>
       <li>Fällt die gegnerische Kugel in ein Loch oder in den Abgrund, gewinnst du. Fallen beide, verliert, wer gekippt hat.</li>
-      <li>Nicht direkt zurückkippen. Ab Zug 20 bricht alle 2 Züge ein rot markierter Randstein weg.</li>
+      <li>Kippen geht in jede Richtung, auch zurück. Ab Zug 20 bricht alle 2 Züge ein rot markiertes Stück weg: erst der Rand, dann der Boden von außen nach innen. Wer auf einem einstürzenden Feld steht, fällt.</li>
+      <li>Mit Bedenkzeit: Läuft deine Uhr ab, verlierst du die Runde.</li>
     </ul>
     <p>Jeder Zug wird erst angezeigt, nochmal tippen führt ihn aus. Wer zuerst 2 Runden gewinnt, gewinnt das Duell. Wer eine Runde verliert, fängt die nächste an.</p>
     <button class="btn primary" id="rulesOk">Verstanden</button>
@@ -304,7 +314,7 @@ const KIPPE_CONFIG={dbUrl:"https://kippe-52256-default-rtdb.europe-west1.firebas
 // ===== LOGIC START =====
 // Each turn: tilt the board, nudge your own ball one field, or build (3 stones and 3 holes per round).
 const RULES={nudgeNoRepeat:false}; // true would forbid two nudges in a row (tested: unlimited plays better)
-const N=7, STONES=3, HOLES=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2, MAX_MOVES=100;
+const N=7, STONES=3, HOLES=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2;
 const DIRS={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
 const OPP={up:"down",down:"up",left:"right",right:"left"};
 const SIDES=["top","right","bottom","left"];
@@ -314,7 +324,7 @@ const START=[[6,0],[0,6]];
 const MAPS=[
   {name:"Standard",grid:[".......",".......","..W....","...H...","....W..",".......","......."],
    edges:{top:"WCCCCCW",bottom:"WCCCCCW",left:"WCCCCCW",right:"WCCCCCW"}},
-  {name:"Kreuzung",grid:["...C...",".H..H..","..W....","C..H..C","....W..","..H..H.","...C..."],
+  {name:"Kreuzung",grid:["...C...",".C..H..","..W....","C..H..C","....W..","..H..C.","...C..."],
    edges:{top:"WCWWWWW",bottom:"WWWWWCW",left:"WCWWWWW",right:"WWWWWCW"}},
   {name:"Schleuse",grid:[".......","...WH..",".H...W.",".C.H.C.",".W...H.","..HW...","......."],
    edges:{top:"WWWOWWW",bottom:"WWWOWWW",left:"WWWCWWW",right:"WWWCWWW"}},
@@ -324,10 +334,22 @@ const MAPS=[
    edges:{top:"WWOOOWW",bottom:"WWOOOWW",left:"WWCWCWW",right:"WWCWCWW"}}
 ];
 const STANDARD=0;
+// The arena shrinks in a fixed, visible order: first the 28 rail segments (from the corners inward),
+// then the floor itself, ring by ring from the outside. A ball still standing on a collapsing field falls.
+// Consecutive entries are point-symmetric pairs, so both sides lose ground equally. No game can last forever.
 const SHRINK_ORDER=(()=>{const o=[],seen=new Set();
   for(let k=0;k<=3;k++)for(const [s,i] of [["top",k],["bottom",6-k],["right",k],["left",6-k],["top",6-k],["bottom",k],["left",k],["right",6-k]]){
-    if(!seen.has(s+i)){seen.add(s+i);o.push([s,i]);}}
+    if(!seen.has(s+i)){seen.add(s+i);o.push({kind:"edge",side:s,i});}}
+  for(let ring=0;ring<=3;ring++){
+    const per=[],a=ring,b=N-1-ring;
+    if(a===b)per.push([a,a]);
+    else{for(let c=a;c<b;c++)per.push([a,c]);for(let r=a;r<b;r++)per.push([r,b]);for(let c=b;c>a;c--)per.push([b,c]);for(let r=b;r>a;r--)per.push([r,a]);}
+    for(const [r,c] of per.slice(0,Math.ceil(per.length/2))){
+      for(const [rr,cc] of [[r,c],[N-1-r,N-1-c]]){const k=rr+","+cc;if(!seen.has(k)){seen.add(k);o.push({kind:"cell",r:rr,c:cc});}}
+    }
+  }
   return o;})();
+const shrinkDone=(s,x)=>x.kind==="edge"?s.edges[x.side][x.i].t==="O":s.cells[x.r][x.c].t==="H";
 const SOLID=t=>t==="W"||t==="C"||t==="S";
 function edgeAt(r,c,dr,dc){return dr<0?["top",c]:dr>0?["bottom",c]:dc<0?["left",r]:["right",r];}
 function parseTile(ch){return ch==="C"?{t:"C",hp:HP}:{t:ch};}
@@ -388,7 +410,6 @@ function slide(s,dir){
   return balls;
 }
 function tiltLegal(s,dir){
-  if(s.lastTilt&&dir===OPP[s.lastTilt])return {ok:false,why:"gesperrt"};
   const res=slide(s,dir);
   if(!res.some(b=>b.path.length>1))return {ok:false,why:"nichts rollt"};
   return {ok:true,res};
@@ -457,11 +478,15 @@ function hasAction(s){
 }
 function upcoming(s,k){
   const out=[];
-  for(let j=s.shrinkIdx;j<SHRINK_ORDER.length&&out.length<k;j++){const [sd,i]=SHRINK_ORDER[j];if(s.edges[sd][i].t!=="O")out.push([sd,i]);}
+  for(let j=s.shrinkIdx;j<SHRINK_ORDER.length&&out.length<k;j++){const x=SHRINK_ORDER[j];if(!shrinkDone(s,x))out.push(x);}
   return out;
 }
 function breakNext(n){
-  while(n.shrinkIdx<SHRINK_ORDER.length){const [sd,i]=SHRINK_ORDER[n.shrinkIdx++];if(n.edges[sd][i].t!=="O"){n.edges[sd][i]={t:"O"};return [sd,i];}}
+  while(n.shrinkIdx<SHRINK_ORDER.length){
+    const x=SHRINK_ORDER[n.shrinkIdx++];if(shrinkDone(n,x))continue;
+    if(x.kind==="edge")n.edges[x.side][x.i]={t:"O"};else n.cells[x.r][x.c]={t:"H"};
+    return x;
+  }
   return null;
 }
 // returns {state, outcome, passed, broke}  outcome: null | {winner, reason, off} | {draw:true}
@@ -492,7 +517,10 @@ function applyNudge(s,dir,chk){
 function finishTurn(n){
   let broke=null;
   if(n.moves>=SHRINK_START&&(n.moves-SHRINK_START)%SHRINK_EVERY===0)broke=breakNext(n);
-  if(n.moves>=MAX_MOVES)return {state:n,outcome:{draw:true},broke};
+  if(broke&&broke.kind==="cell"){
+    const i=n.balls.findIndex(b=>b.alive&&b.r===broke.r&&b.c===broke.c);
+    if(i>=0){n.balls[i]={...n.balls[i],alive:false};return {state:n,outcome:{winner:1-i,reason:"crumble"},broke};}
+  }
   n.turn=1-n.turn;
   let passed=false;
   if(!hasAction(n)){
@@ -558,7 +586,6 @@ function exposure(s,b){
 function evalState(s,p,sense=1){
   const o=1-p;let sc=0;
   for(const d of Object.keys(DIRS)){
-    if(s.lastTilt&&d===OPP[s.lastTilt])continue;
     const res=slide(s,d),mf=res[p].fell,of=res[o].fell;
     if(of&&!mf)sc+=60*(s.turn===p?1:.6)*sense;
     if(mf&&!of)sc-=60*(s.turn===o?1:.6)*sense;
@@ -742,8 +769,8 @@ function drawScene(g,cs,F,o){
     const a=Math.min(1,(o.flashCell.until-now)/300)*.6;g.fillStyle=`rgba(216,64,43,${a})`;rr(g,F+o.flashCell.c*cs+cs*.05,F+o.flashCell.r*cs+cs*.05,cs*.9,cs*.9,cs*.12);g.fill();
   }
   // upcoming shrink
-  (o.warn||[]).forEach(([side,i],k)=>{
-    const [x,y,w,h]=segRect(side,i,cs,F);
+  (o.warn||[]).forEach((wn,k)=>{
+    const [x,y,w,h]=wn.kind==="edge"?segRect(wn.side,wn.i,cs,F):[F+wn.c*cs,F+wn.r*cs,cs,cs];
     g.save();g.globalAlpha=k===0?.55+.45*pulse:.45;g.strokeStyle="#ff4a33";g.lineWidth=Math.max(2,cs*.07);
     if(k>0)g.setLineDash([cs*.08,cs*.08]);
     rr(g,x+2,y+2,w-4,h-4,cs*.06);g.stroke();g.restore();
@@ -865,7 +892,7 @@ const POOL=MAPS.map((m,i)=>i).filter(i=>i!==STANDARD);
 const $=id=>document.getElementById(id);
 const cv=$("cv"),g=cv.getContext("2d"),tiltEl=$("tilt"),pop=$("pop"),stage=$("stage");
 const RM=matchMedia("(prefers-reduced-motion: reduce)");
-let mode={kind:"local",level:"medium",human:0,color:0,field:"std"};
+let mode={kind:"local",level:"medium",human:0,color:0,field:"std",time:0};
 try{const m=JSON.parse(localStorage.getItem("kippe-mode")||"null");if(m&&m.kind)mode={...mode,...m};}catch(e){}
 let match={score:[0,0],round:0},roundStarter=0,gameActive=false;
 let S=newRound(STANDARD,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
@@ -971,7 +998,7 @@ function tryTilt(dir){
   if(nudgeMode){tryNudge(dir);return;}
   closePop();
   const L=tiltLegal(S,dir);
-  if(!L.ok){flash=L.why==="gesperrt"?`<span class="warn">${ARW[dir]} geht gerade nicht:</span> Das Brett wurde eben nach ${ARW[OPP[dir]]} gekippt, direkt zurückkippen ist gesperrt. Du kannst stattdessen schubsen oder bauen.`:`In Richtung ${ARW[dir]} rollt keine Kugel. Probier schubsen oder bauen.`;preview=null;render();flash="";return;}
+  if(!L.ok){flash=`In Richtung ${ARW[dir]} rollt keine Kugel. Probier schubsen oder bauen.`;preview=null;render();flash="";return;}
   if(preview&&preview.type==="tilt"&&preview.dir===dir){doTilt(dir,L.res);return;}
   preview={type:"tilt",dir,res:L.res};render();
 }
@@ -1000,7 +1027,7 @@ function tryNudge(dir){
 function doTilt(dir,res,nudge){
   if(nudge&&!res)res=nudgeRes(S,dir,nudge.chk);
   if(!res){const L=tiltLegal(S,dir);if(!L.ok)return;res=L.res;}
-  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:nudge?"nudge":"tilt",dir,by:net.side});
+  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:nudge?"nudge":"tilt",dir,by:net.side,tl:Math.round(clocks[net.side])});
   preview=null;closePop();history.push(S);
   const mover=S.turn;nudgeMode=false;
   const pre=S,out=nudge?applyNudge(S,dir,nudge.chk):applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
@@ -1053,8 +1080,9 @@ function doTilt(dir,res,nudge){
   render();
 }
 function afterMove(out){
-  if(out.broke){const [sd,i]=out.broke;SFX.shatter();buzz(25);breakFx({kind:"edge",side:sd,i},{top:-Math.PI/2,bottom:Math.PI/2,left:Math.PI,right:0}[sd]);
-    flash=`<span class="warn">Ein Randstein ist weggebrochen.</span>`;}
+  if(out.broke){const x=out.broke;SFX.shatter();buzz(25);
+    if(x.kind==="edge"){breakFx(x,{top:-Math.PI/2,bottom:Math.PI/2,left:Math.PI,right:0}[x.side]);flash=`<span class="warn">Ein Randstein ist weggebrochen.</span>`;}
+    else{breakFx({kind:"cell",r:x.r,c:x.c});flash=`<span class="warn">Ein Feld ist eingestürzt.</span>`;}}
   if(out.passed)flash=(flash?flash+"<br>":"")+`${name(1-S.turn)} kann nicht ziehen und setzt aus.`;
   render();flash="";
   if(out.outcome){setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
@@ -1082,7 +1110,7 @@ function onCellTap(r,c){
 }
 function doBuild(r,c,kind){
   if(buildCheck(S,r,c,kind))return;
-  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side});
+  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side,tl:Math.round(clocks[net.side])});
   closePop();preview=null;history.push(S);
   const out=applyBuild(S,r,c,kind);S=out.state;
   const [x,y]=px(r,c);
@@ -1192,7 +1220,7 @@ function render(){
   for(let k=0;k<HOLES;k++)bh+=`<i class="${k<S.stock.H[show]?"on":""}" title="Löcher"></i>`;
   st.innerHTML=bh;st.setAttribute("aria-label",`${name(show)}: ${S.stock.S[show]} Steine, ${S.stock.H[show]} Löcher übrig`);
   $("undoBtn").disabled=!history.length||!!anim;$("undoBtn").hidden=mode.kind==="online";
-  updatePop();renderHint();kick();
+  updatePop();renderHint();renderClocks();kick();
 }
 function renderHint(){
   const h=$("hint");
@@ -1214,7 +1242,7 @@ function renderHint(){
     return;
   }
   if(!preview){
-    const blocked=S.lastTilt?` · <b>${ARW[OPP[S.lastTilt]]}</b> gesperrt`:"";
+    const blocked="";
     if(nudgeMode){h.innerHTML=`<b>Schubsen:</b> Richtung wählen. Nur deine Kugel rollt ein Feld, gegen einen hellen Stein gibt's einen Treffer.`;return;}
     h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`;return;
   }
@@ -1246,10 +1274,10 @@ function endRound(o){
     match.score[o.winner]++;
     const w=o.winner,l=1-w,where=o.off?"über die Kante":"ins Loch",bm=meSide()>=0;
     big.className="big p"+w;
-    big.textContent=o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":"EIGENTOR!";
+    big.textContent=o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":o.reason==="time"?"ZEIT UM!":o.reason==="crumble"?"ABGESTÜRZT!":"EIGENTOR!";
     title.textContent=`${name(w)} ${wins(w)} die Runde`;
     const lName=isMe(l)?"Du bist":`${name(l)} ist`;
-    text.textContent=o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${isMe(l)?"Du hast":name(l)+" hat"} gekippt und ${isMe(l)?"verlierst":"verliert"}.`:`${isMe(l)?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
+    text.textContent=o.reason==="time"?(isMe(l)?"Deine Bedenkzeit ist abgelaufen.":`Die Bedenkzeit von ${name(l)} ist abgelaufen.`):o.reason==="crumble"?(isMe(l)?"Unter deiner Kugel ist das Feld eingestürzt.":`Unter der Kugel von ${name(l)} ist das Feld eingestürzt.`):o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${isMe(l)?"Du hast":name(l)+" hat"} gekippt und ${isMe(l)?"verlierst":"verliert"}.`:`${isMe(l)?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
     if(match.score[w]>=2){
       title.textContent=`${name(w)} ${wins(w)} das Duell ${match.score[w]}:${match.score[l]}`;
       if(bm)big.textContent=isMe(w)?"GEWONNEN!":"VERLOREN";
@@ -1292,7 +1320,8 @@ function drawThumb(c,i,size){
 function startRound(mapIdx,starter){
   cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);
   $("resNext").disabled=false;
-  const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every roundhistory=[];preview=null;flash="";closePop();
+  const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every round
+  history=[];preview=null;flash="";nudgeMode=false;closePop();resetClocks();
   gameActive=true;render();maybeBot();
 }
 function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),starter);}
@@ -1308,7 +1337,7 @@ function syncMenu(){
   $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
   if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
-  seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);
+  seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);seg("segTime",mode.time||0);
   $("colorOpts").hidden=mode.kind==="local";
   $("fieldTip").textContent={std:"Immer dieselbe Aufstellung, wie beim Schach.",pool:"Vier feste Karten, der Verlierer wählt die nächste.",rand:"Jede Runde eine neue, zufällig gebaute Karte."}[mode.field]||"";
   $("leaveBtn").hidden=!(net&&net.started);
@@ -1316,8 +1345,8 @@ function syncMenu(){
 }
 function openMenu(){cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
 for(const b of document.querySelectorAll(".mode[data-mode]"))b.onclick=()=>{mode.kind=b.dataset.mode;syncMenu();};
-for(const [id,key] of [["segLevel","level"],["segColor","color"],["segField","field"]])
-  for(const b of $(id).children)b.onclick=()=>{mode[key]=b.dataset.v==="0"||b.dataset.v==="1"?+b.dataset.v:b.dataset.v;syncMenu();};
+for(const [id,key] of [["segLevel","level"],["segColor","color"],["segField","field"],["segTime","time"]])
+  for(const b of $(id).children)b.onclick=()=>{const v=b.dataset.v;mode[key]=/^\d+$/.test(v)?+v:v;syncMenu();};
 $("playBtn").onclick=()=>{
   try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
   if(net)netLeave(true);
@@ -1441,7 +1470,7 @@ async function netCreate(){
   $("lobbyLink").textContent=shareUrl(code);$("lobbyCode").textContent=code;
   lobbyStatus("Duell wird angelegt …");
   try{
-    await dbReq("PUT",`rooms/${code}`,{v:2,created:NOW,field:mode.field,host:side,first:1-side,map:firstMap(),players:{["p"+side]:{name:nm,seen:NOW}}});
+    await dbReq("PUT",`rooms/${code}`,{v:2,created:NOW,field:mode.field,time:mode.time||0,host:side,first:1-side,map:firstMap(),players:{["p"+side]:{name:nm,seen:NOW}}});
   }catch(e){lobbyStatus("Keine Verbindung zum Server. Bitte nochmal versuchen.","err");return;}
   seatSet(code,{side});
   window.history.replaceState(null,"","#r-"+code);
@@ -1579,6 +1608,7 @@ function netResync(){
 function netStart(again){
   net.started=true;
   mode.field=["pool","rand"].includes(net.room.field)?net.room.field:"std";
+  mode.time=[60,300,600].includes(net.room.time)?net.room.time:0;
   $("lobby").hidden=true;$("menu").hidden=true;$("result").hidden=true;
   match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];net.duel=0;
   startRound(typeof net.room.map==="number"?net.room.map:STANDARD,typeof net.room.first==="number"?net.room.first:1);
@@ -1587,8 +1617,11 @@ function netStart(again){
   let shown=null;
   while(log[slot(net.applied)]){
     const e=log[slot(net.applied)];
-    if(e.k==="m"){
+    if(e.k==="timeout"){
+      if(!net.lastOutcome){const o={winner:1-e.by,reason:"time"};match.score[o.winner]++;net.lastOutcome=o;shown=o;timeoutSent=true;if(match.score[0]>=2||match.score[1]>=2)net.duelLoser=e.by;}
+    }else if(e.k==="m"){
       const out=netPlay(S,e);if(!out){net.applied++;continue;}
+      if(typeof e.tl==="number")clocks[e.by]=e.tl;
       S=out.state;history.push(S);
       if(out.outcome){if(!out.outcome.draw)match.score[out.outcome.winner]++;net.lastOutcome=out.outcome;shown=out.outcome;if(match.score[0]>=2||match.score[1]>=2)net.duelLoser=1-out.outcome.winner;}
     }else{netNextRound(e,true);shown=null;if(e.k==="rematch")net.rematchSent=net.duel-1;}
@@ -1639,7 +1672,11 @@ async function netPump(){
       await sleep(RM.matches?200:420);
       if(!net)return;
       net.applied++;
+      if(typeof e.tl==="number"&&mode.time>0)clocks[e.by]=e.tl;
       if(e.t==="tilt")doTilt(e.dir,mv.res);else if(e.t==="nudge")doTilt(e.dir,preview.res,{chk:mv});else doBuild(e.r,e.c,e.kind);
+    }else if(e.k==="timeout"){
+      net.applied++;
+      if($("result").hidden&&!timeoutSent){timeoutSent=true;clocks[e.by]=0;cancelBot();preview=null;endRound({winner:1-e.by,reason:"time"});}
     }else{
       net.applied++;
       netNextRound(e,false);
@@ -1712,6 +1749,39 @@ $("shareBtn").onclick=async()=>{
 };
 $("lobbyCancel").onclick=()=>{netClose();$("lobby").hidden=true;gameActive=false;openMenu();};
 window.addEventListener("hashchange",()=>{if(!net||!location.hash.endsWith(net.code))netBootFromHash();});
+
+/* ---------- clocks ---------- */
+// Chess-style thinking time per round. Online, every move carries the mover's remaining time (tl),
+// and a player whose clock runs out writes a timeout entry; the opponent may claim it after a grace period.
+let clocks=[0,0],clockLast=0,timeoutSent=false,lowTick=-1;
+function resetClocks(){const t=(mode.time||0)*1000;clocks=[t,t];timeoutSent=false;clockLast=0;renderClocks();}
+function clockRunning(){
+  return mode.time>0&&gameActive&&!anim&&!countdown&&$("result").hidden&&$("menu").hidden&&$("lobby").hidden&&
+    !(mode.kind!=="online"&&document.hidden)&&!(mode.kind==="online"&&(!net||!net.started))&&!isBot(S.turn); // the bot has no clock
+}
+const fmt=ms=>{ms=Math.max(0,ms);const s=Math.ceil(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");};
+function renderClocks(){
+  const on=mode.time>0;$("clocks").hidden=!on;if(!on)return;
+  for(const p of [0,1]){const el=$("clk"+p);el.textContent=isBot(p)?"Bot":fmt(clocks[p]);el.classList.toggle("on",S.turn===p&&gameActive);el.classList.toggle("low",clocks[p]<10000&&S.turn===p&&gameActive);
+    el.title=`${name(p)}: ${fmt(clocks[p])} übrig`;}
+}
+function timeUp(p){
+  if(timeoutSent||!$("result").hidden)return;
+  timeoutSent=true;clocks[p]=0;cancelBot();preview=null;nudgeMode=false;closePop();
+  if(mode.kind==="online"&&net)netSend({k:"timeout",by:p});
+  SFX.plop();buzz([60,40,60]);renderClocks();
+  endRound({winner:1-p,reason:"time"});
+}
+setInterval(()=>{
+  const now=performance.now(),dt=clockLast?now-clockLast:0;clockLast=now;
+  if(!clockRunning())return;
+  const p=S.turn;clocks[p]-=dt;
+  const sec=Math.ceil(clocks[p]/1000);
+  if(sec<=5&&sec>0&&sec!==lowTick&&(mode.kind==="local"||isMe(p))){lowTick=sec;SFX.knock();}
+  if(mode.kind==="online"&&net&&p!==net.side){if(clocks[p]<-3000)timeUp(p);} // opponent silent too long
+  else if(clocks[p]<=0)timeUp(p);
+  renderClocks();
+},200);
 
 /* ---------- install as app ---------- */
 let installEvt=null;

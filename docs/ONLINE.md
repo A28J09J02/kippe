@@ -14,9 +14,10 @@ Wer die Seite neu lädt oder die App kurz schließt, landet über denselben Link
 - Die Spiellogik ist deterministisch, deshalb speichert ein Raum nur Spieler und eine Zugliste:
   ```
   rooms/K7QM2P/
-    v, created, field, host, first, map
+    v, created, field, time, host, first, map
     players/p0, players/p1       {name, seen, vote?, left?}
-    log/m0000, log/m0001, …      {k:"m", t:"tilt", dir, by} | {k:"m", t:"build", r, c, kind, by} | {k:"m", t:"nudge", dir, by} | {k:"next", map} | {k:"rematch", field, map}
+    log/m0000, log/m0001, …      {k:"m", t:"tilt", dir, by} | {k:"m", t:"build", r, c, kind, by} | {k:"m", t:"nudge", dir, by} | {k:"next", map} | {k:"rematch", field, map} | {k:"timeout", by}
+    (Züge tragen tl = verbleibende Bedenkzeit des Ziehenden in ms)
   ```
 - Nur wer am Zug ist, schreibt den nächsten Eintrag. Beide Geräte prüfen jeden Zug mit derselben Logik und spielen ihn mit Animation nach.
 - Anwesenheit: Jedes Gerät meldet sich alle 15 s, nach 40 s Funkstille erscheint „offline“.
