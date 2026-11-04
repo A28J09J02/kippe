@@ -22,16 +22,16 @@
   --bg:#e7eaee; --panel:#f7f8fa; --ink:#1b2127; --muted:#5b6570; --line:#cfd5dc;
   --p0:#e2513b; --p0-hi:#ffd3c9; --p0-lo:#8e2416;
   --p1:#2a5fd6; --p1-hi:#d6e2ff; --p1-lo:#15306f;
-  --warn:#d8402b; --rail:#5b3d22; --wood:#d4aa6e;
+  --warn:#d8402b; --rail:#5b3d22; --accentN:#8a5a1f; --wood:#d4aa6e;
   --display:"Dela Gothic One","Arial Black",Impact,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#13171c; --panel:#1c2229; --ink:#eef1f4; --muted:#9aa4ae; --line:#2e3640;
-  --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; color-scheme:dark}}
+  --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; --accentN:#e0aa62; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#13171c; --panel:#1c2229; --ink:#eef1f4; --muted:#9aa4ae; --line:#2e3640;
-  --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; color-scheme:dark}
+  --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; --accentN:#e0aa62; color-scheme:dark}
 [hidden]{display:none!important}
 html,body{height:100%}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -79,10 +79,18 @@ h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spa
 .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .dir{height:56px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:800 24px var(--body);cursor:pointer}
 .dir:disabled{opacity:.3;cursor:not-allowed}
+.dir.blocked{opacity:.35}
+.controls.nudge .dir{border-style:dashed;border-width:2px}
+.controls.nudge .dir:not(:disabled){color:var(--accentN)}
+.foot .btn.on{background:var(--ink);color:var(--bg);border-color:transparent}
+.builds i{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--line)}
+.builds i.on{background:#1c140b;box-shadow:inset 0 0 0 2px #8a6236}
 .dir.armed{color:#fff;border-color:transparent}
 .dir.armed.p0{background:var(--p0)}.dir.armed.p1{background:var(--p1)}
 button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.foot .btn{white-space:nowrap}
+#undoBtn{min-width:44px;font-size:18px;padding:8px 12px}
 .builds{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 .builds span{width:16px;height:16px;border-radius:4px;background:var(--line)}
 .builds span.on.p0{background:var(--p0)}.builds span.on.p1{background:var(--p1)}
@@ -98,7 +106,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .big{font-family:var(--display);font-size:40px;line-height:1;margin:0}
 .big.p0{color:var(--p0)}.big.p1{color:var(--p1)}
 .lbl{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.maps{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.maps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mapbtn{border:2px solid var(--line);border-radius:12px;background:var(--bg);padding:6px;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;color:var(--ink);font:800 13px var(--body)}
 .mapbtn canvas{width:100%;aspect-ratio:1;height:auto;border-radius:8px}
 .mapbtn.sel{border-color:var(--ink)}
@@ -137,6 +145,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .status.ok .pulse{background:#2fa36b;animation:none}
 .status.err{color:var(--warn)}.status.err .pulse{background:var(--warn);animation:none}
 .net{font-weight:800}.net.off{color:var(--warn)}
+.count{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(10,12,15,.45);pointer-events:all}
+.count span{font-family:var(--display);font-size:min(40vw,220px);color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.5);animation:pop .8s ease-out both}
+@keyframes pop{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.9}}
+@media (prefers-reduced-motion:reduce){.count span{animation:none}}
 .install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
@@ -166,7 +178,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     </div>
   </div>
   <div class="hint" id="hint"></div>
-  <div class="controls">
+  <div class="controls" id="controls">
     <button class="dir" data-dir="left" aria-label="Nach links kippen">◀</button>
     <button class="dir" data-dir="up" aria-label="Nach oben kippen">▲</button>
     <button class="dir" data-dir="down" aria-label="Nach unten kippen">▼</button>
@@ -174,7 +186,8 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
   </div>
   <div class="foot">
     <div class="builds" id="builds"></div>
-    <button class="btn" id="undoBtn">↶ Zug zurück</button>
+    <button class="btn" id="nudgeBtn" aria-pressed="false">Schubsen</button>
+    <button class="btn" id="undoBtn" aria-label="Zug zurück" title="Zug zurück">↶</button>
   </div>
 </div>
 
@@ -202,8 +215,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     <div class="opts" id="botOpts">
       <span class="lbl">Stufe</span>
       <div class="seg" id="segLevel"><button class="btn" data-v="easy">Leicht</button><button class="btn" data-v="medium">Mittel</button><button class="btn" data-v="hard">Schwer</button></div>
+    </div>
+    <div class="opts" id="colorOpts">
       <span class="lbl">Du spielst</span>
-      <div class="seg" id="segColor"><button class="btn p0" data-v="0">Rot · fängt an</button><button class="btn p1" data-v="1">Blau</button></div>
+      <div class="seg" id="segColor"><button class="btn p0" data-v="0">Rot</button><button class="btn p1" data-v="1">Blau</button><button class="btn" data-v="r">Zufall</button></div>
     </div>
     <div class="opts" id="onlineOpts">
       <label class="lbl" for="nameInput">Dein Name</label>
@@ -211,14 +226,15 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     </div>
     <div class="opts">
       <span class="lbl">Spielfeld</span>
-      <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">Wechselnde Karten</button></div>
+      <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufallskarte</button></div>
+      <p class="tip" id="fieldTip"></p>
     </div>
     <button class="btn primary" id="playBtn">Spielen</button>
     <div class="install" id="installBox" hidden>
       <button class="btn" id="installBtn">App installieren</button>
       <p class="tip" id="installTip"></p>
     </div>
-    <div class="linkrow"><button class="btn" id="resumeBtn" hidden>Weiterspielen</button><button class="btn" id="menuRules">Regeln</button></div>
+    <div class="linkrow"><button class="btn" id="resumeBtn" hidden>Weiterspielen</button><button class="btn" id="leaveBtn" hidden>Duell verlassen</button><button class="btn" id="menuRules">Regeln</button></div>
   </div>
 </div>
 
@@ -241,13 +257,16 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
   </div>
 </div>
 
+<div class="count" id="count" hidden><span id="countNum">3</span></div>
+
 <div class="overlay" id="rules" hidden>
   <div class="card">
     <h2>Kippe – so geht's</h2>
     <ul>
-      <li>Pro Zug genau eins: <b>Brett kippen</b> oder <b>bauen</b>.</li>
+      <li>Pro Zug genau eins: <b>Brett kippen</b>, <b>Kugel schubsen</b> oder <b>bauen</b>. Du musst nie kippen.</li>
       <li><b>Kippen</b> bewegt <b>beide</b> Kugeln. Sie rollen, bis sie gegen etwas stoßen.</li>
-      <li><b>Bauen:</b> Feld antippen, Stein oder Loch wählen. 3 Bauaktionen pro Runde. Nach einem Bauzug musst du erst wieder kippen.</li>
+      <li><b>Schubsen:</b> Nur deine Kugel rollt genau ein Feld. Schubst du sie gegen einen hellen Stein, gibt das einen Treffer. Auf deiner Kugel wischen oder unten „Schubsen“ antippen.</li>
+      <li><b>Bauen:</b> Feld antippen, Stein oder Loch wählen. Jeder hat pro Runde 3 Steine und 3 Löcher.</li>
       <li>Nichts direkt neben die eigene Kugel bauen, Löcher neben keine Kugel. Keine Kugel darf eingemauert werden.</li>
       <li>Die hellen Randsteine und gesetzte Steine halten 3 Treffer. Bricht ein Randstein, entsteht dort ein Abgrund.</li>
       <li>Fällt die gegnerische Kugel in ein Loch oder in den Abgrund, gewinnst du. Fallen beide, verliert, wer gekippt hat.</li>
@@ -267,6 +286,11 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <span class="lbl" id="pickWho">Blau wählt die nächste Karte</span>
       <div class="maps" id="maps"></div>
     </div>
+    <div id="reOpts" class="opts" hidden>
+      <span class="lbl">Spielfeld für die Revanche</span>
+      <div class="seg" id="segReField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufall</button></div>
+      <p class="tip" id="reStatus"></p>
+    </div>
     <div class="row"><button class="btn" id="resMenu">Menü</button><button class="btn primary" id="resNext">Nächste Runde</button></div>
   </div>
 </div>
@@ -278,8 +302,9 @@ const KIPPE_CONFIG={dbUrl:"https://kippe-52256-default-rtdb.europe-west1.firebas
 </script>
 <script id="logic-src">
 // ===== LOGIC START =====
-const RULES={noDoubleBuild:true}; // after building you must tilt before you may build again
-const N=7, BUILDS=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2, MAX_MOVES=100;
+// Each turn: tilt the board, nudge your own ball one field, or build (3 stones and 3 holes per round).
+const RULES={nudgeNoRepeat:false}; // true would forbid two nudges in a row (tested: unlimited plays better)
+const N=7, STONES=3, HOLES=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2, MAX_MOVES=100;
 const DIRS={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
 const OPP={up:"down",down:"up",left:"right",right:"left"};
 const SIDES=["top","right","bottom","left"];
@@ -306,11 +331,38 @@ const SHRINK_ORDER=(()=>{const o=[],seen=new Set();
 const SOLID=t=>t==="W"||t==="C"||t==="S";
 function edgeAt(r,c,dr,dc){return dr<0?["top",c]:dr>0?["bottom",c]:dc<0?["left",r]:["right",r];}
 function parseTile(ch){return ch==="C"?{t:"C",hp:HP}:{t:ch};}
+// maps: ids below 1000 are the hand-built MAPS, 1000+ are generated from that seed
+function getMap(id){return id<1000?MAPS[id]:generateMap(id);}
+function lrng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const mapCache={};
+function generateMap(id){
+  if(mapCache[id])return mapCache[id];
+  for(let attempt=0;;attempt++){
+    const R=lrng(id*7919+attempt*104729),g=[...Array(N)].map(()=>Array(N).fill("."));
+    const near=(r,c)=>START.some(([sr,sc])=>Math.abs(sr-r)+Math.abs(sc-c)<=1);
+    const put=(ch,n,avoidNear)=>{for(let k=0,tries=0;k<n&&tries<200;tries++){
+      const r=Math.floor(R()*N),c=Math.floor(R()*N);
+      if(g[r][c]!=="."||g[N-1-r][N-1-c]!=="."||START.some(([a,b])=>(a===r&&b===c)||(a===N-1-r&&b===N-1-c)))continue;
+      if(avoidNear&&(near(r,c)||near(N-1-r,N-1-c)))continue;
+      g[r][c]=g[N-1-r][N-1-c]=ch;k++;}};
+    if(R()<.5)g[3][3]="H";
+    put("H",1+Math.floor(R()*2),true);put("W",1+Math.floor(R()*2),false);put("C",1+Math.floor(R()*2),false);
+    const side=()=>{const a=[];for(let i=0;i<N;i++){const x=R();a.push(i===0||i===N-1?"W":x<.7?"C":x<.95?"W":"O");}return a;};
+    const top=side(),left=side();
+    const map={name:"Zufall "+(id%10000),grid:g.map(r=>r.join("")),
+      edges:{top:top.join(""),bottom:top.slice().reverse().join(""),left:left.join(""),right:left.slice().reverse().join("")}};
+    mapCache[id]=map;
+    const st=newRound(id,0);
+    const ok=!Object.keys(DIRS).some(d=>slide(st,d).some(b=>b.fell))&&st.balls.every(b=>canRoll(st,b));
+    if(ok)return map;
+    delete mapCache[id];
+  }
+}
 function newRound(mapIdx,starter){
-  const m=MAPS[mapIdx];
+  const m=getMap(mapIdx);
   const cells=m.grid.map(row=>[...row].map(parseTile));
   const edges={};for(const s of SIDES)edges[s]=[...m.edges[s]].map(parseTile);
-  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,builds:[BUILDS,BUILDS],built:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
+  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,stock:{S:[STONES,STONES],H:[HOLES,HOLES]},nudged:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
 }
 function slide(s,dir){
   const [dr,dc]=DIRS[dir];
@@ -349,7 +401,7 @@ function damage(n,h){
 }
 function cloneState(s){
   return {mapIdx:s.mapIdx,cells:s.cells.map(r=>r.slice()),edges:{top:s.edges.top.slice(),right:s.edges.right.slice(),bottom:s.edges.bottom.slice(),left:s.edges.left.slice()},
-    balls:s.balls.map(b=>({r:b.r,c:b.c,alive:b.alive})),turn:s.turn,builds:s.builds.slice(),built:s.built.slice(),lastTilt:s.lastTilt,moves:s.moves,shrinkIdx:s.shrinkIdx};
+    balls:s.balls.map(b=>({r:b.r,c:b.c,alive:b.alive})),turn:s.turn,stock:{S:s.stock.S.slice(),H:s.stock.H.slice()},nudged:s.nudged.slice(),lastTilt:s.lastTilt,moves:s.moves,shrinkIdx:s.shrinkIdx};
 }
 function canRoll(s,b){
   for(const [dr,dc] of Object.values(DIRS)){
@@ -362,8 +414,7 @@ function canRoll(s,b){
 const adj=(b,r,c)=>Math.abs(b.r-r)+Math.abs(b.c-c)===1;
 // null = legal, otherwise a reason
 function buildCheck(s,r,c,kind){
-  if(s.builds[s.turn]<=0)return "Keine Bauaktionen mehr";
-  if(RULES.noDoubleBuild&&s.built[s.turn])return "Erst kippen, dann wieder bauen";
+  if(s.stock[kind][s.turn]<=0)return kind==="S"?"Keine Steine mehr":"Keine Löcher mehr";
   if(s.cells[r][c].t!==".")return "Feld ist nicht frei";
   if(s.balls.some(b=>b.alive&&b.r===r&&b.c===c))return "Hier liegt eine Kugel";
   const me=s.balls[s.turn],op=s.balls[1-s.turn];
@@ -377,10 +428,32 @@ function buildCheck(s,r,c,kind){
   }
   return null;
 }
-function hasAction(s){
-  if(Object.keys(DIRS).some(d=>tiltLegal(s,d).ok))return true;
-  if(s.builds[s.turn]>0&&!(RULES.noDoubleBuild&&s.built[s.turn]))for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!buildCheck(s,r,c,"S")||!buildCheck(s,r,c,"H"))return true;
+// nudge: move only your own ball one field; pushing against a crumble wall or stone is a hit
+function nudgeCheck(s,dir){
+  if(RULES.nudgeNoRepeat&&s.nudged[s.turn])return {ok:false,why:"Nicht zweimal hintereinander schubsen"};
+  const b=s.balls[s.turn],o=s.balls[1-s.turn],[dr,dc]=DIRS[dir],nr=b.r+dr,nc=b.c+dc;
+  if(!b.alive)return {ok:false,why:""};
+  if(nr<0||nr>=N||nc<0||nc>=N){
+    const [side,i]=edgeAt(b.r,b.c,dr,dc),e=s.edges[side][i];
+    if(e.t==="O")return {ok:false,why:"Da ist der Abgrund"};
+    if(e.t==="C")return {ok:true,hit:{kind:"edge",side,i}};
+    return {ok:false,why:"Feste Wand, da passiert nichts"};
+  }
+  if(o.alive&&o.r===nr&&o.c===nc)return {ok:false,why:"Da liegt die andere Kugel"};
+  const t=s.cells[nr][nc].t;
+  if(t==="W")return {ok:false,why:"Feste Wand, da passiert nichts"};
+  if(t==="C"||t==="S")return {ok:true,hit:{kind:"cell",r:nr,c:nc}};
+  if(t==="H")return {ok:false,why:"Da ist ein Loch"};
+  return {ok:true,to:[nr,nc]};
+}
+function hasBuild(s){
+  if(s.stock.S[s.turn]<=0&&s.stock.H[s.turn]<=0)return false;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(!buildCheck(s,r,c,"S")||!buildCheck(s,r,c,"H"))return true;
   return false;
+}
+function hasAction(s){
+  const ds=Object.keys(DIRS);
+  return ds.some(d=>tiltLegal(s,d).ok)||ds.some(d=>nudgeCheck(s,d).ok)||hasBuild(s);
 }
 function upcoming(s,k){
   const out=[];
@@ -397,7 +470,7 @@ function applyTilt(s,dir,res){
   res=res||slide(s,dir);
   n.balls=res.map(b=>({r:b.r,c:b.c,alive:b.alive&&!b.fell}));
   for(const b of res)if(b.hit)damage(n,b.hit);
-  n.lastTilt=dir;n.moves++;n.built[s.turn]=false;
+  n.lastTilt=dir;n.moves++;n.nudged[s.turn]=false;
   const f=[res[0].fell,res[1].fell];
   if(f[0]&&f[1])return {state:n,outcome:{winner:1-s.turn,reason:"both"}};
   if(f[0]||f[1]){const l=f[0]?0:1;return {state:n,outcome:{winner:1-l,reason:l!==s.turn?"trap":"self",off:res[l].off}};}
@@ -406,7 +479,14 @@ function applyTilt(s,dir,res){
 function applyBuild(s,r,c,kind){
   const n=cloneState(s);
   n.cells[r][c]=kind==="S"?{t:"S",o:s.turn,hp:HP}:{t:"H"};
-  n.builds[s.turn]--;n.built[s.turn]=true;n.lastTilt=null;n.moves++;
+  n.stock[kind][s.turn]--;n.nudged[s.turn]=false;n.lastTilt=null;n.moves++;
+  return finishTurn(n);
+}
+function applyNudge(s,dir,chk){
+  const n=cloneState(s);chk=chk||nudgeCheck(s,dir);
+  if(chk.to)n.balls[s.turn]={r:chk.to[0],c:chk.to[1],alive:true};
+  if(chk.hit)damage(n,chk.hit);
+  n.nudged[s.turn]=true;n.lastTilt=null;n.moves++;
   return finishTurn(n);
 }
 function finishTurn(n){
@@ -424,10 +504,11 @@ function finishTurn(n){
 function listMoves(s){
   const ms=[];
   for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(L.ok)ms.push({type:"tilt",dir:d,res:L.res});}
-  if(s.builds[s.turn]>0)for(let r=0;r<N;r++)for(let c=0;c<N;c++)for(const k of ["S","H"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
+  for(const d of Object.keys(DIRS)){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++)for(const k of ["S","H"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
   return ms;
 }
-function playMove(s,m){return m.type==="tilt"?applyTilt(s,m.dir,m.res):applyBuild(s,m.r,m.c,m.kind);}
+function playMove(s,m){return m.type==="tilt"?applyTilt(s,m.dir,m.res):m.type==="nudge"?applyNudge(s,m.dir,m.chk):applyBuild(s,m.r,m.c,m.kind);}
 // ===== LOGIC END =====
 </script>
 <script id="bot-src">
@@ -442,19 +523,20 @@ const BOT_LEVELS={
 };
 // styles bias the bot's own move choice at the root, not its judgement of danger
 const BOT_STYLES={
-  trapper:{name:"Fallensteller",H:22,S:4, tilt:-4},
-  builder:{name:"Mauerer",      H:4, S:22,tilt:-4},
-  roller: {name:"Roller",       H:-6,S:-6,tilt:16}
+  trapper:{name:"Fallensteller",H:22,S:4, tilt:-4,nudge:0},
+  builder:{name:"Mauerer",      H:4, S:22,tilt:-4,nudge:4},
+  roller: {name:"Roller",       H:-6,S:-6,tilt:16,nudge:6}
 };
 const WIN=100000;
 // candidate moves: all tilts, builds only on lines the balls can use within the next tilt
 function botMoves(s){
   const ms=[];
   for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(L.ok)ms.push({type:"tilt",dir:d,res:L.res});}
-  if(s.builds[s.turn]>0&&!(RULES.noDoubleBuild&&s.built[s.turn])){
+  for(const d of Object.keys(DIRS)){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
+  if(s.stock.S[s.turn]>0||s.stock.H[s.turn]>0){
     const rows=new Set(),cols=new Set();
     for(const b of s.balls)if(b.alive){rows.add(b.r);cols.add(b.c);}
-    for(const m of ms)for(const b of m.res)if(!b.fell){rows.add(b.r);cols.add(b.c);}
+    for(const m of ms)if(m.res)for(const b of m.res)if(!b.fell){rows.add(b.r);cols.add(b.c);}
     for(let r=0;r<N;r++)for(let c=0;c<N;c++){
       if(!rows.has(r)&&!cols.has(c))continue;
       for(const k of ["H","S"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
@@ -481,7 +563,7 @@ function evalState(s,p,sense=1){
     if(of&&!mf)sc+=60*(s.turn===p?1:.6)*sense;
     if(mf&&!of)sc-=60*(s.turn===o?1:.6)*sense;
   }
-  sc+=7*(s.builds[p]-s.builds[o]);
+  sc+=7*(s.stock.S[p]+s.stock.H[p]-s.stock.S[o]-s.stock.H[o]);
   sc+=9*(exposure(s,s.balls[o])-exposure(s,s.balls[p]))*sense;
   return sc;
 }
@@ -508,7 +590,7 @@ function negamax(s,depth,alpha,beta,ply,ctx){
   return best;
 }
 const isWinMove=(s,m)=>{const o=playMove(s,m);return !!(o.outcome&&!o.outcome.draw&&o.outcome.winner===s.turn);};
-const styleBias=(st,m)=>st?(m.type==="tilt"?st.tilt:st[m.kind]):0;
+const styleBias=(st,m)=>st?(m.type==="tilt"?st.tilt:m.type==="nudge"?st.nudge:st[m.kind]):0;
 // root search; every move whose value lies within `margin` of the best is scored exactly,
 // then one of those is drawn at random (weighted), so the bot does not repeat itself
 function chooseMove(s,level,style,rand=Math.random){
@@ -667,7 +749,8 @@ function drawScene(g,cs,F,o){
     rr(g,x+2,y+2,w-4,h-4,cs*.06);g.stroke();g.restore();
   });
   // tilt preview
-  if(o.preview&&o.preview.type==="tilt")drawPreview(g,cs,F,o.preview,o.pc,pulse);
+  if(o.preview&&(o.preview.type==="tilt"||o.preview.type==="nudge"))drawPreview(g,cs,F,o.preview,o.pc,pulse);
+  if(o.nudgeTargets)for(const [r,c] of o.nudgeTargets){const [x,y]=pathPt([r,c],cs,F);g.save();g.globalAlpha=.85;g.strokeStyle=o.pc[o.active].base;g.lineWidth=Math.max(2,cs*.06);g.setLineDash([cs*.06,cs*.06]);g.beginPath();g.arc(x,y,cs*(.22+.08*pulse),0,7);g.stroke();g.restore();}
   // balls
   (o.poses||[]).forEach((p,i)=>{if(p)drawBall(g,cs,F,p,o.pc[i],o.active===i);});
   g.restore();
@@ -680,31 +763,33 @@ function pathPt(p,cs,F){
 }
 function drawPreview(g,cs,F,pv,pc,pulse){
   pv.res.forEach((b,i)=>{
-    if(b.path.length<2)return;
-    const pts=b.path.map(p=>pathPt(p,cs,F)),end=pts[pts.length-1];
-    g.save();g.lineCap="round";
-    g.setLineDash([cs*.02,cs*.17]);g.lineWidth=cs*.14;g.strokeStyle="rgba(255,250,240,.65)";
-    g.beginPath();pts.forEach(([x,y],k)=>k?g.lineTo(x,y):g.moveTo(x,y));g.stroke();
-    g.lineWidth=cs*.09;g.strokeStyle=pc[i].base;g.stroke();
-    g.setLineDash([]);
-    if(b.fell){
-      const R=cs*(.22+.12*pulse);
-      g.lineWidth=cs*.08;g.strokeStyle="#fff";g.beginPath();g.arc(end[0],end[1],R,0,7);g.stroke();
-      g.lineWidth=cs*.04;g.strokeStyle="#ff4a33";g.beginPath();g.arc(end[0],end[1],R,0,7);g.stroke();
-    }else{
-      g.lineWidth=cs*.07;g.strokeStyle="rgba(255,250,240,.8)";g.beginPath();g.arc(end[0],end[1],cs*.36,0,7);g.stroke();
-      g.lineWidth=cs*.045;g.strokeStyle=pc[i].base;g.stroke();
+    if(b.path.length>=2){
+      const pts=b.path.map(p=>pathPt(p,cs,F)),end=pts[pts.length-1];
+      g.save();g.lineCap="round";
+      g.setLineDash([cs*.02,cs*.17]);g.lineWidth=cs*.14;g.strokeStyle="rgba(255,250,240,.65)";
+      g.beginPath();pts.forEach(([x,y],k)=>k?g.lineTo(x,y):g.moveTo(x,y));g.stroke();
+      g.lineWidth=cs*.09;g.strokeStyle=pc[i].base;g.stroke();
+      g.setLineDash([]);
+      if(b.fell){
+        const R=cs*(.22+.12*pulse);
+        g.lineWidth=cs*.08;g.strokeStyle="#fff";g.beginPath();g.arc(end[0],end[1],R,0,7);g.stroke();
+        g.lineWidth=cs*.04;g.strokeStyle="#ff4a33";g.beginPath();g.arc(end[0],end[1],R,0,7);g.stroke();
+      }else{
+        g.lineWidth=cs*.07;g.strokeStyle="rgba(255,250,240,.8)";g.beginPath();g.arc(end[0],end[1],cs*.36,0,7);g.stroke();
+        g.lineWidth=cs*.045;g.strokeStyle=pc[i].base;g.stroke();
+      }
+      g.restore();
     }
-    if(b.hit){
-      let hx,hy;
-      if(b.hit.kind==="cell"){hx=ctr(b.hit.c,cs,F);hy=ctr(b.hit.r,cs,F);}
-      else{const [x,y,w,h]=segRect(b.hit.side,b.hit.i,cs,F);hx=x+w/2;hy=y+h/2;}
-      const fs=Math.max(10,cs*.3);g.font=`800 ${fs}px Figtree, system-ui, sans-serif`;g.textAlign="center";g.textBaseline="middle";
-      g.fillStyle="rgba(20,14,8,.85)";rr(g,hx-fs*.9,hy-fs*.62,fs*1.8,fs*1.24,fs*.4);g.fill();
-      g.fillStyle="#fff";g.fillText("−1",hx,hy+fs*.04);
-    }
-    g.restore();
+    if(b.hit)drawHit(g,cs,F,b.hit);
   });
+}
+function drawHit(g,cs,F,hit){
+  let hx,hy;
+  if(hit.kind==="cell"){hx=ctr(hit.c,cs,F);hy=ctr(hit.r,cs,F);}
+  else{const [x,y,w,h]=segRect(hit.side,hit.i,cs,F);hx=x+w/2;hy=y+h/2;}
+  const fs=Math.max(10,cs*.3);g.save();g.font=`800 ${fs}px Figtree, system-ui, sans-serif`;g.textAlign="center";g.textBaseline="middle";
+  g.fillStyle="rgba(20,14,8,.85)";rr(g,hx-fs*.9,hy-fs*.62,fs*1.8,fs*1.24,fs*.4);g.fill();
+  g.fillStyle="#fff";g.fillText("−1",hx,hy+fs*.04);g.restore();
 }
 function drawBall(g,cs,F,p,col,active){
   const cx=ctr(p.c,cs,F),cy=ctr(p.r,cs,F),R=cs*.36*p.scale;
@@ -734,10 +819,20 @@ function drawBall(g,cs,F,p,col,active){
 /* ---------- sound ---------- */
 let AC=null,NB=null,muted=false;
 try{muted=localStorage.getItem("kippe-muted")==="1";}catch(e){}
+// Browsers only allow sound after a real tap/click (pointerup, touchend, click, keydown — not pointerdown on phones).
+// On iPhones Web Audio is also muted by the silent switch unless the audio session is set to "playback".
+let audioUnlocked=false;
+const SILENT="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
 function audio(){
+  try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
     NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
-  if(AC.state==="suspended")AC.resume();
+  if(AC.state!=="running")AC.resume().catch(()=>{});
+  if(!audioUnlocked){
+    audioUnlocked=true;
+    try{const a=new Audio(SILENT);a.setAttribute("playsinline","");a.play().catch(()=>{});}catch(e){}
+    try{const b=AC.createBuffer(1,1,22050),src=AC.createBufferSource();src.buffer=b;src.connect(AC.destination);src.start(0);}catch(e){}
+  }
 }
 function noise(dur,freq,type,vol,delay=0,f2){
   if(!AC||muted)return;const t=AC.currentTime+delay/1000;
@@ -770,21 +865,25 @@ const POOL=MAPS.map((m,i)=>i).filter(i=>i!==STANDARD);
 const $=id=>document.getElementById(id);
 const cv=$("cv"),g=cv.getContext("2d"),tiltEl=$("tilt"),pop=$("pop"),stage=$("stage");
 const RM=matchMedia("(prefers-reduced-motion: reduce)");
-let mode={kind:"local",level:"medium",human:0,field:"std"};
+let mode={kind:"local",level:"medium",human:0,color:0,field:"std"};
 try{const m=JSON.parse(localStorage.getItem("kippe-mode")||"null");if(m&&m.kind)mode={...mode,...m};}catch(e){}
 let match={score:[0,0],round:0},roundStarter=0,gameActive=false;
 let S=newRound(STANDARD,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
 let bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
 let bot={thinking:false,token:0,style:null};
+let nudgeMode=false;
 const geo={size:300,cs:40,F:14,dpr:1};
 const isBot=p=>mode.kind==="bot"&&p!==mode.human;
+let countdown=false;
+const pickColor=()=>mode.color==="r"?(Math.random()<.5?0:1):+mode.color;
+const randomMapId=()=>1000+Math.floor(Math.random()*8999000);
 const meSide=()=>mode.kind==="bot"?mode.human:mode.kind==="online"&&net?net.side:-1;
 const isMe=p=>p===meSide();
 const isRemote=p=>mode.kind==="online"&&!!net&&p!==net.side;
 const oppName=()=>net&&net.names[1-net.side]||"Gegner";
 const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":oppName();
 const wins=p=>isMe(p)?"gewinnst":"gewinnt";
-const inputLocked=()=>!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
+const inputLocked=()=>countdown||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
@@ -819,7 +918,7 @@ function paint(now){
   if(!RM.matches&&now<shakeT+140){const k=1-(now-shakeT)/140;g.translate((Math.random()-.5)*5*k,(Math.random()-.5)*5*k);}
   const src=anim?anim.vis:S;
   drawScene(g,geo.cs,geo.F,{cells:src.cells,edges:src.edges,poses:poses(now),pc:PC,active:anim?-1:S.turn,
-    preview:anim?null:preview,warn:warnList(),now,flashCell,
+    preview:anim?null:preview,warn:warnList(),now,flashCell,nudgeTargets:anim?null:nudgeTargets(),
     ghost:!anim&&preview&&preview.type==="build"?{r:preview.r,c:preview.c,kind:preview.kind,player:S.turn}:null});
   for(const p of particles){g.globalAlpha=Math.max(0,p.life/p.max);g.fillStyle=p.color;
     if(p.sq)g.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);else{g.beginPath();g.arc(p.x,p.y,p.size/2,0,7);g.fill();}}
@@ -836,6 +935,7 @@ function animPose(i,t){
   const a=anim,b=a.res[i],m=a.bm[i],[dr,dc]=DIRS[a.dir],[r0,c0]=b.path[0];
   if(!b.alive)return null;
   const tt=t-a.lead,p=tt<=0?0:tt>=m.T?m.steps:Math.min(m.steps,rollD(tt));
+  if(a.bump===i&&tt>0&&tt<180){const f=.22*Math.sin(Math.PI*tt/180);return {r:r0+dr*f,c:c0+dc*f,scale:1,alpha:1,phase:bv[i].phase+f*ROLL,ax:dc,ay:dr};}
   const ps=m.steps?{ax:dc,ay:dr}:{ax:bv[i].ax,ay:bv[i].ay};
   const P={r:r0+dr*p,c:c0+dc*p,scale:1,alpha:1,phase:bv[i].phase+p*ROLL*(m.steps?1:0),...ps};
   if(tt<m.T)return P;
@@ -868,17 +968,42 @@ function breakFx(hit,outward){
 /* ---------- actions ---------- */
 function tryTilt(dir){
   if(inputLocked())return;
+  if(nudgeMode){tryNudge(dir);return;}
   closePop();
   const L=tiltLegal(S,dir);
-  if(!L.ok){flash=L.why==="gesperrt"?`<b>${ARW[dir]}</b> ist gesperrt, nicht direkt zurückkippen.`:"In diese Richtung rollt nichts.";preview=null;render();flash="";return;}
+  if(!L.ok){flash=L.why==="gesperrt"?`<span class="warn">${ARW[dir]} geht gerade nicht:</span> Das Brett wurde eben nach ${ARW[OPP[dir]]} gekippt, direkt zurückkippen ist gesperrt. Du kannst stattdessen schubsen oder bauen.`:`In Richtung ${ARW[dir]} rollt keine Kugel. Probier schubsen oder bauen.`;preview=null;render();flash="";return;}
   if(preview&&preview.type==="tilt"&&preview.dir===dir){doTilt(dir,L.res);return;}
   preview={type:"tilt",dir,res:L.res};render();
 }
-function doTilt(dir,res){
+// a nudge looks like a tilt where only the mover's ball travels (one field) or bumps
+function nudgeRes(st,dir,chk){
+  return st.balls.map((b,i)=>{
+    const o={r:b.r,c:b.c,alive:b.alive,fell:false,off:false,path:[[b.r,b.c]],hit:null,stop:null};
+    if(i===st.turn){if(chk.to){o.r=chk.to[0];o.c=chk.to[1];o.path.push(chk.to.slice());}if(chk.hit)o.hit=chk.hit;}
+    return o;
+  });
+}
+function nudgeTargets(){
+  if(!nudgeMode||inputLocked())return null;
+  const b=S.balls[S.turn];
+  return Object.entries(DIRS).filter(([d])=>nudgeCheck(S,d).ok).map(([d,[dr,dc]])=>[b.r+dr,b.c+dc]);
+}
+function setNudge(on){nudgeMode=!!on;if(nudgeMode){preview=null;closePop();}render();}
+function tryNudge(dir){
+  if(inputLocked())return;
+  closePop();
+  const C=nudgeCheck(S,dir);
+  if(!C.ok){flash=`<span class="warn">Schubsen nach ${ARW[dir]} geht nicht:</span> ${C.why}.`;preview=null;render();flash="";return;}
+  if(preview&&preview.type==="nudge"&&preview.dir===dir){doTilt(dir,preview.res,{chk:preview.chk});return;}
+  preview={type:"nudge",dir,chk:C,res:nudgeRes(S,dir,C)};render();
+}
+function doTilt(dir,res,nudge){
+  if(nudge&&!res)res=nudgeRes(S,dir,nudge.chk);
   if(!res){const L=tiltLegal(S,dir);if(!L.ok)return;res=L.res;}
-  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"tilt",dir,by:net.side});
+  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:nudge?"nudge":"tilt",dir,by:net.side});
   preview=null;closePop();history.push(S);
-  const pre=S,out=applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
+  const mover=S.turn;nudgeMode=false;
+  const pre=S,out=nudge?applyNudge(S,dir,nudge.chk):applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
   const vis=cloneState(pre);
   const lead=RM.matches?0:LEAD;
   const bm=res.map(b=>{const steps=Math.max(0,b.path.length-1-(b.off?1:0));return {steps,T:rollT(steps)};});
@@ -903,13 +1028,23 @@ function doTilt(dir,res){
       }});
     }
   });
-  if(!RM.matches){
+  if(nudge&&nudge.chk.hit&&!nudge.chk.to){ // bump into a stone or wall: short lunge, then the hit
+    events.push({t:lead+70,fn:()=>{
+      const b=res[mover],[x,y]=px(b.r+dr*.45,b.c+dc*.45);SFX.click();buzz(15);shakeT=performance.now();
+      let owner=null;const h=nudge.chk.hit;if(h.kind==="cell"&&vis.cells[h.r][h.c].t==="S")owner=vis.cells[h.r][h.c].o;
+      const broke=damage(vis,h);
+      if(broke){SFX.shatter();buzz(30);breakFx({...h,owner},h.kind==="edge"?Math.atan2(dr,dc):undefined);}
+      else{SFX.crack();burst(x,y,6,{color:owner!=null?PC[owner].base:B.sandLo,sq:true,size:geo.cs*.07,sp:.1,g:.0006,life:300,dir:Math.atan2(-dr,-dc),spread:2});}
+    }});
+    end=Math.max(end,180);
+  }
+  if(!RM.matches&&!nudge){
     const rot={up:"rotateX(7deg)",down:"rotateX(-7deg)",left:"rotateY(-7deg)",right:"rotateY(7deg)"}[dir];
     tiltEl.style.transition="transform 150ms ease-out";tiltEl.style.transform=rot;
     events.push({t:lead+maxT,fn:()=>{tiltEl.style.transition="transform 200ms ease-in-out";tiltEl.style.transform="";}});
   }
   events.push({t:lead,fn:()=>SFX.roll(maxT,0)});
-  anim={t0:performance.now(),lead,dir,res,bm,vis,events,end:lead+end+40,finish:()=>{
+  anim={t0:performance.now(),lead,dir,res,bm,vis,events,end:lead+end+40,bump:nudge&&nudge.chk.hit&&!nudge.chk.to?mover:-1,finish:()=>{
     res.forEach((b,i)=>{if(bm[i].steps){bv[i].phase+=bm[i].steps*ROLL;bv[i].ax=dc;bv[i].ay=dr;}});
     tiltEl.style.transform="";
     S=out.state;
@@ -927,6 +1062,13 @@ function afterMove(out){
 }
 function onCellTap(r,c){
   if(inputLocked())return;
+  const me=S.balls[S.turn];
+  if(me.r===r&&me.c===c){setNudge(!nudgeMode);return;} // tap your own ball: nudge mode
+  if(nudgeMode){
+    const d=Object.keys(DIRS).find(k=>me.r+DIRS[k][0]===r&&me.c+DIRS[k][1]===c);
+    if(d){tryNudge(d);return;}
+    setNudge(false);
+  }
   const cell=S.cells[r][c],ball=S.balls.some(b=>b.alive&&b.r===r&&b.c===c);
   if(cell.t!=="."||ball){preview=null;closePop();render();return;}
   if(preview&&preview.type==="build"&&preview.r===r&&preview.c===c){doBuild(r,c,preview.kind);return;}
@@ -979,12 +1121,13 @@ async function maybeBot(){
   if(!m){bot.thinking=false;render();return;}
   // show the move like a player would, then play it
   if(m.type==="tilt"){const L=tiltLegal(S,m.dir);if(!L.ok){bot.thinking=false;render();return;}preview={type:"tilt",dir:m.dir,res:L.res};}
+  else if(m.type==="nudge"){const C=nudgeCheck(S,m.dir);if(!C.ok){bot.thinking=false;render();return;}preview={type:"nudge",dir:m.dir,chk:C,res:nudgeRes(S,m.dir,C)};}
   else preview={type:"build",r:m.r,c:m.c,kind:m.kind};
   render();
   await sleep(RM.matches?250:560);
   if(token!==bot.token)return;
   bot.thinking=false;
-  if(m.type==="tilt")doTilt(m.dir,preview.res);else doBuild(m.r,m.c,m.kind);
+  if(m.type==="tilt")doTilt(m.dir,preview.res);else if(m.type==="nudge")doTilt(m.dir,preview.res,{chk:preview.chk});else doBuild(m.r,m.c,m.kind);
 }
 function cancelBot(){bot.token++;bot.thinking=false;}
 
@@ -1004,7 +1147,7 @@ function updatePop(){
     const armed=preview&&preview.type==="build"&&preview.kind===k;
     btn.disabled=!!why;btn.className=armed?"armed p"+S.turn:"";
     btn.querySelector("span").textContent=armed?`${KIND[k]} setzen ✓`:KIND[k];
-    btn.querySelector("small").textContent=why||(armed?"nochmal tippen":"Vorschau zeigen");
+    btn.querySelector("small").textContent=why||(armed?"nochmal tippen":`noch ${S.stock[k][S.turn]}`);
   }
 }
 function closePop(){pop.hidden=true;popCell=null;}
@@ -1021,8 +1164,8 @@ function render(){
   t.className="turn p"+S.turn+(bot.thinking?" thinking":"");
   if(mode.kind==="online")t.classList.toggle("thinking",isRemote(S.turn)&&!preview);
   $("turnText").textContent=botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
-  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:MAPS[S.mapIdx].name;
-  $("roundInfo").innerHTML=`Runde ${match.round+1} · ${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+MAPS[S.mapIdx].name:""}${netBadge()}`;
+  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:getMap(S.mapIdx).name;
+  $("roundInfo").innerHTML=`Runde ${match.round+1} · ${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+esc(getMap(S.mapIdx).name):""}${netBadge()}`;
   const m=S.moves,left=upcoming(S,1).length;
   let mi;
   if(m<SHRINK_START)mi=`Zug ${m} · Rand bricht ab Zug ${SHRINK_START}`;
@@ -1030,15 +1173,24 @@ function render(){
   else{const nx=(m-SHRINK_START)%SHRINK_EVERY===0?m+SHRINK_EVERY:m+1;mi=`Zug ${m} · <span class="hot">Abbruch nach Zug ${nx}</span>`;}
   $("moveInfo").innerHTML=mi;
   const locked=inputLocked();
+  if(locked&&nudgeMode&&!anim)nudgeMode=false;
+  $("controls").classList.toggle("nudge",nudgeMode);
   document.querySelectorAll(".dir").forEach(b=>{
-    const d=b.dataset.dir,L=tiltLegal(S,d);
-    b.disabled=!L.ok||locked;
-    b.className="dir"+(preview&&preview.type==="tilt"&&preview.dir===d?" armed p"+S.turn:"");
-    b.title=L.ok?"":L.why==="gesperrt"?"Gesperrt: nicht direkt zurückkippen":"In diese Richtung rollt nichts";
+    const d=b.dataset.dir;
+    const ok=nudgeMode?nudgeCheck(S,d).ok:tiltLegal(S,d).ok;
+    b.disabled=locked;
+    const armed=preview&&(preview.type==="tilt"||preview.type==="nudge")&&preview.dir===d;
+    b.className="dir"+(ok?"":" blocked")+(armed?" armed p"+S.turn:"");
+    b.setAttribute("aria-label",(nudgeMode?"Kugel schubsen nach ":"Brett kippen nach ")+{up:"oben",down:"unten",left:"links",right:"rechts"}[d]);
   });
+  $("nudgeBtn").classList.toggle("on",nudgeMode);$("nudgeBtn").setAttribute("aria-pressed",nudgeMode);$("nudgeBtn").disabled=locked;
   const show=meSide()>=0?meSide():S.turn;
-  const st=$("builds");st.innerHTML=`<b style="color:var(--p${show})">${esc(name(show))}</b> ${isMe(show)?"baust":"baut"} noch:`;
-  for(let k=0;k<BUILDS;k++){const sp=document.createElement("span");sp.className=(k<S.builds[show]?"on ":"")+"p"+show;st.appendChild(sp);}
+  const st=$("builds");
+  let bh=`<b style="color:var(--p${show})" title="${esc(name(show))}">${isMe(show)?"Du":esc(name(show))}</b>`;
+  for(let k=0;k<STONES;k++)bh+=`<span class="${k<S.stock.S[show]?"on ":""}p${show}" title="Steine"></span>`;
+  bh+=`<span style="width:4px;background:none"></span>`;
+  for(let k=0;k<HOLES;k++)bh+=`<i class="${k<S.stock.H[show]?"on":""}" title="Löcher"></i>`;
+  st.innerHTML=bh;st.setAttribute("aria-label",`${name(show)}: ${S.stock.S[show]} Steine, ${S.stock.H[show]} Löcher übrig`);
   $("undoBtn").disabled=!history.length||!!anim;$("undoBtn").hidden=mode.kind==="online";
   updatePop();renderHint();kick();
 }
@@ -1049,6 +1201,7 @@ function renderHint(){
   if(isRemote(S.turn)){
     const n=esc(oppName());
     if(preview&&preview.type==="tilt")h.innerHTML=`${n} kippt <b>${ARW[preview.dir]}</b>`;
+    else if(preview&&preview.type==="nudge")h.innerHTML=`${n} schubst <b>${ARW[preview.dir]}</b>`;
     else if(preview&&preview.type==="build")h.innerHTML=`${n} setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
     else h.innerHTML=net&&net.oppOffline?`<span class="warn">${n} ist gerade nicht verbunden.</span> Das Spiel geht weiter, sobald ${n} zurück ist.`:`${n} überlegt …`;
     return;
@@ -1056,15 +1209,17 @@ function renderHint(){
   if(isBot(S.turn)){
     if(preview&&preview.type==="tilt")h.innerHTML=`Bot kippt <b>${ARW[preview.dir]}</b>`;
     else if(preview&&preview.type==="build")h.innerHTML=`Bot setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
+    else if(preview&&preview.type==="nudge")h.innerHTML=`Bot schubst <b>${ARW[preview.dir]}</b>`;
     else h.innerHTML="Der Bot rechnet seine Züge durch …";
     return;
   }
   if(!preview){
     const blocked=S.lastTilt?` · <b>${ARW[OPP[S.lastTilt]]}</b> gesperrt`:"";
-    const mustTilt=RULES.noDoubleBuild&&S.built[S.turn]&&S.builds[S.turn]>0?" · erst kippen, dann bauen":"";
-    h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen oder Pfeil zum Kippen · Feld antippen zum Bauen${blocked}${mustTilt}`;return;
+    if(nudgeMode){h.innerHTML=`<b>Schubsen:</b> Richtung wählen. Nur deine Kugel rollt ein Feld, gegen einen hellen Stein gibt's einen Treffer.`;return;}
+    h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`;return;
   }
   if(preview.type==="build"){h.innerHTML=`${KIND[preview.kind]}-Vorschau · <b>nochmal tippen</b> zum Setzen`;return;}
+  if(preview.type==="nudge"){h.innerHTML=`Schubs-Vorschau · <b>${ARW[preview.dir]} nochmal</b> zum Schubsen`+(preview.chk.hit?`<br>Deine Kugel stößt dagegen: ein Treffer.`:"");return;}
   const me=preview.res[S.turn],op=preview.res[1-S.turn];
   let msg=`Vorschau · <b>${ARW[preview.dir]} nochmal tippen</b> zum Kippen`;
   if(me.fell&&op.fell)msg+=`<br><span class="warn">Beide fallen, du verlierst!</span>`;
@@ -1076,7 +1231,9 @@ function renderHint(){
 
 /* ---------- rounds ---------- */
 let pickMap=POOL[0];
-function firstMap(){return mode.field==="pool"?POOL[0]:STANDARD;}
+function firstMap(field){field=field||mode.field;return field==="pool"?POOL[Math.floor(Math.random()*POOL.length)]:field==="rand"?randomMapId():STANDARD;}
+// map for the next round: standard stays, the 4-map pool uses the loser's pick (-1 = random), random fields roll a new map
+function nextMap(){return mode.field==="pool"?(pickMap<0?POOL[Math.floor(Math.random()*POOL.length)]:pickMap):mode.field==="rand"?randomMapId():STANDARD;}
 function endRound(o){
   cancelBot();
   const big=$("resBig"),title=$("resTitle"),text=$("resText"),next=$("resNext"),pick=$("pick");
@@ -1105,10 +1262,11 @@ function endRound(o){
         const cur=POOL.indexOf(S.mapIdx);pickMap=POOL[(cur+1)%POOL.length];
         if(!isBot(l)&&!isRemote(l)){$("pickWho").textContent=`${isMe(l)?"Du wählst":name(l)+" wählt"} die nächste Karte`;pick.hidden=false;buildPicker();}
       }
-      next.onclick=()=>{$("result").hidden=true;match.round++;startRound(mode.field==="pool"?pickMap:STANDARD,l);};
+      next.onclick=()=>{$("result").hidden=true;match.round++;startRound(nextMap(),l);};
     }
   }
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
+  $("reOpts").hidden=true;$("resMenu").textContent="Menü";
   if(mode.kind==="online"&&net)netResultButtons(o);
   else if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
   $("result").hidden=false;next.disabled||next.focus();
@@ -1116,7 +1274,9 @@ function endRound(o){
 }
 function buildPicker(){
   const box=$("maps");box.innerHTML="";
-  POOL.forEach(i=>{
+  [...POOL,-1].forEach(i=>{
+    if(i<0){const b=document.createElement("button");b.className="mapbtn"+(pickMap<0?" sel":"");b.setAttribute("aria-pressed",pickMap<0);
+      b.innerHTML='<span style="font:400 40px var(--display);line-height:1;padding:18px 0">?</span><span>Zufall</span>';b.onclick=()=>{pickMap=-1;buildPicker();};box.appendChild(b);return;}
     const m=MAPS[i],b=document.createElement("button");b.className="mapbtn"+(i===pickMap?" sel":"");b.setAttribute("aria-pressed",i===pickMap);
     const c=document.createElement("canvas");b.appendChild(c);const lab=document.createElement("span");lab.textContent=m.name;b.appendChild(lab);
     b.onclick=()=>{pickMap=i;buildPicker();};box.appendChild(b);
@@ -1148,23 +1308,30 @@ function syncMenu(){
   $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
   if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
-  seg("segLevel",mode.level);seg("segColor",mode.human);seg("segField",mode.field);
+  seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);
+  $("colorOpts").hidden=mode.kind==="local";
+  $("fieldTip").textContent={std:"Immer dieselbe Aufstellung, wie beim Schach.",pool:"Vier feste Karten, der Verlierer wählt die nächste.",rand:"Jede Runde eine neue, zufällig gebaute Karte."}[mode.field]||"";
+  $("leaveBtn").hidden=!(net&&net.started);
   $("resumeBtn").hidden=!gameActive;
 }
 function openMenu(){cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
 for(const b of document.querySelectorAll(".mode[data-mode]"))b.onclick=()=>{mode.kind=b.dataset.mode;syncMenu();};
-for(const [id,key,num] of [["segLevel","level"],["segColor","human",true],["segField","field"]])
-  for(const b of $(id).children)b.onclick=()=>{mode[key]=num?+b.dataset.v:b.dataset.v;syncMenu();};
+for(const [id,key] of [["segLevel","level"],["segColor","color"],["segField","field"]])
+  for(const b of $(id).children)b.onclick=()=>{mode[key]=b.dataset.v==="0"||b.dataset.v==="1"?+b.dataset.v:b.dataset.v;syncMenu();};
 $("playBtn").onclick=()=>{
   try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
+  if(net)netLeave(true);
   if(mode.kind==="online"){netCreate();return;}
-  netClose();
   $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
+  if(mode.kind==="bot")mode.human=pickColor();
   newMatch(0);
 };
 $("resumeBtn").onclick=()=>{$("menu").hidden=true;render();maybeBot();netPump();};
 $("menuRules").onclick=()=>{$("rules").hidden=false;$("rulesOk").focus();};
-$("resMenu").onclick=()=>{$("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
+$("resMenu").onclick=()=>{
+  if(mode.kind==="online"&&net){netLeave(false);return;}
+  $("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
+$("leaveBtn").onclick=()=>netLeave(false);
 $("menuBtn").onclick=openMenu;
 
 /* ---------- input ---------- */
@@ -1181,26 +1348,41 @@ $("rulesOk").addEventListener("click",()=>{$("rules").hidden=true;});
 const ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 const ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 5M22 9l-5 5"/></svg>';
 function muteUI(){const b=$("muteBtn");b.innerHTML=muted?ICON_OFF:ICON_ON;b.setAttribute("aria-label",muted?"Ton an":"Ton aus");}
-$("muteBtn").addEventListener("click",()=>{muted=!muted;try{localStorage.setItem("kippe-muted",muted?"1":"0");}catch(e){}muteUI();});
-document.addEventListener("pointerdown",audio,{passive:true});
-document.addEventListener("keydown",audio);
+$("muteBtn").addEventListener("click",()=>{muted=!muted;try{localStorage.setItem("kippe-muted",muted?"1":"0");}catch(e){}muteUI();audio();if(!muted)SFX.place();});
+for(const ev of ["pointerup","touchend","click","keydown"])document.addEventListener(ev,audio,{passive:true,capture:true});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC&&AC.state!=="running")AC.resume().catch(()=>{});});
 let p0=null;
-cv.addEventListener("pointerdown",e=>{p0={x:e.clientX,y:e.clientY};});
-cv.addEventListener("pointerup",e=>{
-  if(!p0)return;const dx=e.clientX-p0.x,dy=e.clientY-p0.y;p0=null;
-  if(Math.hypot(dx,dy)>28){tryTilt(Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up"));return;}
+function cellAt(e){
   const rect=cv.getBoundingClientRect(),k=geo.size/rect.width;
   const x=(e.clientX-rect.left)*k-geo.F,y=(e.clientY-rect.top)*k-geo.F;
-  const c=Math.floor(x/geo.cs),r=Math.floor(y/geo.cs);
-  if(r>=0&&r<N&&c>=0&&c<N)onCellTap(r,c);else if(!inputLocked()){preview=null;closePop();render();}
+  return [Math.floor(y/geo.cs),Math.floor(x/geo.cs)];
+}
+cv.addEventListener("pointerdown",e=>{p0={x:e.clientX,y:e.clientY,cell:cellAt(e)};});
+cv.addEventListener("pointerup",e=>{
+  if(!p0)return;const dx=e.clientX-p0.x,dy=e.clientY-p0.y,start=p0.cell;p0=null;
+  if(Math.hypot(dx,dy)>28){
+    const d=Math.abs(dx)>Math.abs(dy)?(dx>0?"right":"left"):(dy>0?"down":"up");
+    const me=S.balls[S.turn];
+    if(me&&start[0]===me.r&&start[1]===me.c&&!isRemote(S.turn)&&!isBot(S.turn)){if(!nudgeMode)nudgeMode=true;tryNudge(d);return;} // swipe on your own ball
+    if(nudgeMode)nudgeMode=false;
+    tryTilt(d);return;
+  }
+  const [r,c]=cellAt(e);
+  if(r>=0&&r<N&&c>=0&&c<N){onCellTap(r,c);return;}
+  if(nudgeMode&&!inputLocked()){ // tap on the rail next to your ball
+    const me=S.balls[S.turn],d=Object.keys(DIRS).find(k=>me.r+DIRS[k][0]===r&&me.c+DIRS[k][1]===c);
+    if(d){tryNudge(d);return;}
+  }
+  if(!inputLocked()){preview=null;nudgeMode=false;closePop();render();}
 });
+$("nudgeBtn").addEventListener("click",()=>{if(!inputLocked())setNudge(!nudgeMode);});
 cv.addEventListener("pointercancel",()=>{p0=null;});
 document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!pop.contains(e.target)&&e.target!==cv){closePop();if(preview&&preview.type==="build"&&!isBot(S.turn))preview=null;render();}});
 document.addEventListener("keydown",e=>{
   if(!$("rules").hidden||!$("result").hidden||!$("menu").hidden)return;
   const m={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"}[e.key];
-  if(m){e.preventDefault();tryTilt(m);}
-  if(e.key==="Escape"&&!inputLocked()){preview=null;closePop();render();}
+  if(m){e.preventDefault();if(e.shiftKey){if(!inputLocked()){nudgeMode=true;tryNudge(m);}}else{nudgeMode=false;tryTilt(m);}}
+  if(e.key==="Escape"&&!inputLocked()){preview=null;nudgeMode=false;closePop();render();}
 });
 /* ---------- online ---------- */
 // Transport: Firebase Realtime Database over plain REST + EventSource streaming, no SDK.
@@ -1252,19 +1434,19 @@ function showLobby(kind){
 async function netCreate(){
   const nm=cleanName($("nameInput").value);saveName(nm);
   netClose();
-  const code=newCode();
+  const code=newCode(),side=pickColor();
   showLobby("host");
   $("lobbyTitle").textContent="Duell erstellt";
-  $("lobbyText").textContent="Schick diesen Link an deinen Freund. Sobald er ihn öffnet, geht's los. Du spielst Rot, dein Freund fängt an.";
+  $("lobbyText").textContent=`Schick diesen Link an deinen Freund. Sobald er ihn öffnet, geht's los. Du spielst ${["Rot","Blau"][side]}, dein Freund fängt an.`;
   $("lobbyLink").textContent=shareUrl(code);$("lobbyCode").textContent=code;
   lobbyStatus("Duell wird angelegt …");
   try{
-    await dbReq("PUT",`rooms/${code}`,{v:1,created:NOW,field:mode.field,players:{p0:{name:nm,seen:NOW}}});
+    await dbReq("PUT",`rooms/${code}`,{v:2,created:NOW,field:mode.field,host:side,first:1-side,map:firstMap(),players:{["p"+side]:{name:nm,seen:NOW}}});
   }catch(e){lobbyStatus("Keine Verbindung zum Server. Bitte nochmal versuchen.","err");return;}
-  seatSet(code,{side:0});
+  seatSet(code,{side});
   window.history.replaceState(null,"","#r-"+code);
   lobbyStatus("Warte auf deinen Gegner …");
-  netOpen(code,0);
+  netOpen(code,side);
 }
 async function netJoinFlow(code){
   netClose();
@@ -1274,27 +1456,28 @@ async function netJoinFlow(code){
   if(!onlineReady()){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(onlineWhy(),"err");return;}
   let room;
   try{room=await dbReq("GET",`rooms/${code}`);}catch(e){$("lobbyJoin").hidden=true;lobbyStatus("Keine Verbindung zum Server.","err");return;}
-  if(!room||!room.players||!room.players.p0){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(`Kein Duell mit dem Code ${code} gefunden.`,"err");return;}
+  const host=room&&room.host===1?1:0,me=1-host;
+  if(!room||!room.players||!room.players["p"+host]){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(`Kein Duell mit dem Code ${code} gefunden.`,"err");return;}
   const seat=seatGet(code);
   if(seat){$("lobby").hidden=true;netOpen(code,seat.side);return;} // rejoin after reload
-  if(room.players.p1){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus("Dieses Duell ist schon voll.","err");return;}
-  $("lobbyText").textContent=`${room.players.p0.name} fordert dich heraus. Du spielst Blau und fängst an.`;
+  if(room.players["p"+me]){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus("Dieses Duell ist schon voll.","err");return;}
+  $("lobbyText").textContent=`${room.players["p"+host].name} fordert dich heraus. Du spielst ${["Rot","Blau"][me]} und fängst an.`;
   lobbyStatus("Namen eingeben und beitreten","ok");
   $("joinName").value=myName();
   $("joinBtn").onclick=async()=>{
     const nm=cleanName($("joinName").value);saveName(nm);
     $("joinBtn").disabled=true;lobbyStatus("Trete bei …");
     try{
-      const cur=await dbReq("GET",`rooms/${code}/players/p1`);
+      const cur=await dbReq("GET",`rooms/${code}/players/p${me}`);
       if(cur){lobbyStatus("Dieses Duell ist schon voll.","err");return;}
-      await dbReq("PUT",`rooms/${code}/players/p1`,{name:nm,seen:NOW});
+      await dbReq("PUT",`rooms/${code}/players/p${me}`,{name:nm,seen:NOW});
     }catch(e){lobbyStatus("Keine Verbindung zum Server.","err");$("joinBtn").disabled=false;return;}
-    seatSet(code,{side:1});
-    netOpen(code,1);
+    seatSet(code,{side:me});
+    netOpen(code,me);
   };
 }
 function netOpen(code,side){
-  net={code,side,room:null,applied:0,started:false,busy:false,names:["Rot","Blau"],oppSeen:0,oppSeenAt:Date.now(),oppOffline:false,lastOutcome:null,duelLoser:0,es:null,hb:null,queue:[]};
+  net={code,side,room:null,applied:0,started:false,busy:false,duel:0,voted:-1,rematchSent:-1,names:["Rot","Blau"],oppSeen:0,oppSeenAt:Date.now(),oppOffline:false,lastOutcome:null,duelLoser:0,es:null,hb:null,queue:[]};
   mode.kind="online";mode.human=side;
   const es=new EventSource(`${DB}/rooms/${code}.json`);net.es=es;
   const apply=(ev,fn)=>es.addEventListener(ev,e=>{if(!net||net.es!==es)return;let d;try{d=JSON.parse(e.data);}catch(x){return;}fn(d);netRoomChanged();});
@@ -1331,12 +1514,60 @@ function netRoomChanged(){
   if(P.p0)net.names[0]=P.p0.name;if(P.p1)net.names[1]=P.p1.name;
   const opp=P["p"+(1-net.side)];
   if(opp&&opp.seen!==net.oppSeen){net.oppSeen=opp.seen;net.oppSeenAt=Date.now();if(net.oppOffline){net.oppOffline=false;render();}}
+  if(opp&&opp.left){netOppLeft();return;}
   if(!net.started){
     if(P.p0&&P.p1)netStart();
-    else if(net.side===0)lobbyStatus("Warte auf deinen Gegner …");
+    else lobbyStatus("Warte auf deinen Gegner …");
     return;
   }
+  netVotes();
   netPump();
+}
+// rematch: both players vote; red's device then writes the rematch entry for both
+function netVotes(){
+  if(!net||!net.started)return;
+  const P=net.room.players||{},a=P.p0&&P.p0.vote,b=P.p1&&P.p1.vote;
+  const mine=net.side?b:a,theirs=net.side?a:b;
+  if(!$("result").hidden&&!$("reOpts").hidden){
+    $("reStatus").textContent=theirs&&theirs.n===net.duel?(mine&&mine.n===net.duel?"Beide sind bereit …":`${oppName()} will eine Revanche!`):mine&&mine.n===net.duel?`Warte auf ${oppName()} …`:"";
+  }
+  if(a&&b&&a.n===net.duel&&b.n===net.duel&&net.side===0&&net.rematchSent!==net.duel&&!anim){
+    net.rematchSent=net.duel;
+    const loser=net.duelLoser,field=(loser?b:a).field||"std";
+    const e={k:"rematch",field,map:firstMap(field)};
+    netSend(e);netNextRound(e,false);render();
+  }
+}
+function netLeave(silent){
+  if(!net)return;
+  const code=net.code,side=net.side;
+  dbReq("PUT",`rooms/${code}/players/p${side}/left`,true).catch(()=>{});
+  netClose();gameActive=false;
+  $("result").hidden=true;$("lobby").hidden=true;
+  if(!silent)openMenu();
+}
+function netOppLeft(){
+  const who=oppName();
+  netClose();gameActive=false;
+  const big=$("resBig"),next=$("resNext");
+  big.className="big";big.textContent="WEG";
+  $("resTitle").textContent=`${who} hat das Duell verlassen`;$("resText").textContent="Erstell einfach ein neues Duell, wenn ihr weiterspielen wollt.";
+  $("pick").hidden=true;$("reOpts").hidden=true;$("lobby").hidden=true;$("menu").hidden=true;
+  $("resMenu").textContent="Menü";$("resMenu").onclick=()=>{$("result").hidden=true;openMenu();};
+  next.disabled=false;next.textContent="Neues Duell";next.onclick=()=>{$("result").hidden=true;mode.kind="online";openMenu();};
+  $("result").hidden=false;
+}
+function showCountdown(done){
+  if(RM.matches){done&&done();return;}
+  countdown=true;render();
+  const box=$("count"),num=$("countNum");let n=3;box.hidden=false;
+  const step=()=>{
+    num.textContent=n>0?n:"Los!";num.style.animation="none";void num.offsetWidth;num.style.animation="";
+    if(n>0){SFX.knock();}else{SFX.place();buzz(30);}
+    if(n-- < 0){box.hidden=true;countdown=false;render();done&&done();return;}
+    setTimeout(step,n<0?600:750);
+  };
+  step();
 }
 // first sync: replay everything already in the log without animation, then follow live
 function netResync(){
@@ -1347,11 +1578,11 @@ function netResync(){
 }
 function netStart(again){
   net.started=true;
-  mode.field=net.room.field==="pool"?"pool":"std";
+  mode.field=["pool","rand"].includes(net.room.field)?net.room.field:"std";
   $("lobby").hidden=true;$("menu").hidden=true;$("result").hidden=true;
-  if(net.side===0&&!again){SFX.place();buzz(40);}
-  match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
-  startRound(firstMap(),1);
+  match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];net.duel=0;
+  startRound(typeof net.room.map==="number"?net.room.map:STANDARD,typeof net.room.first==="number"?net.room.first:1);
+  if(!again&&!net.room.log)showCountdown();
   const log=net.room.log||{};
   let shown=null;
   while(log[slot(net.applied)]){
@@ -1360,7 +1591,7 @@ function netStart(again){
       const out=netPlay(S,e);if(!out){net.applied++;continue;}
       S=out.state;history.push(S);
       if(out.outcome){if(!out.outcome.draw)match.score[out.outcome.winner]++;net.lastOutcome=out.outcome;shown=out.outcome;if(match.score[0]>=2||match.score[1]>=2)net.duelLoser=1-out.outcome.winner;}
-    }else{netNextRound(e,true);shown=null;}
+    }else{netNextRound(e,true);shown=null;if(e.k==="rematch")net.rematchSent=net.duel-1;}
     net.applied++;
   }
   render();
@@ -1372,6 +1603,7 @@ function netStart(again){
 function netPlay(st,e){
   if(e.by!==st.turn)return null;
   if(e.t==="tilt"){const L=tiltLegal(st,e.dir);return L.ok?applyTilt(st,e.dir,L.res):null;}
+  if(e.t==="nudge"){const C=nudgeCheck(st,e.dir);return C.ok?applyNudge(st,e.dir,C):null;}
   if(e.t==="build"&&!buildCheck(st,e.r,e.c,e.kind))return applyBuild(st,e.r,e.c,e.kind);
   return null;
 }
@@ -1399,15 +1631,15 @@ async function netPump(){
     if(e.k==="m"){
       if(!$("result").hidden){net.busy=false;return;}
       if(e.by!==S.turn||e.by===net.side){net.applied++;return;} // stale or own echo
-      const mv=e.t==="tilt"?tiltLegal(S,e.dir):null;
-      if(e.t==="tilt"&&!mv.ok){net.applied++;return;}
+      const mv=e.t==="tilt"?tiltLegal(S,e.dir):e.t==="nudge"?nudgeCheck(S,e.dir):null;
+      if((e.t==="tilt"||e.t==="nudge")&&!mv.ok){net.applied++;return;}
       if(e.t==="build"&&buildCheck(S,e.r,e.c,e.kind)){net.applied++;return;}
-      preview=e.t==="tilt"?{type:"tilt",dir:e.dir,res:mv.res}:{type:"build",r:e.r,c:e.c,kind:e.kind};
+      preview=e.t==="tilt"?{type:"tilt",dir:e.dir,res:mv.res}:e.t==="nudge"?{type:"nudge",dir:e.dir,chk:mv,res:nudgeRes(S,e.dir,mv)}:{type:"build",r:e.r,c:e.c,kind:e.kind};
       render();
       await sleep(RM.matches?200:420);
       if(!net)return;
       net.applied++;
-      if(e.t==="tilt")doTilt(e.dir,mv.res);else doBuild(e.r,e.c,e.kind);
+      if(e.t==="tilt")doTilt(e.dir,mv.res);else if(e.t==="nudge")doTilt(e.dir,preview.res,{chk:mv});else doBuild(e.r,e.c,e.kind);
     }else{
       net.applied++;
       netNextRound(e,false);
@@ -1418,13 +1650,17 @@ async function netPump(){
 }
 function netNextRound(e,silent){
   const o=net.lastOutcome;let map,starter;
-  if(e.k==="rematch"){match={score:[0,0],round:0};starter=net.duelLoser;map=firstMap();}
+  if(e.k==="rematch"){
+    match={score:[0,0],round:0};net.duel++;starter=net.duelLoser;
+    if(["std","pool","rand"].includes(e.field))mode.field=e.field;
+    map=typeof e.map==="number"?e.map:firstMap();
+  }
   else if(!o||o.draw){map=S.mapIdx;starter=1-roundStarter;}
-  else{starter=1-o.winner;map=mode.field==="pool"&&POOL.includes(e.map)?e.map:STANDARD;match.round++;}
+  else{starter=1-o.winner;map=typeof e.map==="number"?e.map:STANDARD;match.round++;}
   net.lastOutcome=null;
   $("result").hidden=true;
   startRound(map,starter);
-  if(!silent){SFX.place();}
+  if(!silent&&e.k==="rematch")showCountdown();else if(!silent)SFX.place();
 }
 function netResultButtons(o){
   const next=$("resNext"),pick=$("pick");
@@ -1432,13 +1668,30 @@ function netResultButtons(o){
   const over=match.score[0]>=2||match.score[1]>=2;
   if(over)net.duelLoser=1-o.winner;
   const loser=o.draw?null:1-o.winner;
-  const mustPick=!over&&!o.draw&&mode.field==="pool";
+  $("resMenu").textContent="Verlassen";
+  if(over){
+    // both have to agree; the field for the rematch can be changed here
+    let field=mode.field;
+    const seg=$("segReField"),sync=()=>{for(const b of seg.children)b.classList.toggle("sel",b.dataset.v===field);};
+    for(const b of seg.children)b.onclick=()=>{field=b.dataset.v;sync();};sync();
+    $("reOpts").hidden=false;
+    const voted=net.voted===net.duel;
+    next.disabled=voted;next.textContent=voted?"Revanche angefragt":"Revanche";
+    next.onclick=()=>{
+      net.voted=net.duel;next.disabled=true;next.textContent="Revanche angefragt";
+      dbReq("PUT",`rooms/${net.code}/players/p${net.side}/vote`,{n:net.duel,field}).catch(()=>{next.disabled=false;next.textContent="Revanche";});
+      netVotes();
+    };
+    netVotes();
+    return;
+  }
+  const mustPick=!o.draw&&mode.field==="pool";
   const mine=!mustPick||loser===net.side;
   next.disabled=!mine;
   if(!mine){next.textContent=`${oppName()} wählt die Karte …`;pick.hidden=true;}
-  else next.textContent=over?"Revanche":o.draw?"Nochmal":"Nächste Runde";
+  else next.textContent=o.draw?"Nochmal":"Nächste Runde";
   next.onclick=()=>{
-    const e=over?{k:"rematch"}:mustPick?{k:"next",map:pickMap}:{k:"next"};
+    const e={k:"next",map:o.draw?S.mapIdx:nextMap()};
     netSend(e);netNextRound(e,false);render();
   };
 }

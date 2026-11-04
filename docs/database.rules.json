@@ -13,6 +13,8 @@
             ".validate": "newData.hasChildren(['name'])",
             "name": { ".validate": "newData.isString() && newData.val().length <= 16" },
             "seen": { ".validate": "newData.isNumber()" },
+            "left": { ".validate": "newData.isBoolean()" },
+            "vote": { ".validate": "newData.hasChildren(['n']) && newData.child('n').isNumber()" },
             "$other": { ".validate": false }
           }
         },

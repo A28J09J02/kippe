@@ -4,7 +4,8 @@
 1. Spieler 1 wählt im Menü **Online gegen Freunde**, gibt seinen Namen ein und tippt **Duell erstellen**.
 2. Er bekommt einen Link wie `https://a28j09j02.github.io/kippe/#r-K7QM2P` und schickt ihn (Teilen-Knopf oder kopieren).
 3. Spieler 2 öffnet den Link, gibt seinen Namen ein und tippt **Beitreten**. Das Spiel startet sofort auf beiden Geräten.
-4. Der Eingeladene (Blau) fängt an, danach beginnt immer der Verlierer der Runde. Best of 3, danach Revanche.
+4. Countdown 3, 2, 1, los. Der Eingeladene fängt an, danach beginnt immer der Verlierer der Runde. Farbe des Erstellers: Rot, Blau oder Zufall.
+5. Nach dem Duell: Revanche nur, wenn beide zustimmen; dabei lässt sich das Spielfeld wechseln. „Verlassen“ beendet das Duell für beide.
 
 Wer die Seite neu lädt oder die App kurz schließt, landet über denselben Link wieder im Spiel: Der Spielstand wird aus der Zugliste nachgespielt.
 
@@ -13,9 +14,9 @@ Wer die Seite neu lädt oder die App kurz schließt, landet über denselben Link
 - Die Spiellogik ist deterministisch, deshalb speichert ein Raum nur Spieler und eine Zugliste:
   ```
   rooms/K7QM2P/
-    v, created, field            ("std" oder "pool")
-    players/p0, players/p1       {name, seen}
-    log/m0000, log/m0001, …      {k:"m", t:"tilt", dir, by} | {k:"m", t:"build", r, c, kind, by} | {k:"next", map?} | {k:"rematch"}
+    v, created, field, host, first, map
+    players/p0, players/p1       {name, seen, vote?, left?}
+    log/m0000, log/m0001, …      {k:"m", t:"tilt", dir, by} | {k:"m", t:"build", r, c, kind, by} | {k:"m", t:"nudge", dir, by} | {k:"next", map} | {k:"rematch", field, map}
   ```
 - Nur wer am Zug ist, schreibt den nächsten Eintrag. Beide Geräte prüfen jeden Zug mit derselben Logik und spielen ihn mit Animation nach.
 - Anwesenheit: Jedes Gerät meldet sich alle 15 s, nach 40 s Funkstille erscheint „offline“.

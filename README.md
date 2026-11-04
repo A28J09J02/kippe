@@ -5,8 +5,8 @@
 ## Spielen
 **https://a28j09j02.github.io/kippe/** (GitHub Pages aus `main`, installierbar als App). Lokal: `index.html` im Browser öffnen. Im Menü wählen:
 - **Zu zweit** an einem Handy
-- **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), mit Rot oder Blau
-- **Online** kommt später (siehe `docs/ONLINE.md`)
+- **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), als Rot, Blau oder per Zufall
+- **Online gegen Freunde** per Einladungslink (siehe `docs/ONLINE.md`)
 
 Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wechselnde Karten** (4 Karten, der Verlierer wählt die nächste).
 
@@ -19,11 +19,17 @@ Kippe ist eine Web-App (PWA): dieselbe Seite läuft im Browser und lässt sich a
 Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die neuen Dateien laden.
 
 ## Regeln in Kürze
-- Pro Zug genau eins: kippen oder bauen. Kippen bewegt beide Kugeln.
-- 3 Bauaktionen pro Runde, danach muss man erst wieder kippen, bevor man erneut baut.
+- Pro Zug genau eins: **kippen** (beide Kugeln rollen bis zum Hindernis), **schubsen** (nur die eigene Kugel ein Feld; gegen einen hellen Stein = ein Treffer) oder **bauen**.
+- Jeder hat pro Runde 3 Steine und 3 Löcher. Man muss nie kippen.
+- Direkt zurückkippen (Gegenrichtung des letzten Kippens) ist gesperrt; tippt man trotzdem, erklärt das Spiel warum.
 - Randsteine und gesetzte Steine halten 3 Treffer. Ein zerbrochener Randstein wird zum Abgrund.
 - Ab Zug 20 bricht alle 2 Züge ein Randstein weg (vorher rot markiert).
 - Best of 3, wer eine Runde verliert, fängt die nächste an.
+
+## Spielfelder
+- **Standard:** immer dieselbe Aufstellung, wie beim Schach.
+- **4 Karten:** Kreuzung, Schleuse, Zickzack, Abbruch. Der Verlierer wählt die nächste oder lässt den Zufall entscheiden.
+- **Zufallskarte:** jede Runde eine neu gebaute, punktsymmetrische Karte (aus einer Zahl erzeugt, online für beide gleich).
 
 ## Standardbrett
 7×7, fast leer: ein Loch in der Mitte, zwei feste Blöcke diagonal, ringsum bröckelnde Randsteine, nur die Ecken sind fest. Rot startet unten links, Blau oben rechts. Ausgewählt aus drei Kandidaten per Bot-gegen-Bot-Test: die meisten Runden enden durch eine gestellte Falle („Reingelegt“), Startvorteil im Test rund 40 %.
