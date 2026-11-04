@@ -3,7 +3,7 @@
 1-gegen-1-Strategiespiel fürs Handy: Zwei Kugeln, ein kippbares Brett. Wer am Zug ist, kippt das Brett oder baut einen Stein oder ein Loch. Ziel: die gegnerische Kugel in ein Loch oder über die Kante befördern, ohne selbst zu fallen.
 
 ## Spielen
-`index.html` im Browser öffnen. Im Menü wählen:
+**https://a28j09j02.github.io/kippe/** (GitHub Pages aus `main`, installierbar als App). Lokal: `index.html` im Browser öffnen. Im Menü wählen:
 - **Zu zweit** an einem Handy
 - **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), mit Rot oder Blau
 - **Online** kommt später (siehe `docs/ONLINE.md`)
