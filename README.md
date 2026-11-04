@@ -10,6 +10,14 @@
 
 Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wechselnde Karten** (4 Karten, der Verlierer wählt die nächste).
 
+## Als App installieren
+Kippe ist eine Web-App (PWA): dieselbe Seite läuft im Browser und lässt sich als App installieren, mit eigenem Icon, im Vollbild und offline gegen den Bot.
+- **iPhone/iPad:** Seite in Safari öffnen → Teilen → „Zum Home-Bildschirm“
+- **Android:** Seite in Chrome öffnen → „App installieren“ (auch als Knopf im Menü)
+- **Windows/Mac:** Seite in Chrome oder Edge öffnen → Installieren-Symbol in der Adressleiste oder Knopf im Menü
+
+Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die neuen Dateien laden.
+
 ## Regeln in Kürze
 - Pro Zug genau eins: kippen oder bauen. Kippen bewegt beide Kugeln.
 - 3 Bauaktionen pro Runde, danach muss man erst wieder kippen, bevor man erneut baut.
@@ -28,6 +36,7 @@ Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wec
 - `tools/check-maps.js` – Fairness-Prüfung aller Karten (Symmetrie, kein Sofort-Fall, kein erzwungener Sieg in 4 Halbzügen)
 - `tools/bot-arena.js` – Bot gegen Bot, z. B. `node tools/bot-arena.js hard hard 20`
 - `tools/artifact.py` – erzeugt `dist/artifact.html` (ohne Dokument-Hülle) für die Claude-Vorschau
+- `manifest.webmanifest`, `sw.js`, `icons/` – App-Installation und Offline-Betrieb (`tools/make-icons.py` zeichnet die Icons)
 - `docs/ONLINE.md` – Plan für Online-Duelle
 
 ## Tests

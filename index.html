@@ -6,6 +6,14 @@
 <title>Kippe</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#5b3d22">
+<meta name="description" content="Kippe – 1-gegen-1-Strategiespiel: Brett kippen, Gegner reinlegen.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kippe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Figtree:wght@400;600;800&display=swap">
 <style>
@@ -120,6 +128,8 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .menu .primary{padding:14px;font-size:16px}
 .linkrow{display:flex;justify-content:center;gap:8px}
 .linkrow .btn{background:transparent}
+.install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
 </style>
 </head>
@@ -191,6 +201,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">Wechselnde Karten</button></div>
     </div>
     <button class="btn primary" id="playBtn">Spielen</button>
+    <div class="install" id="installBox" hidden>
+      <button class="btn" id="installBtn">App installieren</button>
+      <p class="tip" id="installTip"></p>
+    </div>
     <div class="linkrow"><button class="btn" id="resumeBtn" hidden>Weiterspielen</button><button class="btn" id="menuRules">Regeln</button></div>
   </div>
 </div>
@@ -1125,6 +1139,25 @@ document.addEventListener("keydown",e=>{
   if(m){e.preventDefault();tryTilt(m);}
   if(e.key==="Escape"&&!inputLocked()){preview=null;closePop();render();}
 });
+/* ---------- install as app ---------- */
+let installEvt=null;
+const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+function installUI(){
+  const box=$("installBox"),btn=$("installBtn"),tip=$("installTip");
+  const secure=location.protocol==="https:"||location.hostname==="localhost";
+  if(standalone()||!secure){box.hidden=true;return;}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  if(installEvt){box.hidden=false;btn.hidden=false;tip.textContent="Läuft dann wie eine App, auch offline gegen den Bot.";}
+  else if(ios){box.hidden=false;btn.hidden=true;tip.innerHTML="Als App installieren: in Safari auf <b>Teilen</b> tippen, dann <b>Zum Home-Bildschirm</b>.";}
+  else box.hidden=true;
+}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;installUI();});
+window.addEventListener("appinstalled",()=>{installEvt=null;installUI();});
+$("installBtn").onclick=async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice;}catch(e){}installEvt=null;installUI();};
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")&&!/claude\.ai|claudeusercontent/.test(location.host)){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+installUI();
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
 </script>
 </body>
