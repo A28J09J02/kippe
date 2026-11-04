@@ -40,6 +40,8 @@ node tools/bot-arena.js medium hard 20 400
 ## Bot-Stufen
 | Stufe | Rechentiefe | Verhalten |
 |---|---|---|
-| Leicht | 1 Halbzug | übersieht oft Fallen, macht jeden 4. Zug einen lockeren Zug |
-| Mittel | 2 Halbzüge | fällt nicht in einfache Fallen, etwas Zufall |
-| Schwer | bis 6 Halbzüge, ca. 1,4 s | spielt den besten gefundenen Zug |
+| Leicht | 1 Halbzug | übersieht gut die Hälfte der Siege, spielt jeden zweiten Zug unachtsam, wählt locker unter brauchbaren Zügen |
+| Mittel | 2 Halbzüge | sieht die meisten Fallen, übersieht ab und zu einen Sieg, gelegentlich unachtsam |
+| Schwer | bis 6 Halbzüge, ca. 1,4 s | spielt einen der besten gefundenen Züge |
+
+Abwechslung: Der Bot wählt zufällig (gewichtet) unter allen Zügen, die fast so gut sind wie der beste. In den ersten Zügen ist die Auswahl größer, damit Runden unterschiedlich beginnen. Zusätzlich bekommt er pro Runde einen Spielstil: Fallensteller (baut lieber Löcher), Mauerer (lieber Steine) oder Roller (kippt lieber). Der Stil beeinflusst nur die Auswahl unter guten Zügen, nie das Erkennen von Gefahr.

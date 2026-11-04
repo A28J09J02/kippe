@@ -382,10 +382,18 @@ function playMove(s,m){return m.type==="tilt"?applyTilt(s,m.dir,m.res):applyBuil
 <script id="bot-src">
 // ===== BOT START =====
 // Minimax (negamax) with alpha-beta and iterative deepening. Pure: works in the page, a Web Worker and Node.
+// Levels differ in how far they look, how well they sense danger, how often they overlook a win,
+// and how freely they pick among good moves. A per-round style adds variety on top.
 const BOT_LEVELS={
-  easy:  {name:"Leicht",maxDepth:1,noise:35,blunder:.25,time:250},
-  medium:{name:"Mittel",maxDepth:2,noise:6, blunder:0,  time:700},
-  hard:  {name:"Schwer",maxDepth:6,noise:0, blunder:0,  time:1400}
+  easy:  {name:"Leicht",maxDepth:1,sense:.35,missWin:.55,careless:.5, margin:70,temp:30,time:250},
+  medium:{name:"Mittel",maxDepth:2,sense:.9, missWin:.2, careless:.3,margin:30,temp:14,time:700},
+  hard:  {name:"Schwer",maxDepth:6,sense:1,  missWin:0,  careless:0,  margin:10,temp:5, time:1400}
+};
+// styles bias the bot's own move choice at the root, not its judgement of danger
+const BOT_STYLES={
+  trapper:{name:"Fallensteller",H:22,S:4, tilt:-4},
+  builder:{name:"Mauerer",      H:4, S:22,tilt:-4},
+  roller: {name:"Roller",       H:-6,S:-6,tilt:16}
 };
 const WIN=100000;
 // candidate moves: all tilts, builds only on lines the balls can use within the next tilt
@@ -413,18 +421,17 @@ function exposure(s,b){
   }
   return n;
 }
-// static evaluation from the view of player p
-function evalState(s,p){
+// static evaluation from the view of player p; sense < 1 makes the bot partly blind to threats
+function evalState(s,p,sense=1){
   const o=1-p;let sc=0;
   for(const d of Object.keys(DIRS)){
-    if(s.lastTilt&&d===OPP[s.lastTilt]&&s.turn===p)continue;
+    if(s.lastTilt&&d===OPP[s.lastTilt])continue;
     const res=slide(s,d),mf=res[p].fell,of=res[o].fell;
-    const w=s.turn===p?1:.6; // threats of the side to move are worth more
-    if(of&&!mf)sc+=60*w;
-    if(mf&&!of)sc-=60*(s.turn===o?1:.6);
+    if(of&&!mf)sc+=60*(s.turn===p?1:.6)*sense;
+    if(mf&&!of)sc-=60*(s.turn===o?1:.6)*sense;
   }
   sc+=7*(s.builds[p]-s.builds[o]);
-  sc+=9*(exposure(s,s.balls[o])-exposure(s,s.balls[p]));
+  sc+=9*(exposure(s,s.balls[o])-exposure(s,s.balls[p]))*sense;
   return sc;
 }
 function outcomeValue(out,mover,ply){
@@ -434,9 +441,9 @@ function outcomeValue(out,mover,ply){
 const ABORT={};
 function negamax(s,depth,alpha,beta,ply,ctx){
   if((++ctx.nodes&255)===0&&Date.now()>ctx.deadline)throw ABORT;
-  if(depth<=0)return evalState(s,s.turn);
+  if(depth<=0)return evalState(s,s.turn,ctx.sense);
   const ms=botMoves(s);
-  if(!ms.length)return evalState(s,s.turn);
+  if(!ms.length)return evalState(s,s.turn,ctx.sense);
   let best=-Infinity;
   for(const m of ms){
     const out=playMove(s,m);let v;
@@ -449,48 +456,53 @@ function negamax(s,depth,alpha,beta,ply,ctx){
   }
   return best;
 }
-// root: scores every move (needed for noise and ordering), deepens while time allows
-function chooseMove(s,level,rand=Math.random){
-  const L=BOT_LEVELS[level]||BOT_LEVELS.medium;
-  const ctx={nodes:0,deadline:Infinity},stop=Date.now()+L.time;
-  let moves=botMoves(s).map(m=>({m,v:0,k:rand()})).sort((a,b)=>a.k-b.k); // shuffled so equal moves vary between games
-  if(moves.length===0)return null;
-  if(L.blunder&&rand()<L.blunder){
-    // a casual move: anything that does not lose on the spot
-    const safe=moves.filter(x=>{const o=playMove(s,x.m);return !(o.outcome&&!o.outcome.draw&&o.outcome.winner!==s.turn);});
-    const pool=safe.length?safe:moves;
-    return pool[Math.floor(rand()*pool.length)].m;
-  }
+const isWinMove=(s,m)=>{const o=playMove(s,m);return !!(o.outcome&&!o.outcome.draw&&o.outcome.winner===s.turn);};
+const styleBias=(st,m)=>st?(m.type==="tilt"?st.tilt:st[m.kind]):0;
+// root search; every move whose value lies within `margin` of the best is scored exactly,
+// then one of those is drawn at random (weighted), so the bot does not repeat itself
+function chooseMove(s,level,style,rand=Math.random){
+  const L=BOT_LEVELS[level]||BOT_LEVELS.medium,st=BOT_STYLES[style]||null;
+  const ctx={nodes:0,deadline:Infinity,sense:L.sense},stop=Date.now()+L.time;
+  let moves=botMoves(s).map(m=>({m,v:0,k:rand()})).sort((a,b)=>a.k-b.k);
+  if(!moves.length)return null;
+  // an easy bot sometimes simply does not see the winning tilt
+  if(L.missWin&&rand()<L.missWin){const rest=moves.filter(x=>!isWinMove(s,x.m));if(rest.length)moves=rest;}
+  // a weaker bot has "careless" turns: it looks less deep and barely notices threats
+  const careless=L.careless&&rand()<L.careless;
+  const maxDepth=careless?1:L.maxDepth;if(careless)ctx.sense=L.sense*.15;
+  const M=L.margin+50; // search window slack: style bias may lift a move up to ~25 points
   let scored=null;
-  for(let depth=1;depth<=L.maxDepth;depth++){
-    ctx.deadline=depth<=2?Infinity:stop; // depth 1-2 always finish: never walk into a one-move trap
+  for(let depth=1;depth<=maxDepth;depth++){
+    ctx.deadline=depth<=2?Infinity:stop; // depth 1-2 always finish
     if(depth>2&&Date.now()>stop)break;
     try{
-      const cur=[];let alpha=-Infinity,bestM=null;
+      const cur=[];let alpha=-Infinity;
       for(const x of moves){
         const out=playMove(s,x.m);let v;
+        const lo=alpha-M; // values above lo are exact, below are bounds (and never chosen)
         if(out.outcome)v=outcomeValue(out,s.turn,0);
-        else if(L.noise){ // full window so every score is exact
-          v=out.state.turn===s.turn?negamax(out.state,depth-1,-Infinity,Infinity,1,ctx):-negamax(out.state,depth-1,-Infinity,Infinity,1,ctx);
-        }else{
-          v=out.state.turn===s.turn?negamax(out.state,depth-1,alpha,Infinity,1,ctx):-negamax(out.state,depth-1,-Infinity,-alpha,1,ctx);
-        }
-        if(v>alpha||!bestM){alpha=Math.max(alpha,v);bestM=x.m;}
-        cur.push({m:x.m,v,exact:x.m===bestM});
+        else if(out.state.turn===s.turn)v=negamax(out.state,depth-1,lo,Infinity,1,ctx);
+        else v=-negamax(out.state,depth-1,-Infinity,-lo,1,ctx);
+        if(v>alpha)alpha=v;
+        cur.push({m:x.m,v});
       }
-      // with alpha-beta only the first move reaching the best value is exact; later ties are upper bounds
-      cur.sort((a,b)=>b.v-a.v||(a.m===bestM?-1:b.m===bestM?1:0));
-      scored=cur;moves=cur; // best-first ordering for the next depth
-      if(cur[0].v>=WIN-50)break; // forced win found
-      if(cur.every(x=>x.v<=-WIN+50))break; // everything loses, stop thinking
+      cur.sort((a,b)=>b.v-a.v);
+      scored=cur;moves=cur;
+      if(cur[0].v>=WIN-50)break;
+      if(cur.every(x=>x.v<=-WIN+50))break;
     }catch(e){if(e!==ABORT)throw e;break;}
   }
   if(!scored)scored=moves;
-  if(L.noise){
-    const pick=scored.map(x=>({m:x.m,v:x.v+(Math.abs(x.v)>=WIN-50?0:(rand()-.5)*2*L.noise)}));
-    pick.sort((a,b)=>b.v-a.v);return pick[0].m;
-  }
-  return scored[0].m;
+  const best=scored[0].v;
+  if(best>=WIN-50)return scored[0].m; // a seen win is always taken
+  if(best<=-WIN+50)return scored[0].m; // lost anyway: delay as long as possible
+  // pick among near-best moves that do not lose, weighted by value plus style
+  const margin=L.margin+(s.moves<4?20:0); // wider choice in the opening, so rounds start differently
+  const pool=scored.filter(x=>x.v>best-margin&&x.v>-WIN+50)
+    .map(x=>({m:x.m,w:Math.exp((x.v+styleBias(st,x.m)-best)/(s.moves<4?L.temp+8:L.temp))}));
+  let r=rand()*pool.reduce((a,x)=>a+x.w,0);
+  for(const x of pool){r-=x.w;if(r<=0)return x.m;}
+  return pool[0].m;
 }
 // ===== BOT END =====
 </script>
@@ -712,7 +724,7 @@ try{const m=JSON.parse(localStorage.getItem("kippe-mode")||"null");if(m&&m.kind)
 let match={score:[0,0],round:0},roundStarter=0,gameActive=false;
 let S=newRound(STANDARD,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
 let bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
-let bot={thinking:false,token:0};
+let bot={thinking:false,token:0,style:null};
 const geo={size:300,cs:40,F:14,dpr:1};
 const isBot=p=>mode.kind==="bot"&&p!==mode.human;
 const name=p=>mode.kind==="bot"?(p===mode.human?"Du":"Bot"):(p?"Blau":"Rot");
@@ -883,17 +895,17 @@ let worker=null,botReq=0,botWait=null;
 function initWorker(){
   try{
     const src=$("logic-src").textContent+"\n"+$("bot-src").textContent+
-      "\nonmessage=e=>{const {id,state,level}=e.data;const m=chooseMove(state,level);postMessage({id,m:m&&{type:m.type,dir:m.dir,r:m.r,c:m.c,kind:m.kind}});};";
+      "\nonmessage=e=>{const {id,state,level,style}=e.data;const m=chooseMove(state,level,style);postMessage({id,m:m&&{type:m.type,dir:m.dir,r:m.r,c:m.c,kind:m.kind}});};";
     worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
     worker.onmessage=e=>{if(botWait&&e.data.id===botWait.id){const w=botWait;botWait=null;w.resolve(e.data.m);}};
-    worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level));}};
+    worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level,w.style));}};
   }catch(e){worker=null;}
 }
-function askBot(state,level){
+function askBot(state,level,style){
   return new Promise(resolve=>{
     const id=++botReq;
-    if(worker){botWait={id,resolve,state,level};worker.postMessage({id,state,level});}
-    else setTimeout(()=>resolve(chooseMove(state,level)),20);
+    if(worker){botWait={id,resolve,state,level,style};worker.postMessage({id,state,level,style});}
+    else setTimeout(()=>resolve(chooseMove(state,level,style)),20);
   });
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -901,7 +913,7 @@ async function maybeBot(){
   if(!isBot(S.turn)||anim||bot.thinking||!$("result").hidden||!$("menu").hidden)return;
   const token=++bot.token;bot.thinking=true;render();
   const t0=performance.now();
-  const m=await askBot(S,mode.level);
+  const m=await askBot(S,mode.level,bot.style);
   const wait=Math.max(0,650-(performance.now()-t0));
   if(wait)await sleep(wait);
   if(token!==bot.token)return;
@@ -1049,7 +1061,8 @@ function drawThumb(c,i,size){
     poses:s.balls.map((b,k)=>({r:b.r,c:b.c,scale:1,alpha:1,phase:k?2.2:.6,ax:0,ay:-1}))});
 }
 function startRound(mapIdx,starter){
-  cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);history=[];preview=null;flash="";closePop();
+  cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);
+  const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every roundhistory=[];preview=null;flash="";closePop();
   gameActive=true;render();maybeBot();
 }
 function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),starter);}
