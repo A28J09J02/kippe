@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Kippe</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#5b3d22">
@@ -33,7 +33,7 @@
   --bg:#13171c; --panel:#1c2229; --ink:#eef1f4; --muted:#9aa4ae; --line:#2e3640;
   --p0:#f0644d; --p1:#4f82f0; --warn:#ff6a52; --accentN:#e0aa62; color-scheme:dark}
 [hidden]{display:none!important}
-html,body{height:100%}
+html,body{height:100%;touch-action:manipulation}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;
@@ -2083,6 +2083,9 @@ if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostnam
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 installUI();
+// no page zoom on phones (pinch or double tap); iOS Safari ignores user-scalable=no
+for(const ev of ["gesturestart","gesturechange","gestureend"])document.addEventListener(ev,e=>e.preventDefault(),{passive:false});
+document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
 if(!netBootFromHash()){try{if(!localStorage.getItem("kippe-seen")){localStorage.setItem("kippe-seen","1");$("rules").hidden=false;}}catch(e){}}
 </script>
