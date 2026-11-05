@@ -68,6 +68,7 @@ h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spa
 .stage{position:relative;display:flex;justify-content:center;perspective:900px}
 .tilt{position:relative;width:min(100%,470px,calc(100dvh - 320px));min-width:240px;max-width:100%;aspect-ratio:1;
   transition:transform .2s ease-out;transform-style:preserve-3d;border-radius:16px;box-shadow:0 12px 26px rgba(0,0,0,.28)}
+.timed .tilt{width:min(100%,470px,calc(100dvh - 362px))}
 .stage canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:16px}
 .pop{position:absolute;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;gap:6px;
   box-shadow:0 8px 20px rgba(0,0,0,.25);transform:translate(-50%,0)}
@@ -80,10 +81,13 @@ h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0;letter-spa
 .hint{min-height:38px;text-align:center;color:var(--muted);font-size:14px;line-height:1.35;text-wrap:balance}
 .hint b{color:var(--ink)}
 .hint .warn{color:var(--warn);font-weight:800}
+.hint .replay{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--ink);border-radius:6px;padding:1px 6px;margin-right:2px}
 .controls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .dir{height:56px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:800 24px var(--body);cursor:pointer}
 .dir:disabled{opacity:.3;cursor:not-allowed}
 .dir.blocked{opacity:.35}
+.dir{position:relative}
+.dir.danger::after{content:"";position:absolute;top:7px;right:7px;width:11px;height:11px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px var(--panel)}
 .controls.nudge .dir{border-style:dashed;border-width:2px}
 .controls.nudge .dir:not(:disabled){color:var(--accentN)}
 .foot .btn.on{background:var(--ink);color:var(--bg);border-color:transparent}
@@ -153,6 +157,16 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .count span{font-family:var(--display);font-size:min(40vw,220px);color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.5);animation:pop .8s ease-out both}
 @keyframes pop{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.9}}
 @media (prefers-reduced-motion:reduce){.count span{animation:none}}
+.stats{display:flex;flex-direction:column;gap:6px}
+.stats table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+.stats th,.stats td{padding:4px 2px;text-align:center;border-bottom:1px solid var(--line)}
+.stats th{color:var(--muted);font-weight:800}
+.stats tbody th{text-align:left;color:var(--ink)}
+.stats td.won{color:var(--p1);font-weight:800}
+.stats td.cur{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--muted)}
+.badge.on{color:#fff;background:var(--accentN);border-color:transparent}
 .install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
@@ -212,6 +226,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 16h6"/></svg></span>
         <span><b>Gegen den Bot</b><small>Leicht, Mittel oder Schwer</small></span>
       </button>
+      <button class="mode" id="mPuzzle" role="radio" data-mode="puzzle">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg></span>
+        <span><b>Rätsel: Gewinn in 2</b><small id="puzzleSub">Finde die Falle, die immer klappt</small></span>
+      </button>
       <button class="mode" id="mOnline" role="radio" data-mode="online">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
         <span><b>Online gegen Freunde</b><small id="onlineSub">Link schicken, Freund tippt drauf, los geht's</small></span>
@@ -220,6 +238,12 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     <div class="opts" id="botOpts">
       <span class="lbl">Stufe</span>
       <div class="seg" id="segLevel"><button class="btn" data-v="easy">Leicht</button><button class="btn" data-v="medium">Mittel</button><button class="btn" data-v="hard">Schwer</button></div>
+      <div class="stats" id="botStats"></div>
+    </div>
+    <div class="opts" id="puzzleOpts">
+      <span class="lbl">Welches Rätsel</span>
+      <div class="seg" id="segPuzzle"><button class="btn" data-v="day">Rätsel des Tages</button><button class="btn" data-v="next">Nächstes ungelöstes</button></div>
+      <p class="tip" id="puzzleTip"></p>
     </div>
     <div class="opts" id="colorOpts">
       <span class="lbl">Du spielst</span>
@@ -229,11 +253,16 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <label class="lbl" for="nameInput">Dein Name</label>
       <input class="field" id="nameInput" maxlength="16" autocomplete="nickname" placeholder="z. B. Jonas">
     </div>
-    <div class="opts">
+    <div class="opts" id="helpOpts">
+      <span class="lbl">Gefahren-Hinweis</span>
+      <div class="seg" id="segHelp"><button class="btn" data-v="on">An</button><button class="btn" data-v="off">Aus</button></div>
+      <p class="tip">Roter Punkt am Pfeil: Danach kann dich der Gegner mit einem Kippen reinlegen.</p>
+    </div>
+    <div class="opts" id="timeOpts">
       <span class="lbl">Bedenkzeit pro Runde</span>
       <div class="seg" id="segTime"><button class="btn" data-v="0">Ohne</button><button class="btn" data-v="60">1 Min</button><button class="btn" data-v="300">5 Min</button><button class="btn" data-v="600">10 Min</button></div>
     </div>
-    <div class="opts">
+    <div class="opts" id="fieldOpts">
       <span class="lbl">Spielfeld</span>
       <div class="seg" id="segField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufallskarte</button></div>
       <p class="tip" id="fieldTip"></p>
@@ -277,10 +306,10 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <li><b>Schubsen:</b> Nur deine Kugel rollt genau ein Feld. Schubst du sie gegen einen hellen Stein, gibt das einen Treffer. Auf deiner Kugel wischen oder unten „Schubsen“ antippen.</li>
       <li><b>Bauen:</b> Feld antippen, Stein oder Loch wählen. Jeder hat pro Runde 3 Steine und 3 Löcher.</li>
       <li>Nichts direkt neben die eigene Kugel bauen, Löcher neben keine Kugel. Keine Kugel darf eingemauert werden.</li>
-      <li>Die hellen Randsteine und gesetzte Steine halten 3 Treffer. Bricht ein Randstein, entsteht dort ein Abgrund.</li>
+      <li>Helle Wände, helle Randsteine und gesetzte Steine halten 3 Treffer, die Risse zeigen, wie oft sie schon getroffen wurden. Erst dann brechen sie. Bricht ein Randstein, entsteht dort ein Abgrund. Dunkle Wände halten ewig.</li>
       <li>Fällt die gegnerische Kugel in ein Loch oder in den Abgrund, gewinnst du. Fallen beide, verliert, wer gekippt hat.</li>
-      <li>Kippen geht in jede Richtung, auch zurück. Ab Zug 20 bricht alle 2 Züge ein rot markiertes Stück weg: erst der Rand, dann der Boden von außen nach innen. Wer auf einem einstürzenden Feld steht, fällt.</li>
-      <li>Mit Bedenkzeit: Läuft deine Uhr ab, verlierst du die Runde.</li>
+      <li>Nicht direkt zurückkippen: Die Gegenrichtung des letzten Kippens ist gesperrt (nach Bauen oder Schubsen ist wieder alles frei). Ab Zug <span class="rShrink">30</span> bricht alle 2 Züge ein rot markiertes Bodenpaar ein, von außen nach innen. Wände bleiben stehen. Wer auf einem einstürzenden Feld steht, fällt.</li>
+      <li>Mit Bedenkzeit: Läuft deine Uhr ab, verlierst du die Runde. Der Bot hat auch eine Uhr und denkt bei langer Bedenkzeit gründlicher.</li>
     </ul>
     <p>Jeder Zug wird erst angezeigt, nochmal tippen führt ihn aus. Wer zuerst 2 Runden gewinnt, gewinnt das Duell. Wer eine Runde verliert, fängt die nächste an.</p>
     <button class="btn primary" id="rulesOk">Verstanden</button>
@@ -301,6 +330,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <div class="seg" id="segReField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufall</button></div>
       <p class="tip" id="reStatus"></p>
     </div>
+    <button class="btn" id="resReplay">▶ Replay: die letzten 3 Züge</button>
     <div class="row"><button class="btn" id="resMenu">Menü</button><button class="btn primary" id="resNext">Nächste Runde</button></div>
   </div>
 </div>
@@ -312,47 +342,62 @@ const KIPPE_CONFIG={dbUrl:"https://kippe-52256-default-rtdb.europe-west1.firebas
 </script>
 <script id="logic-src">
 // ===== LOGIC START =====
-// Each turn: tilt the board, nudge your own ball one field, or build (3 stones and 3 holes per round).
-const RULES={nudgeNoRepeat:false}; // true would forbid two nudges in a row (tested: unlimited plays better)
-const N=7, STONES=3, HOLES=3, HP=3, SHRINK_START=20, SHRINK_EVERY=2;
+// Each turn: tilt the board, nudge your own ball one field, or build (stones and holes, limited per round).
+// RULES holds every rule switch. The defaults are the rules of the game; the balancing simulation flips them.
+const RULES={
+  backTilt:false,      // false = die Gegenrichtung des direkt vorher gemachten Kippens ist gesperrt (seit 05.11.); true = Zurückkippen erlaubt
+  stones:3, holes:3,   // Bauvorrat pro Spieler und Runde
+  nudge:"ortho",       // "ortho" = Schubsen in 4 Richtungen · "diag" = zusätzlich schräg · "none" = kein Schubsen
+  nudgeHit:true,       // Schubsen gegen Bröckelwand oder Stein zählt als Treffer
+  nudgeNoRepeat:false, // true would forbid two nudges in a row (tested: unlimited plays better)
+  fixedWallHP:0,       // 0 = dunkle Wände halten ewig; >0 = auch sie brechen nach so vielen Treffern
+  shrinkStart:30, shrinkEvery:2, // ab diesem Zug bricht alle 2 Züge ein Bodenpaar ein; Wände verschwinden nie von selbst
+  maxMoves:0           // 0 = kein Zuglimit (nur für Simulationen)
+};
+const N=7, HP=3;
 const DIRS={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]};
+const DIAG={ul:[-1,-1],ur:[-1,1],dl:[1,-1],dr:[1,1]};
+const STEP={...DIRS,...DIAG};
 const OPP={up:"down",down:"up",left:"right",right:"left"};
 const SIDES=["top","right","bottom","left"];
 const START=[[6,0],[0,6]];
+const nudgeDirs=()=>RULES.nudge==="none"?[]:RULES.nudge==="diag"?Object.keys(STEP):Object.keys(DIRS);
 // grid: . Boden · H Loch · W feste Wand · C Bröckelwand ; edges: W fest · C bröckelnd · O offen
 // edges.top/bottom indexed by column, edges.left/right by row; point-symmetric: top[i]=bottom[6-i], left[i]=right[6-i]
 const MAPS=[
   {name:"Standard",grid:[".......",".......","..W....","...H...","....W..",".......","......."],
    edges:{top:"WCCCCCW",bottom:"WCCCCCW",left:"WCCCCCW",right:"WCCCCCW"}},
-  {name:"Kreuzung",grid:["...C...",".C..H..","..W....","C..H..C","....W..","..H..C.","...C..."],
+  {name:"Kreuzung",grid:["...C...",".C..HC.","..W....","C..H..C","....W..",".CH..C.","...C..."],
    edges:{top:"WCWWWWW",bottom:"WWWWWCW",left:"WCWWWWW",right:"WWWWWCW"}},
   {name:"Schleuse",grid:[".......","...WH..",".H...W.",".C.H.C.",".W...H.","..HW...","......."],
    edges:{top:"WWWOWWW",bottom:"WWWOWWW",left:"WWWCWWW",right:"WWWCWWW"}},
-  {name:"Zickzack",grid:[".C.....","..H..W.","...W.H.","...C...",".H.W...",".W..H..",".....C."],
+  {name:"Zickzack",grid:[".......","..H..W.","...W.H.","...C...",".H.W...",".W..H..","......."],
    edges:{top:"WWWWCWW",bottom:"WWCWWWW",left:"WWWWWWW",right:"WWWWWWW"}},
   {name:"Abbruch",grid:[".......",".C...H.","...H...",".W.C.W.","...H...",".H...C.","......."],
    edges:{top:"WWOOOWW",bottom:"WWOOOWW",left:"WWCWCWW",right:"WWCWCWW"}}
 ];
+// 05.11.: Kreuzung bekam Bröckelwände auf 1,5 und 5,1, bei Zickzack fielen die Bröckelwände 0,1 und 6,5 weg.
+// Vorher hatte der Startspieler dort einen erzwungenen Sieg in 5 Halbzügen (exakt nachgerechnet).
 const STANDARD=0;
-// The arena shrinks in a fixed, visible order: first the 28 rail segments (from the corners inward),
-// then the floor itself, ring by ring from the outside. A ball still standing on a collapsing field falls.
-// Consecutive entries are point-symmetric pairs, so both sides lose ground equally. No game can last forever.
+// No round can last forever: from move RULES.shrinkStart on, every 2 moves a point-symmetric pair of floor fields
+// collapses into holes, ring by ring from the outside, in a fixed, visible order. Walls and stones are never
+// removed by this; they only break from hits. A ball still standing on a collapsing field falls.
 const SHRINK_ORDER=(()=>{const o=[],seen=new Set();
-  for(let k=0;k<=3;k++)for(const [s,i] of [["top",k],["bottom",6-k],["right",k],["left",6-k],["top",6-k],["bottom",k],["left",k],["right",6-k]]){
-    if(!seen.has(s+i)){seen.add(s+i);o.push({kind:"edge",side:s,i});}}
   for(let ring=0;ring<=3;ring++){
     const per=[],a=ring,b=N-1-ring;
     if(a===b)per.push([a,a]);
     else{for(let c=a;c<b;c++)per.push([a,c]);for(let r=a;r<b;r++)per.push([r,b]);for(let c=b;c>a;c--)per.push([b,c]);for(let r=b;r>a;r--)per.push([r,a]);}
     for(const [r,c] of per.slice(0,Math.ceil(per.length/2))){
-      for(const [rr,cc] of [[r,c],[N-1-r,N-1-c]]){const k=rr+","+cc;if(!seen.has(k)){seen.add(k);o.push({kind:"cell",r:rr,c:cc});}}
+      const pair=[[r,c],[N-1-r,N-1-c]].filter(([rr,cc])=>!seen.has(rr+","+cc));
+      pair.forEach(([rr,cc])=>seen.add(rr+","+cc));
+      if(pair.length)o.push(pair.length===2&&pair[0][0]===pair[1][0]&&pair[0][1]===pair[1][1]?[pair[0]]:pair);
     }
   }
   return o;})();
-const shrinkDone=(s,x)=>x.kind==="edge"?s.edges[x.side][x.i].t==="O":s.cells[x.r][x.c].t==="H";
+const pairOpen=(s,pair)=>pair.some(([r,c])=>s.cells[r][c].t===".");
 const SOLID=t=>t==="W"||t==="C"||t==="S";
 function edgeAt(r,c,dr,dc){return dr<0?["top",c]:dr>0?["bottom",c]:dc<0?["left",r]:["right",r];}
-function parseTile(ch){return ch==="C"?{t:"C",hp:HP}:{t:ch};}
+function parseTile(ch){return ch==="C"?{t:"C",hp:HP}:ch==="W"&&RULES.fixedWallHP>0?{t:"W",hp:RULES.fixedWallHP}:{t:ch};}
 // maps: ids below 1000 are the hand-built MAPS, 1000+ are generated from that seed
 function getMap(id){return id<1000?MAPS[id]:generateMap(id);}
 function lrng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -384,7 +429,7 @@ function newRound(mapIdx,starter){
   const m=getMap(mapIdx);
   const cells=m.grid.map(row=>[...row].map(parseTile));
   const edges={};for(const s of SIDES)edges[s]=[...m.edges[s]].map(parseTile);
-  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,stock:{S:[STONES,STONES],H:[HOLES,HOLES]},nudged:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
+  return {mapIdx,cells,edges,balls:START.map(([r,c])=>({r,c,alive:true})),turn:starter,stock:{S:[RULES.stones,RULES.stones],H:[RULES.holes,RULES.holes]},nudged:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
 }
 function slide(s,dir){
   const [dr,dc]=DIRS[dir];
@@ -397,11 +442,11 @@ function slide(s,dir){
       if(nr<0||nr>=N||nc<0||nc>=N){
         const [side,k]=edgeAt(b.r,b.c,dr,dc),e=s.edges[side][k];
         if(e.t==="O"){b.fell=b.off=true;b.path.push([nr,nc]);break;}
-        if(moved){b.stop="edge";if(e.t==="C")b.hit={kind:"edge",side,i:k};}
+        if(moved){b.stop="edge";if(e.hp)b.hit={kind:"edge",side,i:k};}
         break;
       }
-      const t=s.cells[nr][nc].t;
-      if(SOLID(t)){if(moved){b.stop=t==="W"?"wall":"block";if(t!=="W")b.hit={kind:"cell",r:nr,c:nc};}break;}
+      const cell=s.cells[nr][nc],t=cell.t;
+      if(SOLID(t)){if(moved){b.stop=t==="W"?"wall":"block";if(cell.hp)b.hit={kind:"cell",r:nr,c:nc};}break;}
       if(o.alive&&!o.fell&&o.r===nr&&o.c===nc){if(moved)b.stop="ball";break;}
       b.r=nr;b.c=nc;b.path.push([nr,nc]);
       if(t==="H"){b.fell=true;break;}
@@ -410,6 +455,7 @@ function slide(s,dir){
   return balls;
 }
 function tiltLegal(s,dir){
+  if(!RULES.backTilt&&s.lastTilt&&dir===OPP[s.lastTilt])return {ok:false,why:"Zurückkippen ist gesperrt"};
   const res=slide(s,dir);
   if(!res.some(b=>b.path.length>1))return {ok:false,why:"nichts rollt"};
   return {ok:true,res};
@@ -424,6 +470,7 @@ function cloneState(s){
   return {mapIdx:s.mapIdx,cells:s.cells.map(r=>r.slice()),edges:{top:s.edges.top.slice(),right:s.edges.right.slice(),bottom:s.edges.bottom.slice(),left:s.edges.left.slice()},
     balls:s.balls.map(b=>({r:b.r,c:b.c,alive:b.alive})),turn:s.turn,stock:{S:s.stock.S.slice(),H:s.stock.H.slice()},nudged:s.nudged.slice(),lastTilt:s.lastTilt,moves:s.moves,shrinkIdx:s.shrinkIdx};
 }
+// a ball must keep at least one direction that is not walled off
 function canRoll(s,b){
   for(const [dr,dc] of Object.values(DIRS)){
     const nr=b.r+dr,nc=b.c+dc;
@@ -440,7 +487,7 @@ function buildCheck(s,r,c,kind){
   if(s.balls.some(b=>b.alive&&b.r===r&&b.c===c))return "Hier liegt eine Kugel";
   const me=s.balls[s.turn],op=s.balls[1-s.turn];
   if(adj(me,r,c))return "Zu nah an deiner Kugel";
-  if(kind==="H"&&adj(op,r,c))return "Zu nah an der gegnerischen Kugel";
+  if(kind==="H"&&op.alive&&adj(op,r,c))return "Zu nah an der gegnerischen Kugel";
   if(kind==="S"){
     const prev=s.cells[r][c];s.cells[r][c]={t:"S"};
     const ok=s.balls.every(b=>!b.alive||canRoll(s,b));
@@ -451,19 +498,24 @@ function buildCheck(s,r,c,kind){
 }
 // nudge: move only your own ball one field; pushing against a crumble wall or stone is a hit
 function nudgeCheck(s,dir){
+  if(RULES.nudge==="none")return {ok:false,why:"Schubsen ist ausgeschaltet"};
+  if(DIAG[dir]&&RULES.nudge!=="diag")return {ok:false,why:"Schräg schubsen ist aus"};
   if(RULES.nudgeNoRepeat&&s.nudged[s.turn])return {ok:false,why:"Nicht zweimal hintereinander schubsen"};
-  const b=s.balls[s.turn],o=s.balls[1-s.turn],[dr,dc]=DIRS[dir],nr=b.r+dr,nc=b.c+dc;
+  const b=s.balls[s.turn],o=s.balls[1-s.turn],[dr,dc]=STEP[dir],nr=b.r+dr,nc=b.c+dc;
   if(!b.alive)return {ok:false,why:""};
   if(nr<0||nr>=N||nc<0||nc>=N){
+    if(DIAG[dir])return {ok:false,why:"Da ist der Rand"};
     const [side,i]=edgeAt(b.r,b.c,dr,dc),e=s.edges[side][i];
     if(e.t==="O")return {ok:false,why:"Da ist der Abgrund"};
-    if(e.t==="C")return {ok:true,hit:{kind:"edge",side,i}};
-    return {ok:false,why:"Feste Wand, da passiert nichts"};
+    if(e.hp&&RULES.nudgeHit)return {ok:true,hit:{kind:"edge",side,i}};
+    return {ok:false,why:e.hp?"Schubsen gegen Wände gibt keinen Treffer":"Feste Wand, da passiert nichts"};
   }
   if(o.alive&&o.r===nr&&o.c===nc)return {ok:false,why:"Da liegt die andere Kugel"};
-  const t=s.cells[nr][nc].t;
-  if(t==="W")return {ok:false,why:"Feste Wand, da passiert nichts"};
-  if(t==="C"||t==="S")return {ok:true,hit:{kind:"cell",r:nr,c:nc}};
+  const cell=s.cells[nr][nc],t=cell.t;
+  if(SOLID(t)){
+    if(cell.hp&&RULES.nudgeHit)return {ok:true,hit:{kind:"cell",r:nr,c:nc}};
+    return {ok:false,why:cell.hp?"Schubsen gegen Wände gibt keinen Treffer":"Feste Wand, da passiert nichts"};
+  }
   if(t==="H")return {ok:false,why:"Da ist ein Loch"};
   return {ok:true,to:[nr,nc]};
 }
@@ -473,19 +525,23 @@ function hasBuild(s){
   return false;
 }
 function hasAction(s){
-  const ds=Object.keys(DIRS);
-  return ds.some(d=>tiltLegal(s,d).ok)||ds.some(d=>nudgeCheck(s,d).ok)||hasBuild(s);
+  return Object.keys(DIRS).some(d=>tiltLegal(s,d).ok)||nudgeDirs().some(d=>nudgeCheck(s,d).ok)||hasBuild(s);
 }
+// the next k field pairs that will collapse (skipping pairs without floor left)
 function upcoming(s,k){
   const out=[];
-  for(let j=s.shrinkIdx;j<SHRINK_ORDER.length&&out.length<k;j++){const x=SHRINK_ORDER[j];if(!shrinkDone(s,x))out.push(x);}
+  for(let j=s.shrinkIdx;j<SHRINK_ORDER.length&&out.length<k;j++){const p=SHRINK_ORDER[j];if(pairOpen(s,p))out.push(p.filter(([r,c])=>s.cells[r][c].t==="."));}
   return out;
 }
+const shrinkOn=()=>RULES.shrinkStart>0;
+const shrinkDue=m=>shrinkOn()&&m>=RULES.shrinkStart&&(m-RULES.shrinkStart)%RULES.shrinkEvery===0;
+// collapses the next pair of floor fields; returns the collapsed fields or null
 function breakNext(n){
   while(n.shrinkIdx<SHRINK_ORDER.length){
-    const x=SHRINK_ORDER[n.shrinkIdx++];if(shrinkDone(n,x))continue;
-    if(x.kind==="edge")n.edges[x.side][x.i]={t:"O"};else n.cells[x.r][x.c]={t:"H"};
-    return x;
+    const p=SHRINK_ORDER[n.shrinkIdx++];if(!pairOpen(n,p))continue;
+    const done=p.filter(([r,c])=>n.cells[r][c].t===".");
+    for(const [r,c] of done)n.cells[r][c]={t:"H"};
+    return done.map(([r,c])=>({kind:"cell",r,c}));
   }
   return null;
 }
@@ -516,11 +572,15 @@ function applyNudge(s,dir,chk){
 }
 function finishTurn(n){
   let broke=null;
-  if(n.moves>=SHRINK_START&&(n.moves-SHRINK_START)%SHRINK_EVERY===0)broke=breakNext(n);
-  if(broke&&broke.kind==="cell"){
-    const i=n.balls.findIndex(b=>b.alive&&b.r===broke.r&&b.c===broke.c);
-    if(i>=0){n.balls[i]={...n.balls[i],alive:false};return {state:n,outcome:{winner:1-i,reason:"crumble"},broke};}
+  if(shrinkDue(n.moves))broke=breakNext(n);
+  if(broke){
+    const hit=[0,1].filter(i=>n.balls[i].alive&&broke.some(x=>x.r===n.balls[i].r&&x.c===n.balls[i].c));
+    if(hit.length){
+      for(const i of hit)n.balls[i]={...n.balls[i],alive:false};
+      return {state:n,outcome:hit.length===2?{draw:true,reason:"crumble"}:{winner:1-hit[0],reason:"crumble"},broke};
+    }
   }
+  if(RULES.maxMoves&&n.moves>=RULES.maxMoves)return {state:n,outcome:{draw:true,reason:"limit"},broke};
   n.turn=1-n.turn;
   let passed=false;
   if(!hasAction(n)){
@@ -532,7 +592,7 @@ function finishTurn(n){
 function listMoves(s){
   const ms=[];
   for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(L.ok)ms.push({type:"tilt",dir:d,res:L.res});}
-  for(const d of Object.keys(DIRS)){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
+  for(const d of nudgeDirs()){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
   for(let r=0;r<N;r++)for(let c=0;c<N;c++)for(const k of ["S","H"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
   return ms;
 }
@@ -541,14 +601,22 @@ function playMove(s,m){return m.type==="tilt"?applyTilt(s,m.dir,m.res):m.type===
 </script>
 <script id="bot-src">
 // ===== BOT START =====
-// Minimax (negamax) with alpha-beta and iterative deepening. Pure: works in the page, a Web Worker and Node.
+// Negamax with alpha-beta and iterative deepening. Pure: works in the page, a Web Worker and Node.
 // Levels differ in how far they look, how well they sense danger, how often they overlook a win,
 // and how freely they pick among good moves. A per-round style adds variety on top.
+// The thinking time follows the clock setting (0 = ohne, 60 / 300 / 600 s): fast games, fast bot;
+// long games, the bot takes its time and searches deeper. It never uses more than 1/15 of its remaining clock.
 const BOT_LEVELS={
-  easy:  {name:"Leicht",maxDepth:1,sense:.35,missWin:.55,careless:.5, margin:70,temp:30,time:250},
-  medium:{name:"Mittel",maxDepth:2,sense:.9, missWin:.2, careless:.3,margin:30,temp:14,time:700},
-  hard:  {name:"Schwer",maxDepth:6,sense:1,  missWin:0,  careless:0,  margin:10,temp:5, time:1400}
+  easy:  {name:"Leicht",maxDepth:2, sense:.5, missWin:.3, careless:.5, margin:50,temp:20, smart:false,think:{0:300,60:200,300:350,600:500},show:{0:650,60:350,300:700,600:900}},
+  medium:{name:"Mittel",maxDepth:4, sense:.9, missWin:.05,careless:.12,margin:24,temp:10, smart:false,think:{0:800,60:350,300:900,600:1400},show:{0:650,60:350,300:700,600:900}},
+  hard:  {name:"Schwer",maxDepth:16,sense:1,  missWin:0,  careless:0,  margin:5, temp:2.5,smart:true, think:{0:1800,60:700,300:2200,600:3800},show:{0:500,60:250,300:600,600:800}}
 };
+function botThinkMs(level,limit,left){
+  const L=BOT_LEVELS[level]||BOT_LEVELS.medium;
+  let ms=L.think[limit]!=null?L.think[limit]:L.think[0];
+  if(limit>0&&left!=null)ms=Math.min(ms,Math.max(60,left/15));
+  return ms;
+}
 // styles bias the bot's own move choice at the root, not its judgement of danger
 const BOT_STYLES={
   trapper:{name:"Fallensteller",H:22,S:4, tilt:-4,nudge:0},
@@ -556,19 +624,31 @@ const BOT_STYLES={
   roller: {name:"Roller",       H:-6,S:-6,tilt:16,nudge:6}
 };
 const WIN=100000;
-// candidate moves: all tilts, builds only on lines the balls can use within the next tilt
-function botMoves(s){
+const moveKey=m=>m.type==="build"?m.kind+m.r+m.c:m.type[0]+m.dir;
+// candidate moves: all tilts and nudges; builds only where they can matter soon.
+// wide (root, weaker levels): rows and columns the balls use now or after one tilt.
+// narrow (deep in the strong search): only fields a ball rolls over now or after one tilt.
+function botMoves(s,narrow){
   const ms=[];
   for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(L.ok)ms.push({type:"tilt",dir:d,res:L.res});}
-  for(const d of Object.keys(DIRS)){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
+  for(const d of nudgeDirs()){const C=nudgeCheck(s,d);if(C.ok)ms.push({type:"nudge",dir:d,chk:C});}
   if(s.stock.S[s.turn]>0||s.stock.H[s.turn]>0){
-    const rows=new Set(),cols=new Set();
-    for(const b of s.balls)if(b.alive){rows.add(b.r);cols.add(b.c);}
-    for(const m of ms)if(m.res)for(const b of m.res)if(!b.fell){rows.add(b.r);cols.add(b.c);}
-    for(let r=0;r<N;r++)for(let c=0;c<N;c++){
-      if(!rows.has(r)&&!cols.has(c))continue;
-      for(const k of ["H","S"])if(!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
+    const want=new Uint8Array(N*N);
+    if(narrow){
+      const mark=res=>{for(const b of res)if(b.alive&&!b.fell)for(const [r,c] of b.path)if(r>=0&&r<N&&c>=0&&c<N)want[r*N+c]=1;};
+      for(const d of Object.keys(DIRS))mark(slide(s,d));
+      for(const m of ms)if(m.res&&!m.res.some(b=>b.fell)){
+        const t={cells:s.cells,edges:s.edges,balls:m.res.map(b=>({r:b.r,c:b.c,alive:b.alive}))};
+        for(const d of Object.keys(DIRS))mark(slide(t,d));
+      }
+    }else{
+      const rows=new Set(),cols=new Set();
+      for(const b of s.balls)if(b.alive){rows.add(b.r);cols.add(b.c);}
+      for(const m of ms)if(m.res)for(const b of m.res)if(!b.fell){rows.add(b.r);cols.add(b.c);}
+      for(let r=0;r<N;r++)for(let c=0;c<N;c++)if(rows.has(r)||cols.has(c))want[r*N+c]=1;
     }
+    for(const k of ["H","S"])for(let r=0;r<N;r++)for(let c=0;c<N;c++)
+      if(want[r*N+c]&&!buildCheck(s,r,c,k))ms.push({type:"build",r,c,kind:k});
   }
   return ms;
 }
@@ -577,18 +657,38 @@ function exposure(s,b){
   let n=0;
   for(const [dr,dc] of Object.values(DIRS)){
     const nr=b.r+dr,nc=b.c+dc;
-    if(nr<0||nr>=N||nc<0||nc>=N){const [sd,k]=edgeAt(b.r,b.c,dr,dc);const e=s.edges[sd][k];if(e.t==="O")n+=1;else if(e.t==="C"&&e.hp===1)n+=.3;continue;}
+    if(nr<0||nr>=N||nc<0||nc>=N){const [sd,k]=edgeAt(b.r,b.c,dr,dc);const e=s.edges[sd][k];if(e.t==="O")n+=1;else if(e.hp===1)n+=.3;continue;}
     if(s.cells[nr][nc].t==="H")n+=1;
   }
   return n;
 }
-// static evaluation from the view of player p; sense < 1 makes the bot partly blind to threats
-function evalState(s,p,sense=1){
-  const o=1-p;let sc=0;
+// tilts that would drop exactly one ball: [drops only p, drops only the other]
+function fallLines(s,p){
+  let a=0,b=0;
   for(const d of Object.keys(DIRS)){
-    const res=slide(s,d),mf=res[p].fell,of=res[o].fell;
-    if(of&&!mf)sc+=60*(s.turn===p?1:.6)*sense;
-    if(mf&&!of)sc-=60*(s.turn===o?1:.6)*sense;
+    const L=tiltLegal(s,d);if(!L.ok)continue;
+    const mf=L.res[p].fell,of=L.res[1-p].fell;
+    if(of&&!mf)a++;else if(mf&&!of)b++;
+  }
+  return [a,b];
+}
+const hasWinningTilt=s=>fallLines(s,s.turn)[0]>0;
+// static evaluation from the view of player p; sense < 1 makes the bot partly blind to threats
+function evalState(s,p,ctx){
+  const o=1-p,sense=ctx.sense;let sc=0;
+  const [wp,wo]=fallLines(s,p);
+  if(ctx.smart){
+    if(s.turn===p&&wp)return 3000;   // the side to move simply tilts and wins
+    if(s.turn===o&&wo)return -3000;
+    // open lines against the side to move must be answered now; two at once are hard to stop
+    if(s.turn===p)sc-=wo*30+(wo>1?90:0);else sc+=wp*30+(wp>1?90:0);
+    if(shrinkOn()&&s.moves>=RULES.shrinkStart-4){
+      const soon=upcoming(s,2).flat();
+      for(const [i,f] of [[p,-1],[o,1]]){const b=s.balls[i];if(soon.some(([r,c])=>r===b.r&&c===b.c))sc+=f*70;}
+    }
+  }else{
+    sc+=60*wp*(s.turn===p?1:.6)*sense;
+    sc-=60*wo*(s.turn===o?1:.6)*sense;
   }
   sc+=7*(s.stock.S[p]+s.stock.H[p]-s.stock.S[o]-s.stock.H[o]);
   sc+=9*(exposure(s,s.balls[o])-exposure(s,s.balls[p]))*sense;
@@ -600,10 +700,13 @@ function outcomeValue(out,mover,ply){
 }
 const ABORT={};
 function negamax(s,depth,alpha,beta,ply,ctx){
-  if((++ctx.nodes&255)===0&&Date.now()>ctx.deadline)throw ABORT;
-  if(depth<=0)return evalState(s,s.turn,ctx.sense);
-  const ms=botMoves(s);
-  if(!ms.length)return evalState(s,s.turn,ctx.sense);
+  if((++ctx.nodes&127)===0&&(Date.now()>ctx.deadline||ctx.nodes>ctx.maxNodes))throw ABORT;
+  if(depth<=0)return evalState(s,s.turn,ctx);
+  if(ctx.smart&&hasWinningTilt(s))return WIN-ply;
+  const ms=botMoves(s,ctx.smart);
+  if(!ms.length)return evalState(s,s.turn,ctx);
+  const k=ctx.killer[ply];
+  if(k){const i=ms.findIndex(m=>moveKey(m)===k);if(i>0)ms.unshift(ms.splice(i,1)[0]);}
   let best=-Infinity;
   for(const m of ms){
     const out=playMove(s,m);let v;
@@ -612,20 +715,24 @@ function negamax(s,depth,alpha,beta,ply,ctx){
     else v=-negamax(out.state,depth-1,-beta,-alpha,ply+1,ctx);
     if(v>best)best=v;
     if(v>alpha)alpha=v;
-    if(alpha>=beta)break;
+    if(alpha>=beta){ctx.killer[ply]=moveKey(m);break;}
   }
   return best;
 }
 const isWinMove=(s,m)=>{const o=playMove(s,m);return !!(o.outcome&&!o.outcome.draw&&o.outcome.winner===s.turn);};
 const styleBias=(st,m)=>st?(m.type==="tilt"?st.tilt:m.type==="nudge"?st.nudge:st[m.kind]):0;
 // root search; every move whose value lies within `margin` of the best is scored exactly,
-// then one of those is drawn at random (weighted), so the bot does not repeat itself
-function chooseMove(s,level,style,rand=Math.random){
-  const L=BOT_LEVELS[level]||BOT_LEVELS.medium,st=BOT_STYLES[style]||null;
-  const ctx={nodes:0,deadline:Infinity,sense:L.sense},stop=Date.now()+L.time;
-  let moves=botMoves(s).map(m=>({m,v:0,k:rand()})).sort((a,b)=>a.k-b.k);
+// then one of those is drawn at random (weighted), so the bot does not repeat itself.
+// opts: {ms: thinking time, nodes: node budget (simulation), rand: random source}; a function counts as rand
+function chooseMove(s,level,style,opts){
+  if(typeof opts==="function")opts={rand:opts};opts=opts||{};
+  const L=BOT_LEVELS[level]||BOT_LEVELS.medium,st=BOT_STYLES[style]||null,rand=opts.rand||Math.random;
+  const ms=opts.ms!=null?opts.ms:L.think[0];
+  const ctx={nodes:0,deadline:Infinity,maxNodes:Infinity,sense:L.sense,smart:L.smart,killer:[]},stop=Date.now()+ms;
+  let cand=botMoves(s,false);if(!cand.length)cand=listMoves(s); // e.g. only builds far away are left
+  let moves=cand.map(m=>({m,v:0,k:rand()})).sort((a,b)=>a.k-b.k);
   if(!moves.length)return null;
-  // an easy bot sometimes simply does not see the winning tilt
+  // a weak bot sometimes simply does not see the winning tilt
   if(L.missWin&&rand()<L.missWin){const rest=moves.filter(x=>!isWinMove(s,x.m));if(rest.length)moves=rest;}
   // a weaker bot has "careless" turns: it looks less deep and barely notices threats
   const careless=L.careless&&rand()<L.careless;
@@ -633,8 +740,9 @@ function chooseMove(s,level,style,rand=Math.random){
   const M=L.margin+50; // search window slack: style bias may lift a move up to ~25 points
   let scored=null;
   for(let depth=1;depth<=maxDepth;depth++){
-    ctx.deadline=depth<=2?Infinity:stop; // depth 1-2 always finish
-    if(depth>2&&Date.now()>stop)break;
+    const full=depth<=2; // depth 1-2 always finish
+    ctx.deadline=full?Infinity:stop;ctx.maxNodes=full||!opts.nodes?Infinity:opts.nodes;
+    if(!full&&(Date.now()>stop||ctx.nodes>ctx.maxNodes))break;
     try{
       const cur=[];let alpha=-Infinity;
       for(const x of moves){
@@ -647,12 +755,13 @@ function chooseMove(s,level,style,rand=Math.random){
         cur.push({m:x.m,v});
       }
       cur.sort((a,b)=>b.v-a.v);
-      scored=cur;moves=cur;
+      scored=cur;moves=cur;ctx.depth=depth;
       if(cur[0].v>=WIN-50)break;
       if(cur.every(x=>x.v<=-WIN+50))break;
     }catch(e){if(e!==ABORT)throw e;break;}
   }
   if(!scored)scored=moves;
+  if(opts.info){opts.info.depth=ctx.depth;opts.info.nodes=ctx.nodes;}
   const best=scored[0].v;
   if(best>=WIN-50)return scored[0].m; // a seen win is always taken
   if(best<=-WIN+50)return scored[0].m; // lost anyway: delay as long as possible
@@ -666,6 +775,40 @@ function chooseMove(s,level,style,rand=Math.random){
 }
 // ===== BOT END =====
 </script>
+<script id="fair-src">
+// Random maps: only seeds that passed the fairness check (no forced win for the starter within 5 half-moves,
+// exact search with the current rules, fairseeds.js). Of 270 checked seeds, 70 failed it.
+const FAIR_SEEDS=[13345,21264,29183,37102,45021,52940,68778,100454,108373,116292,124211,132130,140049,147968,155887,163806,171725,179644,187563,195482,203401,211320,219239,227158,235077,242996,250915,258834,266753,274672,282591,290510,306348,314267,345943,353862,361781,369700,377619,385538,401376,409295,417214,440971,448890,456809,472647,504323,512242,520161,528080,535999,551837,567675,575594,583513,591432,607270,646865,654784,662703,678541,694379,710217,718136,726055,733974,741893,749812,757731,765650,773569,789407,797326,805245,813164,829002,836921,844840,852759,868597,876516,884435,892354,900273,916111,924030,931949,939868,947787,955706,963625,979463,995301,1003220,1011139,1034896,1042815,1050734,1058653,1066572,1074491,1082410,1098248,1106167,1137843,1145762,1153681,1161600,1169519,1177438,1193276,1201195,1209114,1217033,1224952,1240790,1248709,1256628,1264547,1288304,1304142,1319980,1335818,1343737,1367494,1375413,1383332,1399170,1407089,1415008,1422927,1430846,1438765,1454603,1462522,1470441,1478360,1486279,1494198,1502117,1510036,1525874,1541712,1549631,1565469,1581307,1612983,1620902,1636740,1644659,1652578,1660497,1668416,1676335,1684254,1692173,1708011,1715930,1723849,1731768,1739687,1747606,1755525,1763444,1771363,1779282,1787201,1795120,1803039,1810958,1826796,1834715,1842634,1858472,1866391,1874310,1882229,1890148,1898067,1905986,1913905,1921824,1929743,1937662,1945581,1961419,1985176,1993095,2008933,2024771,2040609,2048528,2088123,2111880,2127718,2143556,2159394,2175232,2191070];
+</script>
+<script id="puzzle-src">
+// "Gewinn in 2": positions where the side to move forces a win within its next 2 moves (but not at once).
+// Found by gen_puzzles.js (bot games + exact search). Cells: . H W · a/b/c Bröckelwand mit 1–3 Treffern übrig ·
+// p/q/r Stein Rot, x/y/z Stein Blau (1–3 übrig). Edges top,right,bottom,left with W O a b c.
+const PUZZLES=[{"m":0,"t":1,"mv":21,"lt":"","si":0,"b":[[6,1],[2,6]],"st":[0,2,0,0],"g":"..r..H..H.......WH......H..xHr..W.H..H...........","e":"WcccccWWcbcccWWbccccWWcccccW"},{"m":2,"t":1,"mv":27,"lt":"","si":0,"b":[[6,6],[1,6]],"st":[0,0,0,0],"g":"...HzH....WHy..H...Wx.c.H.cH.W...Hp..HWrH....HHq.","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":29,"lt":"","si":0,"b":[[1,5],[0,5]],"st":[0,0,1,0],"g":"....x.r....q...HW...z...H...H...WHH.........r..H.","e":"WccccbWWbccccWWcccccWWcccccW"},{"m":0,"t":1,"mv":33,"lt":"right","si":2,"b":[[6,2],[1,6]],"st":[0,0,1,0],"g":"HH.H.z..z.......W...x...H..HHHp.W......rH....p.HH","e":"WcccccWWbccccWWbbcccWWccbcbW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"H......rc...H.z..H..HHW.c.W....H....Hr.zcH..Hz.Hr","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":8,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[1,2,2,2],"g":"....H...c...Hr...H....W.c.W....H..r.H...czH......","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[1,1]],"st":[3,0,0,0],"g":"...H.zz..H..W.HH.W.HzHH.c....H.W....W..H...H.....","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":35,"lt":"","si":3,"b":[[5,0],[2,0]],"st":[2,2,0,3],"g":"HHHzH...c..Hb...W...H...H..c.p..W...aHH.c....bHHH","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":2,"t":1,"mv":32,"lt":"","si":3,"b":[[6,1],[1,2]],"st":[0,0,0,0],"g":"HyHHH.....WH...Hx..W..c.H.cz.W...H.H.HWr.H...pHHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":1,"t":1,"mv":28,"lt":"up","si":0,"b":[[4,6],[0,6]],"st":[0,0,2,1],"g":".z.cH...c..Ha...W..z.c..H.rb..z.WH..cHrp.......H.","e":"WcWWWWWWWWWWaWWWWWWcWWcWWWWW"},{"m":3,"t":0,"mv":28,"lt":"","si":0,"b":[[3,0],[0,2]],"st":[0,0,0,1],"g":"...xH....H..W.q.HW.HH.y.c..r.H.W...HW..H....p..H.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":1,"mv":4,"lt":"","si":0,"b":[[6,0],[6,6]],"st":[3,2,2,2],"g":"........c...H.H..H....W.c.W....H..H.H...c.....z..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":25,"lt":"","si":0,"b":[[6,0],[4,0]],"st":[1,0,2,2],"g":"..H.....c...H...zH....W.c.W...qH....H...c...r.H..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWbWW"},{"m":2,"t":0,"mv":5,"lt":"","si":0,"b":[[6,0],[2,6]],"st":[3,2,1,2],"g":".H....H...WH..HH...W..c.H.cy.W...H...HW..........","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":31,"lt":"","si":1,"b":[[5,0],[5,4]],"st":[2,2,2,1],"g":"H......H........W....r..H..H....W...........Hy..H","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":8,"lt":"","si":0,"b":[[0,0],[0,1]],"st":[2,2,2,0],"g":"...Hz....H..W.H..W.H....c....H.W....W..H....H.rH.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":0,"mv":6,"lt":"up","si":0,"b":[[4,0],[0,4]],"st":[3,3,3,2],"g":"..Ha....c..Hc...W....b..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":3,"t":1,"mv":15,"lt":"up","si":0,"b":[[0,6],[0,5]],"st":[3,2,2,3],"g":"..H.x....H..W....W.H....c....H.W....W..H.........","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":19,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[2,2,1,0],"g":"...aHz..cH.Hb...W....c..H..c.rH.W...aH..c.HH.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":6,"lt":"","si":0,"b":[[5,6],[0,6]],"st":[2,2,3,1],"g":"....z.....WH...H...W.rc.H.c.HW...H...HW.......H..","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":10,"lt":"","si":0,"b":[[6,0],[6,1]],"st":[1,2,1,3],"g":"..rH...z..WH.H.H...W..c.H.c..W...H...HW......r...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":12,"lt":"up","si":0,"b":[[3,2],[0,2]],"st":[3,2,0,1],"g":".y...H.........HW.......H.......W.......HHH......","e":"WcbcccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":9,"lt":"down","si":0,"b":[[6,2],[1,6]],"st":[3,2,2,3],"g":".........H..W....W.Hy...c....H.W....W..H.H.......","e":"WWWWcWWWWWWWWWWWbWWWWWWWWWWW"},{"m":3,"t":1,"mv":28,"lt":"down","si":0,"b":[[6,6],[5,6]],"st":[1,0,0,0],"g":"......H..H..WHz..W.H.H..c..H.H.W...rW.zHH...rzH..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":31,"lt":"down","si":1,"b":[[6,0],[6,1]],"st":[0,1,0,2],"g":"z..H..rHa..Hc...W...Ha..H.zc..rrW....H..c...Hc..H","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":4,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[0,1]],"st":[0,1,2,2],"g":"......H.c...H....H..r.W.c.W.r..H....H...c.z.r..H.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":0,"t":1,"mv":28,"lt":"","si":0,"b":[[0,4],[0,6]],"st":[0,1,1,0],"g":".......Hz......HW...x...H..H....Wq..........rH.H.","e":"WccccOWWbccccWWcccccWWcccccW"},{"m":1,"t":0,"mv":28,"lt":"","si":0,"b":[[2,0],[1,0]],"st":[3,2,1,1],"g":"..Hz....c..Hc...W...HHH.H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":19,"lt":"","si":0,"b":[[3,0],[6,2]],"st":[1,2,1,1],"g":"..H...HH.HWH...H...W..c.H.c.pW...H...HW..z.......","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":3,"t":1,"mv":36,"lt":"","si":4,"b":[[0,5],[1,6]],"st":[0,0,1,1],"g":"HHHy.....H.qW.r..W.HxH..c..H.H.W..H.W..H....HHHHz","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":20,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[0,0,0,0],"g":"...cHz..c.rHa.rHWrHz.b..H..c....WHH.aH.zc..H.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":0,"mv":28,"lt":"","si":0,"b":[[0,1],[1,0]],"st":[0,0,0,0],"g":"..Hr.zz..HWH.z.H...WHHc.H.c.HW...H.r.HW...r.H....","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":35,"lt":"","si":3,"b":[[6,0],[0,5]],"st":[1,2,2,1],"g":"HHHz......WH...H...W.rc.H.c.HW...H...HW.....r.HHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":29,"lt":"","si":0,"b":[[5,0],[3,0]],"st":[0,3,2,0],"g":"...............rW.......H.......W.H..qH....HH....","e":"WcccccWWcccccWWcccccWWccccbW"},{"m":0,"t":0,"mv":6,"lt":"","si":0,"b":[[0,5],[0,6]],"st":[3,3,2,1],"g":"................W...H...H....H..W.......H........","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":4,"t":1,"mv":7,"lt":"","si":0,"b":[[6,0],[6,5]],"st":[1,2,1,3],"g":".H......c...H.H..H....W.c.W.r..H....H.r.c.....y..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":22,"lt":"","si":0,"b":[[1,6],[0,6]],"st":[0,0,0,2],"g":".HzHx....H.HW.H..W.H....c..zrH.W....W..H......r..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":0,"mv":15,"lt":"","si":0,"b":[[1,6],[0,5]],"st":[0,0,0,0],"g":".rzHH...czHrH.H..H....W.c.WH...H..H.H...cr......z","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"z......Hc...H.z..H..HHW.c.W....H....HzrrcH..H.rH.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":1,"t":0,"mv":16,"lt":"","si":0,"b":[[5,0],[0,5]],"st":[3,2,1,3],"g":".Hz.....c..Ha...W...Hc..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"}];
+function decodePuzzle(p){
+  const tile=ch=>({a:{t:"C",hp:1},b:{t:"C",hp:2},c:{t:"C",hp:3},p:{t:"S",o:0,hp:1},q:{t:"S",o:0,hp:2},r:{t:"S",o:0,hp:3},x:{t:"S",o:1,hp:1},y:{t:"S",o:1,hp:2},z:{t:"S",o:1,hp:3}})[ch]||{t:ch};
+  const cells=[];for(let r=0;r<N;r++){cells.push([]);for(let c=0;c<N;c++)cells[r].push(tile(p.g[r*N+c]));}
+  const edges={};["top","right","bottom","left"].forEach((k,i)=>{edges[k]=[...p.e.slice(i*N,i*N+N)].map(tile);});
+  return {mapIdx:p.m,cells,edges,balls:p.b.map(([r,c])=>({r,c,alive:true})),turn:p.t,stock:{S:[p.st[0],p.st[1]],H:[p.st[2],p.st[3]]},nudged:[false,false],lastTilt:p.lt||null,moves:p.mv,shrinkIdx:p.si};
+}
+// can `att` force a win within d plies? (exact, all moves)
+function winIn(s,att,d){
+  if(d<=0)return false;const ms=listMoves(s);
+  if(s.turn===att){for(const m of ms){const o=playMove(s,m);if(o.outcome){if(!o.outcome.draw&&o.outcome.winner===att)return true;continue;}if(winIn(o.state,att,d-1))return true;}return false;}
+  if(!ms.length)return false;
+  for(const m of ms){const o=playMove(s,m);if(o.outcome){if(!o.outcome.draw&&o.outcome.winner===att)continue;return false;}if(!winIn(o.state,att,d-1))return false;}
+  return true;
+}
+// the defender's best reply: one that escapes if possible, otherwise one that does not lose on the spot
+function puzzleDefense(s,att){
+  const ms=listMoves(s);let fallback=null;
+  for(const m of ms){const o=playMove(s,m);
+    if(o.outcome){if(!o.outcome.draw&&o.outcome.winner===att)continue;return m;}
+    if(!winIn(o.state,att,1))return m;
+    if(!fallback||m.type==="tilt")fallback=m;}
+  return fallback||ms[0]||null;
+}
+</script>
 <script>
 /* ---------- board rendering ---------- */
 const B={wood:"#d4aa6e",rail:"#5b3d22",railHi:"#7a5532",wall:"#5f4025",wallHi:"#80593a",wallLo:"#3a2513",
@@ -673,9 +816,14 @@ const B={wood:"#d4aa6e",rail:"#5b3d22",railHi:"#7a5532",wall:"#5f4025",wallHi:"#
 const FR=0.36, ROLL=2.7;
 function rr(g,x,y,w,h,r){g.beginPath();if(g.roundRect)g.roundRect(x,y,w,h,r);else g.rect(x,y,w,h);}
 function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const maxHP=t=>t.t==="W"?RULES.fixedWallHP||HP:HP;
 function cracks(g,x,y,w,h,level,seed){
   if(level<=0)return;const R=rng(seed);
-  g.save();g.strokeStyle="rgba(35,20,8,.8)";g.lineWidth=Math.max(1,Math.min(w,h)*.045);g.lineCap="round";g.lineJoin="round";
+  g.save();
+  if(level>=2){ // chipped corner: the block is visibly about to break
+    const k=Math.min(w,h)*.3;g.fillStyle="rgba(25,14,5,.55)";g.beginPath();g.moveTo(x+w,y);g.lineTo(x+w-k,y);g.lineTo(x+w-k*.35,y+k*.45);g.lineTo(x+w,y+k);g.closePath();g.fill();
+  }
+  g.strokeStyle=level>=2?"rgba(25,12,4,.95)":"rgba(35,20,8,.8)";g.lineWidth=Math.max(1,Math.min(w,h)*(level>=2?.06:.045));g.lineCap="round";g.lineJoin="round";
   const n=level===1?2:5;
   for(let k=0;k<n;k++){
     let px,py;const side=Math.floor(R()*4);
@@ -708,8 +856,9 @@ function drawScene(g,cs,F,o){
     }else if(e.t==="C"){
       g.fillStyle=B.sandLo;g.fillRect(x+1,y+1,w-2,h-2);
       g.fillStyle=B.sand;g.fillRect(x+2,y+2,w-4,h-4);speckle(g,x+2,y+2,w-4,h-4,i*7+side.length);
-      cracks(g,x+2,y+2,w-4,h-4,HP-e.hp,i*31+side.length*5);
+      cracks(g,x+2,y+2,w-4,h-4,maxHP(e)-e.hp,i*31+side.length*5);
     }else{
+      if(e.hp)cracks(g,x+2,y+2,w-4,h-4,maxHP(e)-e.hp,i*31+side.length*5);
       g.fillStyle="rgba(255,255,255,.06)";
       if(side==="top")g.fillRect(x,y,w,h*.35);else if(side==="left")g.fillRect(x,y,w*.35,h);
     }
@@ -751,7 +900,7 @@ function drawScene(g,cs,F,o){
       g.fillStyle=mid;rr(g,bx,by,bw,bw-cs*.09,rad);g.fill();
       g.globalAlpha=.35;g.fillStyle=hi;rr(g,bx+bw*.12,by+bw*.08,bw*.76,cs*.05,cs*.03);g.fill();g.globalAlpha=1;
       if(cell.t==="C")speckle(g,bx,by,bw,bw-cs*.09,r*13+c*7);
-      if(cell.t!=="W")cracks(g,bx,by,bw,bw-cs*.09,HP-cell.hp,r*97+c*13+(cell.t==="S"?5:0));
+      if(cell.hp)cracks(g,bx,by,bw,bw-cs*.09,maxHP(cell)-cell.hp,r*97+c*13+(cell.t==="S"?5:0));
       continue;
     }
     g.fillStyle="rgba(255,255,255,.08)";rr(g,x+cs*.07,y+cs*.07,cs*.86,cs*.86,cs*.1);g.fill();
@@ -769,14 +918,14 @@ function drawScene(g,cs,F,o){
     const a=Math.min(1,(o.flashCell.until-now)/300)*.6;g.fillStyle=`rgba(216,64,43,${a})`;rr(g,F+o.flashCell.c*cs+cs*.05,F+o.flashCell.r*cs+cs*.05,cs*.9,cs*.9,cs*.12);g.fill();
   }
   // upcoming shrink
-  (o.warn||[]).forEach((wn,k)=>{
-    const [x,y,w,h]=wn.kind==="edge"?segRect(wn.side,wn.i,cs,F):[F+wn.c*cs,F+wn.r*cs,cs,cs];
-    g.save();g.globalAlpha=k===0?.55+.45*pulse:.45;g.strokeStyle="#ff4a33";g.lineWidth=Math.max(2,cs*.07);
-    if(k>0)g.setLineDash([cs*.08,cs*.08]);
+  (o.warn||[]).forEach(wn=>{
+    const [x,y,w,h]=[F+wn.c*cs,F+wn.r*cs,cs,cs];
+    g.save();g.globalAlpha=wn.next?.55+.45*pulse:.45;g.strokeStyle="#ff4a33";g.lineWidth=Math.max(2,cs*.07);
+    if(!wn.next)g.setLineDash([cs*.08,cs*.08]);
     rr(g,x+2,y+2,w-4,h-4,cs*.06);g.stroke();g.restore();
   });
   // tilt preview
-  if(o.preview&&(o.preview.type==="tilt"||o.preview.type==="nudge"))drawPreview(g,cs,F,o.preview,o.pc,pulse);
+  if(o.preview&&(o.preview.type==="tilt"||o.preview.type==="nudge"))drawPreview(g,cs,F,o.preview,o.pc,pulse,o);
   if(o.nudgeTargets)for(const [r,c] of o.nudgeTargets){const [x,y]=pathPt([r,c],cs,F);g.save();g.globalAlpha=.85;g.strokeStyle=o.pc[o.active].base;g.lineWidth=Math.max(2,cs*.06);g.setLineDash([cs*.06,cs*.06]);g.beginPath();g.arc(x,y,cs*(.22+.08*pulse),0,7);g.stroke();g.restore();}
   // balls
   (o.poses||[]).forEach((p,i)=>{if(p)drawBall(g,cs,F,p,o.pc[i],o.active===i);});
@@ -788,7 +937,7 @@ function pathPt(p,cs,F){
   if(r<0)y=F*.45;if(r>=N)y=L+F*.55;if(c<0)x=F*.45;if(c>=N)x=L+F*.55;
   return [x,y];
 }
-function drawPreview(g,cs,F,pv,pc,pulse){
+function drawPreview(g,cs,F,pv,pc,pulse,st){
   pv.res.forEach((b,i)=>{
     if(b.path.length>=2){
       const pts=b.path.map(p=>pathPt(p,cs,F)),end=pts[pts.length-1];
@@ -807,16 +956,19 @@ function drawPreview(g,cs,F,pv,pc,pulse){
       }
       g.restore();
     }
-    if(b.hit)drawHit(g,cs,F,b.hit);
+    if(b.hit)drawHit(g,cs,F,b.hit,st);
   });
 }
-function drawHit(g,cs,F,hit){
+function drawHit(g,cs,F,hit,st){
+  const tile=st?(hit.kind==="cell"?st.cells[hit.r][hit.c]:st.edges[hit.side][hit.i]):null,last=tile&&tile.hp===1;
   let hx,hy;
   if(hit.kind==="cell"){hx=ctr(hit.c,cs,F);hy=ctr(hit.r,cs,F);}
   else{const [x,y,w,h]=segRect(hit.side,hit.i,cs,F);hx=x+w/2;hy=y+h/2;}
-  const fs=Math.max(10,cs*.3);g.save();g.font=`800 ${fs}px Figtree, system-ui, sans-serif`;g.textAlign="center";g.textBaseline="middle";
-  g.fillStyle="rgba(20,14,8,.85)";rr(g,hx-fs*.9,hy-fs*.62,fs*1.8,fs*1.24,fs*.4);g.fill();
-  g.fillStyle="#fff";g.fillText("−1",hx,hy+fs*.04);g.restore();
+  const fs=Math.max(10,cs*.3),txt=last?"bricht":"−1";
+  g.save();g.font=`800 ${fs}px Figtree, system-ui, sans-serif`;g.textAlign="center";g.textBaseline="middle";
+  const tw=Math.max(fs*1.8,g.measureText(txt).width+fs*.8);
+  g.fillStyle=last?"rgba(216,64,43,.95)":"rgba(20,14,8,.85)";rr(g,hx-tw/2,hy-fs*.62,tw,fs*1.24,fs*.4);g.fill();
+  g.fillStyle="#fff";g.fillText(txt,hx,hy+fs*.04);g.restore();
 }
 function drawBall(g,cs,F,p,col,active){
   const cx=ctr(p.c,cs,F),cy=ctr(p.r,cs,F),R=cs*.36*p.scale;
@@ -892,25 +1044,27 @@ const POOL=MAPS.map((m,i)=>i).filter(i=>i!==STANDARD);
 const $=id=>document.getElementById(id);
 const cv=$("cv"),g=cv.getContext("2d"),tiltEl=$("tilt"),pop=$("pop"),stage=$("stage");
 const RM=matchMedia("(prefers-reduced-motion: reduce)");
-let mode={kind:"local",level:"medium",human:0,color:0,field:"std",time:0};
+let mode={kind:"local",level:"medium",human:0,color:0,field:"std",time:0,help:"on"};
 try{const m=JSON.parse(localStorage.getItem("kippe-mode")||"null");if(m&&m.kind)mode={...mode,...m};}catch(e){}
-let match={score:[0,0],round:0},roundStarter=0,gameActive=false;
+let match={score:[0,0],round:0},roundStarter=0,gameActive=false,activeMode=null,roundOver=false;
 let S=newRound(STANDARD,0),history=[],preview=null,anim=null,flash="",flashCell=null,particles=[],shakeT=-1e9,lastNow=0,raf=0;
 let bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
 let bot={thinking:false,token:0,style:null};
 let nudgeMode=false;
 const geo={size:300,cs:40,F:14,dpr:1};
-const isBot=p=>mode.kind==="bot"&&p!==mode.human;
+const vsAI=()=>mode.kind==="bot"||mode.kind==="puzzle";
+const isBot=p=>vsAI()&&p!==mode.human;
+const timeLimit=()=>mode.kind==="puzzle"?0:(mode.time||0);
 let countdown=false;
 const pickColor=()=>mode.color==="r"?(Math.random()<.5?0:1):+mode.color;
-const randomMapId=()=>1000+Math.floor(Math.random()*8999000);
-const meSide=()=>mode.kind==="bot"?mode.human:mode.kind==="online"&&net?net.side:-1;
+const randomMapId=()=>FAIR_SEEDS[Math.floor(Math.random()*FAIR_SEEDS.length)];
+const meSide=()=>vsAI()?mode.human:mode.kind==="online"&&net?net.side:-1;
 const isMe=p=>p===meSide();
 const isRemote=p=>mode.kind==="online"&&!!net&&p!==net.side;
 const oppName=()=>net&&net.names[1-net.side]||"Gegner";
-const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":oppName();
+const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":mode.kind==="puzzle"?"Gegner":oppName();
 const wins=p=>isMe(p)?"gewinnst":"gewinnt";
-const inputLocked=()=>countdown||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
+const inputLocked=()=>replaying||countdown||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
@@ -932,14 +1086,17 @@ const rollD=t=>V0*t+.5*ACC*t*t;
 function kick(){if(!raf)raf=requestAnimationFrame(frame);}
 function frame(now){
   raf=0;const dt=lastNow?Math.min(50,now-lastNow):16;lastNow=now;
-  if(anim){const t=now-anim.t0;for(const ev of anim.events)if(!ev.done&&t>=ev.t){ev.done=true;ev.fn();}if(t>=anim.end){const a=anim;anim=null;a.finish();}}
+  if(anim){const t=(now-anim.t0)/(anim.slow||1);for(const ev of anim.events)if(!ev.done&&t>=ev.t){ev.done=true;ev.fn();}if(t>=anim.end){const a=anim;anim=null;a.finish();}}
   for(const p of particles){p.life-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}
   particles=particles.filter(p=>p.life>0);
   paint(now);
   const pulsing=(preview&&preview.type==="tilt"&&preview.res.some(b=>b.fell))||warnList().length||(flashCell&&now<flashCell.until);
   if(anim||particles.length||now<shakeT+160||pulsing)kick();else lastNow=0;
 }
-function warnList(){return (!anim&&S.moves>=SHRINK_START-6)?upcoming(S,2):[];}
+function warnList(){
+  if(anim||!shrinkOn()||S.moves<RULES.shrinkStart-6)return [];
+  return upcoming(S,2).flatMap((pair,k)=>pair.map(([r,c])=>({r,c,next:k===0})));
+}
 function paint(now){
   g.setTransform(geo.dpr,0,0,geo.dpr,0,0);g.clearRect(0,0,geo.size,geo.size);
   if(!RM.matches&&now<shakeT+140){const k=1-(now-shakeT)/140;g.translate((Math.random()-.5)*5*k,(Math.random()-.5)*5*k);}
@@ -953,7 +1110,7 @@ function paint(now){
 }
 function poses(now){
   return [0,1].map(i=>{
-    if(anim)return animPose(i,now-anim.t0);
+    if(anim)return animPose(i,(now-anim.t0)/(anim.slow||1));
     const b=S.balls[i];if(!b.alive)return null;
     return {r:b.r,c:b.c,scale:1,alpha:1,phase:bv[i].phase,ax:bv[i].ax,ay:bv[i].ay};
   });
@@ -998,7 +1155,7 @@ function tryTilt(dir){
   if(nudgeMode){tryNudge(dir);return;}
   closePop();
   const L=tiltLegal(S,dir);
-  if(!L.ok){flash=`In Richtung ${ARW[dir]} rollt keine Kugel. Probier schubsen oder bauen.`;preview=null;render();flash="";return;}
+  if(!L.ok){flash=L.why==="nichts rollt"?`In Richtung ${ARW[dir]} rollt keine Kugel. Probier schubsen oder bauen.`:`<span class="warn">${ARW[dir]}: ${L.why}.</span>`;preview=null;render();flash="";return;}
   if(preview&&preview.type==="tilt"&&preview.dir===dir){doTilt(dir,L.res);return;}
   preview={type:"tilt",dir,res:L.res};render();
 }
@@ -1024,11 +1181,13 @@ function tryNudge(dir){
   if(preview&&preview.type==="nudge"&&preview.dir===dir){doTilt(dir,preview.res,{chk:preview.chk});return;}
   preview={type:"nudge",dir,chk:C,res:nudgeRes(S,dir,C)};render();
 }
-function doTilt(dir,res,nudge){
+// rp (replay): {slow, done} plays the move again without logging, sending or continuing the game
+function doTilt(dir,res,nudge,rp){
   if(nudge&&!res)res=nudgeRes(S,dir,nudge.chk);
   if(!res){const L=tiltLegal(S,dir);if(!L.ok)return;res=L.res;}
-  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:nudge?"nudge":"tilt",dir,by:net.side,tl:Math.round(clocks[net.side])});
-  preview=null;closePop();history.push(S);
+  if(!rp&&mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:nudge?"nudge":"tilt",dir,by:net.side,tl:Math.round(clocks[net.side])});
+  preview=null;closePop();
+  if(!rp){history.push(S);roundLog.push(nudge?{kind:"nudge",dir,chk:nudge.chk,by:S.turn,pre:S}:{kind:"tilt",dir,by:S.turn,pre:S});}
   const mover=S.turn;nudgeMode=false;
   const pre=S,out=nudge?applyNudge(S,dir,nudge.chk):applyTilt(S,dir,res),[dr,dc]=DIRS[dir];
   const vis=cloneState(pre);
@@ -1070,22 +1229,24 @@ function doTilt(dir,res,nudge){
     tiltEl.style.transition="transform 150ms ease-out";tiltEl.style.transform=rot;
     events.push({t:lead+maxT,fn:()=>{tiltEl.style.transition="transform 200ms ease-in-out";tiltEl.style.transform="";}});
   }
-  events.push({t:lead,fn:()=>SFX.roll(maxT,0)});
-  anim={t0:performance.now(),lead,dir,res,bm,vis,events,end:lead+end+40,bump:nudge&&nudge.chk.hit&&!nudge.chk.to?mover:-1,finish:()=>{
+  const slow=rp&&rp.slow||1;
+  events.push({t:lead,fn:()=>SFX.roll(maxT*slow,0)});
+  anim={t0:performance.now(),slow,lead,dir,res,bm,vis,events,end:lead+end+40,bump:nudge&&nudge.chk.hit&&!nudge.chk.to?mover:-1,finish:()=>{
     res.forEach((b,i)=>{if(bm[i].steps){bv[i].phase+=bm[i].steps*ROLL;bv[i].ax=dc;bv[i].ay=dr;}});
     tiltEl.style.transform="";
     S=out.state;
-    afterMove(out);
+    if(rp){render();rp.done();}else afterMove(out);
   }};
   render();
 }
 function afterMove(out){
-  if(out.broke){const x=out.broke;SFX.shatter();buzz(25);
-    if(x.kind==="edge"){breakFx(x,{top:-Math.PI/2,bottom:Math.PI/2,left:Math.PI,right:0}[x.side]);flash=`<span class="warn">Ein Randstein ist weggebrochen.</span>`;}
-    else{breakFx({kind:"cell",r:x.r,c:x.c});flash=`<span class="warn">Ein Feld ist eingestürzt.</span>`;}}
+  if(out.broke){SFX.shatter();buzz(25);
+    for(const x of out.broke)breakFx({kind:"cell",r:x.r,c:x.c});
+    flash=`<span class="warn">${out.broke.length>1?"Zwei Felder sind":"Ein Feld ist"} eingestürzt.</span>`;}
   if(out.passed)flash=(flash?flash+"<br>":"")+`${name(1-S.turn)} kann nicht ziehen und setzt aus.`;
   render();flash="";
   if(out.outcome){setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
+  if(mode.kind==="puzzle"&&roundLog.filter(x=>x.by===mode.human).length>=2){setTimeout(()=>puzzleEnd(false),350);return;}
   maybeBot();netPump();
 }
 function onCellTap(r,c){
@@ -1108,42 +1269,74 @@ function onCellTap(r,c){
   }
   preview=null;openPop(r,c,rs,rh);render();
 }
-function doBuild(r,c,kind){
+function doBuild(r,c,kind,rp){
   if(buildCheck(S,r,c,kind))return;
-  if(mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side,tl:Math.round(clocks[net.side])});
-  closePop();preview=null;history.push(S);
+  if(!rp&&mode.kind==="online"&&net&&S.turn===net.side)netSend({k:"m",t:"build",r,c,kind,by:net.side,tl:Math.round(clocks[net.side])});
+  closePop();preview=null;
+  if(!rp){history.push(S);roundLog.push({kind:"build",r,c,k:kind,by:S.turn,pre:S});}
   const out=applyBuild(S,r,c,kind);S=out.state;
   const [x,y]=px(r,c);
   if(kind==="S"){SFX.place();buzz(12);burst(x,y,10,{color:"rgba(245,230,200,.85)",size:geo.cs*.09,sp:.08,life:320});}
   else{SFX.dig();buzz(20);burst(x,y,12,{color:"rgba(70,45,20,.8)",sq:true,size:geo.cs*.08,sp:.11,g:.0005,life:380});}
+  if(rp){render();setTimeout(rp.done,700);return;}
   afterMove(out);
 }
+
+/* ---------- replay ---------- */
+// After a round: the last 3 moves again in slow motion, with roll paths and who did what. Basis for clips.
+let roundLog=[],replaying=false,replayFinal=null;
+function stopReplay(){if(!replaying)return;replaying=false;anim=null;tiltEl.style.transform="";S=replayFinal;preview=null;flash="";}
+const VERB={tilt:"kippt",nudge:"schubst"};
+async function playReplay(){
+  const steps=roundLog.slice(-3);if(!steps.length||replaying||anim)return;
+  const final=S;replayFinal=S;replaying=true;$("result").hidden=true;cancelBot();nudgeMode=false;closePop();
+  for(const [k,st] of steps.entries()){
+    S=st.pre;
+    const who=`<b style="color:var(--p${st.by})">${esc(name(st.by))}</b>`,tag=`<span class="replay">Replay ${k+1}/${steps.length}</span> `;
+    if(st.kind==="build"){preview={type:"build",r:st.r,c:st.c,kind:st.k};flash=`${tag}${who} setzt ${st.k==="S"?"einen Stein":"ein Loch"}`;}
+    else{const res=st.kind==="tilt"?tiltLegal(S,st.dir).res:nudgeRes(S,st.dir,st.chk);preview={type:st.kind,dir:st.dir,res,chk:st.chk};
+      flash=`${tag}${who} ${VERB[st.kind]} <b>${ARW[st.dir]}</b>`+(k===steps.length-1?` · <span class="warn">der entscheidende Zug</span>`:"");}
+    render();
+    await sleep(RM.matches?700:1300);
+    if(!replaying)return;
+    await new Promise(done=>{
+      if(st.kind==="build")doBuild(st.r,st.c,st.k,{done});
+      else if(st.kind==="tilt")doTilt(st.dir,preview.res,null,{slow:RM.matches?1:2.4,done});
+      else doTilt(st.dir,preview.res,{chk:st.chk},{slow:RM.matches?1:2.4,done});
+    });
+    await sleep(k===steps.length-1?900:450);
+    if(!replaying)return;
+  }
+  replaying=false;S=final;preview=null;flash="";render();$("result").hidden=false;
+}
+$("resReplay").onclick=playReplay;
 
 /* ---------- bot ---------- */
 let worker=null,botReq=0,botWait=null;
 function initWorker(){
   try{
     const src=$("logic-src").textContent+"\n"+$("bot-src").textContent+
-      "\nonmessage=e=>{const {id,state,level,style}=e.data;const m=chooseMove(state,level,style);postMessage({id,m:m&&{type:m.type,dir:m.dir,r:m.r,c:m.c,kind:m.kind}});};";
+      "\nonmessage=e=>{const {id,state,level,style,ms}=e.data;const m=chooseMove(state,level,style,{ms});postMessage({id,m:m&&{type:m.type,dir:m.dir,r:m.r,c:m.c,kind:m.kind}});};";
     worker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
     worker.onmessage=e=>{if(botWait&&e.data.id===botWait.id){const w=botWait;botWait=null;w.resolve(e.data.m);}};
-    worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level,w.style));}};
+    worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level,w.style,{ms:Math.min(w.ms,900)}));}};
   }catch(e){worker=null;}
 }
-function askBot(state,level,style){
+function askBot(state,level,style,ms){
   return new Promise(resolve=>{
     const id=++botReq;
-    if(worker){botWait={id,resolve,state,level,style};worker.postMessage({id,state,level,style});}
-    else setTimeout(()=>resolve(chooseMove(state,level,style)),20);
+    if(worker){botWait={id,resolve,state,level,style,ms};worker.postMessage({id,state,level,style,ms});}
+    else setTimeout(()=>resolve(chooseMove(state,level,style,{ms:Math.min(ms,900)})),20); // no worker: keep the page responsive
   });
 }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function maybeBot(){
-  if(!isBot(S.turn)||anim||bot.thinking||!$("result").hidden||!$("menu").hidden)return;
+  if(replaying||!isBot(S.turn)||anim||bot.thinking||!$("result").hidden||!$("menu").hidden)return;
   const token=++bot.token;bot.thinking=true;render();
-  const t0=performance.now();
-  const m=await askBot(S,mode.level,bot.style);
-  const wait=Math.max(0,650-(performance.now()-t0));
+  const t0=performance.now(),L=BOT_LEVELS[mode.level]||BOT_LEVELS.medium,lim=timeLimit();
+  const left=lim>0?clocks[S.turn]:null,hurry=left!=null&&left<10000;
+  const m=mode.kind==="puzzle"?(await sleep(300),puzzleDefense(S,mode.human)):await askBot(S,mode.level,bot.style,botThinkMs(mode.level,lim,left));
+  const wait=hurry?0:Math.max(0,(L.show[lim]!=null?L.show[lim]:L.show[0])-(performance.now()-t0));
   if(wait)await sleep(wait);
   if(token!==bot.token)return;
   if(!m){bot.thinking=false;render();return;}
@@ -1152,7 +1345,7 @@ async function maybeBot(){
   else if(m.type==="nudge"){const C=nudgeCheck(S,m.dir);if(!C.ok){bot.thinking=false;render();return;}preview={type:"nudge",dir:m.dir,chk:C,res:nudgeRes(S,m.dir,C)};}
   else preview={type:"build",r:m.r,c:m.c,kind:m.kind};
   render();
-  await sleep(RM.matches?250:560);
+  await sleep(hurry?150:RM.matches?250:lim===60?320:560);
   if(token!==bot.token)return;
   bot.thinking=false;
   if(m.type==="tilt")doTilt(m.dir,preview.res);else if(m.type==="nudge")doTilt(m.dir,preview.res,{chk:preview.chk});else doBuild(m.r,m.c,m.kind);
@@ -1185,41 +1378,62 @@ for(const b of [$("popS"),$("popH")])b.addEventListener("click",e=>{
   preview={type:"build",r,c,kind:k};render();
 });
 
+/* ---------- danger hint (beginner help) ---------- */
+// which of my moves let the opponent win with one tilt, and which tilts the opponent threatens right now
+let dangerCache={s:null,v:null};
+function dangerFor(s){
+  if(dangerCache.s===s)return dangerCache.v;
+  const me=s.turn,v={tilt:{},nudge:{},threats:[]};
+  const oppWins=n=>n.turn!==me&&fallLines(n,n.turn)[0]>0;
+  for(const d of Object.keys(DIRS)){const L=tiltLegal(s,d);if(!L.ok)continue;const o=applyTilt(s,d,L.res);
+    v.tilt[d]=o.outcome?(!o.outcome.draw&&o.outcome.winner!==me):oppWins(o.state);}
+  for(const d of nudgeDirs()){const C=nudgeCheck(s,d);if(!C.ok)continue;const o=applyNudge(s,d,C);
+    v.nudge[d]=o.outcome?(!o.outcome.draw&&o.outcome.winner!==me):oppWins(o.state);}
+  const t={...s,turn:1-me,lastTilt:null};
+  for(const d of Object.keys(DIRS)){const L=tiltLegal(t,d);if(L.ok&&L.res[me].fell&&!L.res[1-me].fell)v.threats.push(d);}
+  dangerCache={s,v};return v;
+}
+const helpOn=()=>mode.help!=="off"&&mode.kind!=="puzzle"&&!replaying&&!isBot(S.turn)&&!isRemote(S.turn)&&!roundOver;
+
 /* ---------- DOM render ---------- */
 function render(){
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
   const t=$("turn"),botTurn=isBot(S.turn);
   t.className="turn p"+S.turn+(bot.thinking?" thinking":"");
   if(mode.kind==="online")t.classList.toggle("thinking",isRemote(S.turn)&&!preview);
-  $("turnText").textContent=botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
-  const what=mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:getMap(S.mapIdx).name;
-  $("roundInfo").innerHTML=`Runde ${match.round+1} · ${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+esc(getMap(S.mapIdx).name):""}${netBadge()}`;
+  $("turnText").textContent=replaying?"Replay":botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
+  const what=mode.kind==="puzzle"?`Rätsel ${puzzle.i+1}`:mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:getMap(S.mapIdx).name;
+  $("roundInfo").innerHTML=`${mode.kind==="puzzle"?"":`Runde ${match.round+1} · `}${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+esc(getMap(S.mapIdx).name):""}${netBadge()}`;
   const m=S.moves,left=upcoming(S,1).length;
   let mi;
-  if(m<SHRINK_START)mi=`Zug ${m} · Rand bricht ab Zug ${SHRINK_START}`;
-  else if(!left)mi=`Zug ${m} · Rand ganz offen`;
-  else{const nx=(m-SHRINK_START)%SHRINK_EVERY===0?m+SHRINK_EVERY:m+1;mi=`Zug ${m} · <span class="hot">Abbruch nach Zug ${nx}</span>`;}
+  if(!shrinkOn())mi=`Zug ${m}`;
+  else if(m<RULES.shrinkStart)mi=`Zug ${m} · Boden bricht ab Zug ${RULES.shrinkStart}`;
+  else if(!left)mi=`Zug ${m}`;
+  else{let nx=m+1;while(!shrinkDue(nx))nx++;mi=`Zug ${m} · <span class="hot">Einsturz nach Zug ${nx}</span>`;}
   $("moveInfo").innerHTML=mi;
   const locked=inputLocked();
   if(locked&&nudgeMode&&!anim)nudgeMode=false;
   $("controls").classList.toggle("nudge",nudgeMode);
+  const dz=helpOn()&&!anim?dangerFor(S):null;
   document.querySelectorAll(".dir").forEach(b=>{
     const d=b.dataset.dir;
     const ok=nudgeMode?nudgeCheck(S,d).ok:tiltLegal(S,d).ok;
     b.disabled=locked;
     const armed=preview&&(preview.type==="tilt"||preview.type==="nudge")&&preview.dir===d;
-    b.className="dir"+(ok?"":" blocked")+(armed?" armed p"+S.turn:"");
+    const bad=dz&&ok&&(nudgeMode?dz.nudge[d]:dz.tilt[d]);
+    b.className="dir"+(ok?"":" blocked")+(armed?" armed p"+S.turn:"")+(bad?" danger":"");
+    b.title=bad?"Danach kann der Gegner dich mit einem Kippen reinlegen":"";
     b.setAttribute("aria-label",(nudgeMode?"Kugel schubsen nach ":"Brett kippen nach ")+{up:"oben",down:"unten",left:"links",right:"rechts"}[d]);
   });
   $("nudgeBtn").classList.toggle("on",nudgeMode);$("nudgeBtn").setAttribute("aria-pressed",nudgeMode);$("nudgeBtn").disabled=locked;
   const show=meSide()>=0?meSide():S.turn;
   const st=$("builds");
   let bh=`<b style="color:var(--p${show})" title="${esc(name(show))}">${isMe(show)?"Du":esc(name(show))}</b>`;
-  for(let k=0;k<STONES;k++)bh+=`<span class="${k<S.stock.S[show]?"on ":""}p${show}" title="Steine"></span>`;
+  for(let k=0;k<RULES.stones;k++)bh+=`<span class="${k<S.stock.S[show]?"on ":""}p${show}" title="Steine"></span>`;
   bh+=`<span style="width:4px;background:none"></span>`;
-  for(let k=0;k<HOLES;k++)bh+=`<i class="${k<S.stock.H[show]?"on":""}" title="Löcher"></i>`;
+  for(let k=0;k<RULES.holes;k++)bh+=`<i class="${k<S.stock.H[show]?"on":""}" title="Löcher"></i>`;
   st.innerHTML=bh;st.setAttribute("aria-label",`${name(show)}: ${S.stock.S[show]} Steine, ${S.stock.H[show]} Löcher übrig`);
-  $("undoBtn").disabled=!history.length||!!anim;$("undoBtn").hidden=mode.kind==="online";
+  $("undoBtn").disabled=!history.length||!!anim||replaying;$("undoBtn").hidden=mode.kind==="online";
   updatePop();renderHint();renderClocks();kick();
 }
 function renderHint(){
@@ -1235,16 +1449,21 @@ function renderHint(){
     return;
   }
   if(isBot(S.turn)){
-    if(preview&&preview.type==="tilt")h.innerHTML=`Bot kippt <b>${ARW[preview.dir]}</b>`;
-    else if(preview&&preview.type==="build")h.innerHTML=`Bot setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
-    else if(preview&&preview.type==="nudge")h.innerHTML=`Bot schubst <b>${ARW[preview.dir]}</b>`;
-    else h.innerHTML="Der Bot rechnet seine Züge durch …";
+    const who=mode.kind==="puzzle"?"Gegner":"Bot";
+    if(preview&&preview.type==="tilt")h.innerHTML=`${who} kippt <b>${ARW[preview.dir]}</b>`;
+    else if(preview&&preview.type==="build")h.innerHTML=`${who} setzt ${preview.kind==="S"?"einen Stein":"ein Loch"}`;
+    else if(preview&&preview.type==="nudge")h.innerHTML=`${who} schubst <b>${ARW[preview.dir]}</b>`;
+    else h.innerHTML=mode.kind==="puzzle"?"Der Gegner sucht einen Ausweg …":"Der Bot rechnet seine Züge durch …";
     return;
   }
   if(!preview){
-    const blocked="";
-    if(nudgeMode){h.innerHTML=`<b>Schubsen:</b> Richtung wählen. Nur deine Kugel rollt ein Feld, gegen einen hellen Stein gibt's einen Treffer.`;return;}
-    h.innerHTML=popCell?"Stein oder Loch wählen":`Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`;return;
+    const blocked=!RULES.backTilt&&S.lastTilt?` · <b>${ARW[OPP[S.lastTilt]]}</b> gesperrt`:"";
+    const dz=helpOn()?dangerFor(S):null;
+    const warnT=dz&&dz.threats.length?`<span class="warn">Achtung:</span> ${mode.kind==="local"?esc(name(1-S.turn)):"Der Gegner"} droht mit ${dz.threats.map(d=>`<b>${ARW[d]}</b>`).join(" oder ")}. Weich aus oder blockiere.`:"";
+    if(nudgeMode){h.innerHTML=(warnT?warnT+"<br>":"")+`<b>Schubsen:</b> Richtung wählen. Nur deine Kugel rollt ein Feld, gegen einen hellen Stein gibt's einen Treffer.`;return;}
+    if(mode.kind==="puzzle"&&!popCell){const n=2-roundLog.filter(x=>x.by===mode.human).length;
+      h.innerHTML=`<b>Rätsel:</b> Gewinne mit ${n===2?"deinen nächsten 2 Zügen":"diesem Zug"}, egal was der Gegner macht.${blocked}`;return;}
+    h.innerHTML=warnT&&!popCell?warnT:(popCell?"Stein oder Loch wählen":`Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`);return;
   }
   if(preview.type==="build"){h.innerHTML=`${KIND[preview.kind]}-Vorschau · <b>nochmal tippen</b> zum Setzen`;return;}
   if(preview.type==="nudge"){h.innerHTML=`Schubs-Vorschau · <b>${ARW[preview.dir]} nochmal</b> zum Schubsen`+(preview.chk.hit?`<br>Deine Kugel stößt dagegen: ein Treffer.`:"");return;}
@@ -1252,7 +1471,7 @@ function renderHint(){
   let msg=`Vorschau · <b>${ARW[preview.dir]} nochmal tippen</b> zum Kippen`;
   if(me.fell&&op.fell)msg+=`<br><span class="warn">Beide fallen, du verlierst!</span>`;
   else if(me.fell)msg+=`<br><span class="warn">Achtung: Du fällst selbst!</span>`;
-  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":esc(name(1-S.turn))}.</b>`;
+  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":mode.kind==="puzzle"?"der Gegner":esc(name(1-S.turn))}.</b>`;
   else if(preview.res.some(b=>b.hit))msg+=`<br>Ein Treffer an einem Stein.`;
   h.innerHTML=msg;
 }
@@ -1263,11 +1482,12 @@ function firstMap(field){field=field||mode.field;return field==="pool"?POOL[Math
 // map for the next round: standard stays, the 4-map pool uses the loser's pick (-1 = random), random fields roll a new map
 function nextMap(){return mode.field==="pool"?(pickMap<0?POOL[Math.floor(Math.random()*POOL.length)]:pickMap):mode.field==="rand"?randomMapId():STANDARD;}
 function endRound(o){
-  cancelBot();
+  if(mode.kind==="puzzle"){puzzleEnd(!o.draw&&o.winner===mode.human);return;}
+  cancelBot();roundOver=true;
   const big=$("resBig"),title=$("resTitle"),text=$("resText"),next=$("resNext"),pick=$("pick");
   pick.hidden=true;
   if(o.draw){
-    big.className="big";big.textContent="PATT";title.textContent="Keiner kann mehr gewinnen";
+    big.className="big";big.textContent="PATT";title.textContent=o.reason==="crumble"?"Beide Kugeln sind eingebrochen":"Keiner kann mehr gewinnen";
     text.textContent="Die Runde wird wiederholt, der andere fängt an.";next.textContent="Nochmal";
     next.onclick=()=>{$("result").hidden=true;startRound(S.mapIdx,1-roundStarter);};
   }else{
@@ -1293,8 +1513,10 @@ function endRound(o){
       next.onclick=()=>{$("result").hidden=true;match.round++;startRound(nextMap(),l);};
     }
   }
+  if(mode.kind==="bot"&&!o.draw){const badge=recordBotRound(o.winner===mode.human,match.score[0]>=2||match.score[1]>=2);if(badge)text.textContent+=" "+badge;}
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
   $("reOpts").hidden=true;$("resMenu").textContent="Menü";
+  $("resReplay").hidden=!roundLog.length||mode.kind==="online";
   if(mode.kind==="online"&&net)netResultButtons(o);
   else if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
   $("result").hidden=false;next.disabled||next.focus();
@@ -1318,11 +1540,62 @@ function drawThumb(c,i,size){
     poses:s.balls.map((b,k)=>({r:b.r,c:b.c,scale:1,alpha:1,phase:k?2.2:.6,ax:0,ay:-1}))});
 }
 function startRound(mapIdx,starter){
-  cancelBot();roundStarter=starter;S=newRound(mapIdx,starter);
+  cancelBot();roundStarter=starter;roundOver=false;roundLog=[];S=newRound(mapIdx,starter);
   $("resNext").disabled=false;
   const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every round
   history=[];preview=null;flash="";nudgeMode=false;closePop();resetClocks();
   gameActive=true;render();maybeBot();
+}
+/* ---------- bot record on this device ---------- */
+// rounds won/lost per level and map (random maps count as one), duels per level; badges for beating a level on every map
+const STAT_COLS=[[0,"Std","Standard"],[1,"Kreu","Kreuzung"],[2,"Schl","Schleuse"],[3,"Zick","Zickzack"],[4,"Abbr","Abbruch"],["rand","Zuf","Zufallskarten"]];
+const LV=[["easy","Leicht"],["medium","Mittel"],["hard","Schwer"]];
+function loadStats(){try{return JSON.parse(localStorage.getItem("kippe-botstats")||"{}")||{};}catch(e){return {};}}
+function saveStats(st){try{localStorage.setItem("kippe-botstats",JSON.stringify(st));}catch(e){}}
+const mapKey=i=>i>=1000?"rand":i;
+const mastered=(st,lv)=>[0,1,2,3,4].every(m=>((st[lv]||{})[m]||{}).w>0);
+// returns the badge text if this round earned a new one
+function recordBotRound(won,duelOver){
+  const st=loadStats(),lv=mode.level,k=mapKey(S.mapIdx);
+  const before=mastered(st,lv);
+  st[lv]=st[lv]||{};st[lv][k]=st[lv][k]||{w:0,l:0};st[lv][k][won?"w":"l"]++;
+  if(duelOver){st.duels=st.duels||{};st.duels[lv]=st.duels[lv]||{w:0,l:0};st.duels[lv][won?"w":"l"]++;}
+  saveStats(st);
+  return !before&&mastered(st,lv)?`Neues Abzeichen: ${BOT_LEVELS[lv].name} auf allen Karten geschlagen!`:"";
+}
+function renderStats(){
+  const st=loadStats(),box=$("botStats");
+  const any=LV.some(([lv])=>st[lv]);
+  if(!any){box.innerHTML=`<p class="tip">Hier erscheint deine Bilanz gegen den Bot: welche Karten du auf welcher Stufe schon geknackt hast.</p>`;return;}
+  let t=`<table aria-label="Deine Bilanz gegen den Bot"><thead><tr><th></th>${STAT_COLS.map(([,a,f])=>`<th title="${f}">${a}</th>`).join("")}<th title="Duelle gewonnen : verloren">Duelle</th></tr></thead><tbody>`;
+  for(const [lv,nm] of LV){const r=st[lv]||{},d=(st.duels||{})[lv];
+    t+=`<tr><th scope="row">${nm}</th>${STAT_COLS.map(([k,,f])=>{const x=r[k];return `<td class="${x&&x.w?"won":""}${lv===mode.level?" cur":""}" title="${f}: ${x?x.w+" gewonnen, "+x.l+" verloren":"noch nicht gespielt"}">${x?(x.w?"✓":"–"):"·"}</td>`;}).join("")}<td${lv===mode.level?' class="cur"':""}>${d?d.w+":"+d.l:"·"}</td></tr>`;}
+  t+=`</tbody></table><div class="badges">${LV.map(([lv,nm])=>`<span class="badge${mastered(st,lv)?" on":""}">${nm} gemeistert</span>`).join("")}</div>`;
+  box.innerHTML=`<span class="lbl">Deine Bilanz</span>`+t;
+}
+
+/* ---------- puzzles ---------- */
+let puzzle={i:0};
+function solvedSet(){try{return new Set(JSON.parse(localStorage.getItem("kippe-solved")||"[]"));}catch(e){return new Set();}}
+function markSolved(i){const s=solvedSet();s.add(i);try{localStorage.setItem("kippe-solved",JSON.stringify([...s]));}catch(e){}}
+const dayPuzzle=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5)%PUZZLES.length;
+function nextPuzzle(from){const s=solvedSet();for(let k=0;k<PUZZLES.length;k++){const i=(from+k)%PUZZLES.length;if(!s.has(i))return i;}return from%PUZZLES.length;}
+function startPuzzle(i){
+  cancelBot();puzzle={i};mode.human=PUZZLES[i].t;
+  S=decodePuzzle(PUZZLES[i]);roundStarter=S.turn;roundOver=false;roundLog=[];history=[];preview=null;flash="";nudgeMode=false;closePop();
+  match={score:[0,0],round:0};resetClocks();gameActive=true;$("resNext").disabled=false;render();
+}
+function puzzleEnd(ok){
+  cancelBot();roundOver=true;
+  const big=$("resBig"),next=$("resNext");$("pick").hidden=true;$("reOpts").hidden=true;
+  if(ok)markSolved(puzzle.i);
+  big.className="big"+(ok?" p"+mode.human:"");big.textContent=ok?"GELÖST!":"KNAPP DANEBEN";
+  $("resTitle").textContent=`Rätsel ${puzzle.i+1} · ${getMap(S.mapIdx).name}`;
+  $("resText").textContent=(ok?"Sauber reingelegt: Der Gegner hatte keine Rettung. ":"Der Gegner konnte sich retten. Schau dir das Replay an und versuch es nochmal. ")+`${solvedSet().size} von ${PUZZLES.length} Rätseln gelöst.`;
+  next.textContent=ok?"Nächstes Rätsel":"Nochmal";
+  next.onclick=()=>{$("result").hidden=true;startPuzzle(ok?nextPuzzle(puzzle.i+1):puzzle.i);};
+  $("resMenu").textContent="Menü";$("resReplay").hidden=!roundLog.length;
+  $("result").hidden=false;next.focus();
 }
 function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),starter);}
 
@@ -1330,22 +1603,25 @@ function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),sta
 function drawHero(){const c=$("heroCv");if(c.clientWidth)drawThumb(c,STANDARD,c.clientWidth);}
 function syncMenu(){
   for(const b of document.querySelectorAll(".mode[data-mode]")){const on=b.dataset.mode===mode.kind;b.classList.toggle("sel",on);b.setAttribute("aria-checked",on);}
-  $("botOpts").hidden=mode.kind!=="bot";
+  $("botOpts").hidden=mode.kind!=="bot";if(mode.kind==="bot")renderStats();
+  $("puzzleOpts").hidden=mode.kind!=="puzzle";$("timeOpts").hidden=mode.kind==="puzzle";$("helpOpts").hidden=mode.kind==="puzzle";$("fieldOpts").hidden=mode.kind==="puzzle";
+  {const n=solvedSet().size;$("puzzleTip").textContent=`Heute: Rätsel ${dayPuzzle()+1} · ${n} von ${PUZZLES.length} gelöst`;
+   $("puzzleSub").textContent=n?`${n} von ${PUZZLES.length} gelöst`:"Finde die Falle, die immer klappt";}
   $("onlineOpts").hidden=mode.kind!=="online";
-  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":"Spielen";
+  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":mode.kind==="puzzle"?"Rätsel starten":"Spielen";
   $("playBtn").disabled=mode.kind==="online"&&!onlineReady();
   $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
   if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
-  seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);seg("segTime",mode.time||0);
-  $("colorOpts").hidden=mode.kind==="local";
+  seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);seg("segTime",mode.time||0);seg("segPuzzle",mode.puzzle||"day");seg("segHelp",mode.help||"on");
+  $("colorOpts").hidden=mode.kind==="local"||mode.kind==="puzzle";
   $("fieldTip").textContent={std:"Immer dieselbe Aufstellung, wie beim Schach.",pool:"Vier feste Karten, der Verlierer wählt die nächste.",rand:"Jede Runde eine neue, zufällig gebaute Karte."}[mode.field]||"";
   $("leaveBtn").hidden=!(net&&net.started);
   $("resumeBtn").hidden=!gameActive;
 }
-function openMenu(){cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
+function openMenu(){stopReplay();cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
 for(const b of document.querySelectorAll(".mode[data-mode]"))b.onclick=()=>{mode.kind=b.dataset.mode;syncMenu();};
-for(const [id,key] of [["segLevel","level"],["segColor","color"],["segField","field"],["segTime","time"]])
+for(const [id,key] of [["segHelp","help"],["segPuzzle","puzzle"],["segLevel","level"],["segColor","color"],["segField","field"],["segTime","time"]])
   for(const b of $(id).children)b.onclick=()=>{const v=b.dataset.v;mode[key]=/^\d+$/.test(v)?+v:v;syncMenu();};
 $("playBtn").onclick=()=>{
   try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
@@ -1353,10 +1629,14 @@ $("playBtn").onclick=()=>{
   if(mode.kind==="online"){netCreate();return;}
   $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
   if(mode.kind==="bot")mode.human=pickColor();
+  activeMode={...mode};
+  if(mode.kind==="puzzle"){startPuzzle(mode.puzzle==="next"?nextPuzzle(0):dayPuzzle());return;}
   newMatch(0);
 };
-$("resumeBtn").onclick=()=>{$("menu").hidden=true;render();maybeBot();netPump();};
+// settings changed in the menu only count for the next game; the running one keeps its own
+$("resumeBtn").onclick=()=>{if(activeMode&&mode.kind!=="online"&&!net)mode={...mode,...activeMode};$("menu").hidden=true;syncMenu();if(roundOver&&!net){$("result").hidden=false;render();return;}render();maybeBot();netPump();};
 $("menuRules").onclick=()=>{$("rules").hidden=false;$("rulesOk").focus();};
+for(const el of document.querySelectorAll(".rShrink"))el.textContent=RULES.shrinkStart;
 $("resMenu").onclick=()=>{
   if(mode.kind==="online"&&net){netLeave(false);return;}
   $("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
@@ -1366,10 +1646,11 @@ $("menuBtn").onclick=openMenu;
 /* ---------- input ---------- */
 document.querySelectorAll(".dir").forEach(b=>b.addEventListener("click",()=>tryTilt(b.dataset.dir)));
 $("undoBtn").addEventListener("click",()=>{
-  if(anim||!history.length)return;
+  if(anim||replaying||!history.length)return;
   cancelBot();
   S=history.pop();
-  if(mode.kind==="bot")while(isBot(S.turn)&&history.length)S=history.pop();
+  if(vsAI())while(isBot(S.turn)&&history.length)S=history.pop();
+  {const i=roundLog.findIndex(x=>x.pre===S);if(i>=0)roundLog.length=i;}
   preview=null;closePop();render();maybeBot();
 });
 $("helpBtn").addEventListener("click",()=>{$("rules").hidden=false;$("rulesOk").focus();});
@@ -1754,15 +2035,15 @@ window.addEventListener("hashchange",()=>{if(!net||!location.hash.endsWith(net.c
 // Chess-style thinking time per round. Online, every move carries the mover's remaining time (tl),
 // and a player whose clock runs out writes a timeout entry; the opponent may claim it after a grace period.
 let clocks=[0,0],clockLast=0,timeoutSent=false,lowTick=-1;
-function resetClocks(){const t=(mode.time||0)*1000;clocks=[t,t];timeoutSent=false;clockLast=0;renderClocks();}
+function resetClocks(){const t=timeLimit()*1000;clocks=[t,t];timeoutSent=false;clockLast=0;lowTick=-1;renderClocks();}
 function clockRunning(){
-  return mode.time>0&&gameActive&&!anim&&!countdown&&$("result").hidden&&$("menu").hidden&&$("lobby").hidden&&
-    !(mode.kind!=="online"&&document.hidden)&&!(mode.kind==="online"&&(!net||!net.started))&&!isBot(S.turn); // the bot has no clock
+  return timeLimit()>0&&gameActive&&!roundOver&&!replaying&&!anim&&!countdown&&$("result").hidden&&$("menu").hidden&&$("lobby").hidden&&
+    !(mode.kind!=="online"&&document.hidden)&&!(mode.kind==="online"&&(!net||!net.started)); // the bot's clock runs too
 }
 const fmt=ms=>{ms=Math.max(0,ms);const s=Math.ceil(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");};
 function renderClocks(){
-  const on=mode.time>0;$("clocks").hidden=!on;if(!on)return;
-  for(const p of [0,1]){const el=$("clk"+p);el.textContent=isBot(p)?"Bot":fmt(clocks[p]);el.classList.toggle("on",S.turn===p&&gameActive);el.classList.toggle("low",clocks[p]<10000&&S.turn===p&&gameActive);
+  const on=timeLimit()>0;$("clocks").hidden=!on;document.body.classList.toggle("timed",on);if(!on)return;
+  for(const p of [0,1]){const el=$("clk"+p);el.textContent=(isBot(p)?"Bot ":"")+fmt(clocks[p]);el.classList.toggle("on",S.turn===p&&gameActive);el.classList.toggle("low",clocks[p]<10000&&S.turn===p&&gameActive);
     el.title=`${name(p)}: ${fmt(clocks[p])} übrig`;}
 }
 function timeUp(p){
@@ -1803,7 +2084,7 @@ if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostnam
 }
 installUI();
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
-netBootFromHash();
+if(!netBootFromHash()){try{if(!localStorage.getItem("kippe-seen")){localStorage.setItem("kippe-seen","1");$("rules").hidden=false;}}catch(e){}}
 </script>
 </body>
 </html>

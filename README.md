@@ -6,6 +6,7 @@
 **https://a28j09j02.github.io/kippe/** (GitHub Pages aus `main`, installierbar als App). Lokal: `index.html` im Browser öffnen. Im Menü wählen:
 - **Zu zweit** an einem Handy
 - **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), als Rot, Blau oder per Zufall
+- **Rätsel: Gewinn in 2** (40 geprüfte Stellungen, Rätsel des Tages)
 - **Online gegen Freunde** per Einladungslink (siehe `docs/ONLINE.md`)
 
 Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wechselnde Karten** (4 Karten, der Verlierer wählt die nächste).
@@ -21,10 +22,11 @@ Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die 
 ## Regeln in Kürze
 - Pro Zug genau eins: **kippen** (beide Kugeln rollen bis zum Hindernis), **schubsen** (nur die eigene Kugel ein Feld; gegen einen hellen Stein = ein Treffer) oder **bauen**.
 - Jeder hat pro Runde 3 Steine und 3 Löcher. Man muss nie kippen.
-- Kippen geht in jede Richtung, auch zurück.
+- Kippen geht in jede Richtung, nur nicht direkt zurück (die Gegenrichtung des letzten Kippens ist gesperrt).
 - Randsteine und gesetzte Steine halten 3 Treffer. Ein zerbrochener Randstein wird zum Abgrund.
-- Ab Zug 20 bricht alle 2 Züge ein rot markiertes Stück weg: erst die 28 Randsteine, dann der Boden Ring für Ring von außen. Wer auf einem einstürzenden Feld steht, fällt. Damit endet jede Runde, ein Zuglimit gibt es nicht.
-- Bedenkzeit pro Runde wählbar: ohne, 1, 5 oder 10 Minuten (Schachuhr). Läuft die Uhr ab, ist die Runde verloren. Der Bot hat keine Uhr.
+- Wände verschwinden nie durch Zeit: helle Wände, Randsteine und Steine brechen nur nach 3 Treffern, dunkle Wände halten ewig.
+- Ab Zug 30 bricht alle 2 Züge ein rot markiertes Bodenpaar ein, von außen nach innen. Wer darauf steht, fällt. Damit endet jede Runde, ein Zuglimit gibt es nicht.
+- Bedenkzeit pro Runde wählbar: ohne, 1, 5 oder 10 Minuten (Schachuhr). Läuft die Uhr ab, ist die Runde verloren. Der Bot hat eine eigene Uhr und denkt passend zur Bedenkzeit.
 - Best of 3, wer eine Runde verliert, fängt die nächste an.
 
 ## Spielfelder
