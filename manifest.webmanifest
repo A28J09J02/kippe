@@ -1,6 +1,6 @@
 {
-  "name": "Kippe",
-  "short_name": "Kippe",
+  "name": "Tiltrap",
+  "short_name": "Tiltrap",
   "description": "1-gegen-1-Strategiespiel: Brett kippen, Gegner reinlegen.",
   "lang": "de",
   "start_url": "./",

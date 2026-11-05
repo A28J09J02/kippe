@@ -1,0 +1,20 @@
+# Tiltrap game server: accounts, friends, rankings and online duels.
+# Runs on the Cloudflare Workers Free plan (SQLite Durable Objects). It has no public address of its own:
+# the game site on Cloudflare Pages reaches it through a service binding under /api.
+name = "tiltrap-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
+[[durable_objects.bindings]]
+name = "MATCH"
+class_name = "Match"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Lobby", "Match"]

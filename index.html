@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Kippe</title>
+<title>Tiltrap</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#5b3d22">
-<meta name="description" content="Kippe – 1-gegen-1-Strategiespiel: Brett kippen, Gegner reinlegen.">
+<meta name="description" content="Tiltrap – 1-gegen-1-Strategiespiel: Brett kippen, Gegner reinlegen. Im Browser, gegen Freunde, Bot oder in der Rangliste.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kippe">
+<meta name="apple-mobile-web-app-title" content="Tiltrap">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Figtree:wght@400;600;800&display=swap">
 <style>
@@ -170,6 +170,39 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
+/* online hub */
+.hubtop{display:flex;align-items:center;justify-content:space-between}
+.hubtop .btn{background:transparent;padding:8px 10px}
+#hub .card h2{margin-top:6px}
+.prof{border:2px solid var(--line);border-radius:14px;padding:12px;background:var(--panel);display:flex;flex-direction:column;gap:6px}
+.prof b{font-family:var(--display);font-weight:400;font-size:22px;margin-right:8px;word-break:break-all}
+.profstats{display:flex;flex-wrap:wrap;gap:6px}
+.profstats span{font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;background:var(--bg);border:1px solid var(--line)}
+.btn.big2{padding:16px;font-size:17px}
+.btn.searching{background:var(--p1);color:#fff}
+.addrow{display:flex;gap:8px}.addrow .field{flex:1}.addrow .btn{min-width:48px;font-size:20px;font-weight:800}
+.flist{display:flex;flex-direction:column;gap:6px}
+.fr{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:9px 10px}
+.fr .who{flex:1;min-width:0}
+.fr .who b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr .who small{color:var(--muted);font-size:12px}
+.fr .on{width:9px;height:9px;border-radius:50%;background:var(--line);flex:none}
+.fr .on.y{background:#2fa36b}
+.fr .btn{padding:7px 10px;font-size:13px;font-weight:800}
+.board table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.board th,.board td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+.board th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.board td:nth-child(2),.board th:nth-child(2){text-align:left;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board tr.me td{font-weight:800;background:color-mix(in srgb,var(--p1) 10%,transparent)}
+.hubnote{border-radius:12px;padding:10px 12px;background:color-mix(in srgb,#2fa36b 15%,var(--panel));font-size:14px;line-height:1.35}
+.hubnote.err{background:color-mix(in srgb,var(--warn) 15%,var(--panel))}
+.privacy{font-size:13px;color:var(--muted)}
+.privacy summary{cursor:pointer;font-weight:800;padding:6px 0}
+.privacy p{font-size:13px;margin:4px 0 10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:max(12px,env(safe-area-inset-top,0px));z-index:40;background:var(--ink);color:var(--bg);border-radius:14px;
+  padding:12px 14px;width:min(92vw,420px);box-sizing:border-box;box-shadow:0 12px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.35}
+.toast .tbtns{display:flex;gap:8px;justify-content:flex-end}
+.toast .btn{padding:7px 12px;font-size:13px}
 /* analysis */
 .evalbar{position:relative;width:14px;flex:none;margin-right:8px;border-radius:7px;overflow:hidden;background:var(--p1);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .evfill{position:absolute;left:0;right:0;bottom:0;height:50%;background:var(--p0);transition:height .35s ease}
@@ -213,7 +246,7 @@ body.tut .sub,body.tut .clocks,body.tut #undoBtn{display:none}
   <header>
     <div class="hl">
       <button class="iconbtn" id="menuBtn" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-      <h1>KIPPE</h1>
+      <h1>TILTRAP</h1>
     </div>
     <div class="score"><span class="chip"><span class="dot p0"></span><span id="s0">0</span></span>:<span class="chip"><span id="s1">0</span><span class="dot p1"></span></span></div>
     <div class="hbtns">
@@ -261,13 +294,13 @@ body.tut .sub,body.tut .clocks,body.tut #undoBtn{display:none}
   <div class="card">
     <div class="hero">
       <canvas id="heroCv" aria-hidden="true"></canvas>
-      <p class="logo">KIPPE</p>
+      <p class="logo">TILTRAP</p>
       <p class="tag">Kipp das Brett. Bring die andere Kugel zu Fall.</p>
     </div>
     <div class="modes" role="radiogroup" aria-label="Spielart">
       <button class="mode" id="mTut" role="radio" data-mode="tut">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>
-        <span><b>Tutorial</b><small id="tutSub">In 2 Minuten verstehen, wie Kippe geht</small></span>
+        <span><b>Tutorial</b><small id="tutSub">In 2 Minuten verstehen, wie Tiltrap geht</small></span>
       </button>
       <button class="mode" id="mLocal" role="radio" data-mode="local">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 19c0-3 2.5-5 5-5s5 2 5 5M11 19c0-3 2.5-5 5-5s5 2 5 5"/></svg></span>
@@ -283,7 +316,7 @@ body.tut .sub,body.tut .clocks,body.tut #undoBtn{display:none}
       </button>
       <button class="mode" id="mOnline" role="radio" data-mode="online">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
-        <span><b>Online gegen Freunde</b><small id="onlineSub">Link schicken, Freund tippt drauf, los geht's</small></span>
+        <span><b>Online</b><small id="onlineSub">Link schicken, Freund tippt drauf, los geht's</small></span>
       </button>
     </div>
     <div class="opts" id="botOpts">
@@ -346,11 +379,52 @@ body.tut .sub,body.tut .clocks,body.tut #undoBtn{display:none}
   </div>
 </div>
 
+<div class="overlay menu" id="hub" hidden>
+  <div class="card">
+    <div class="hubtop"><button class="btn" id="hubBack">‹ Menü</button><span class="lbl">Online</span><span style="width:70px"></span></div>
+    <div id="hubSetup" class="opts" hidden>
+      <h2>Dein Profil</h2>
+      <p>Mit Profil kannst du Freunde hinzufügen, sie herausfordern und in der Rangliste spielen. Du brauchst keine E-Mail und kein Passwort.</p>
+      <label class="lbl" for="hubName">Spielername</label>
+      <input class="field" id="hubName" maxlength="16" autocomplete="nickname" placeholder="z. B. Jonas">
+      <button class="btn primary" id="hubCreate">Profil anlegen</button>
+      <p class="tip" id="hubSetupMsg"></p>
+    </div>
+    <div id="hubMain" class="opts" hidden>
+      <div class="prof">
+        <div><b id="hubTag"></b><button class="btn small" id="hubRename" aria-label="Namen ändern">✎</button></div>
+        <div class="profstats" id="hubStats"></div>
+      </div>
+      <div class="hubnote" id="hubNote" hidden></div>
+      <div id="hubActive" hidden><button class="btn primary" id="hubResume" style="width:100%">Laufendes Duell fortsetzen</button></div>
+      <button class="btn primary big2" id="hubRanked">⚔ Rangliste: Gegner suchen</button>
+      <p class="tip" id="hubRankedTip">Standardbrett, 5 Minuten Bedenkzeit, Best of 3. Danach eine Revanche, dann neuer Gegner.</p>
+      <div class="row"><button class="btn" id="hubInvite">Freund einladen (Link)</button><button class="btn" id="hubFriendLink">Mein Freundes-Link</button></div>
+      <p class="tip" id="hubSettings"></p>
+      <div id="hubChallenges" class="opts"></div>
+      <span class="lbl">Freunde</span>
+      <div class="addrow"><input class="field" id="hubAdd" maxlength="21" placeholder="Name#1234 hinzufügen"><button class="btn" id="hubAddBtn">+</button></div>
+      <div id="hubRequests" class="opts"></div>
+      <div id="hubFriends" class="flist"></div>
+      <span class="lbl">Bestenliste</span>
+      <div class="seg" id="segBoard"><button class="btn" data-v="friends">Freunde</button><button class="btn" data-v="all">Weltweit</button></div>
+      <div id="hubBoard" class="board"></div>
+      <details class="privacy"><summary>Datenschutz &amp; Konto</summary>
+        <p>Gespeichert werden nur dein Spielername mit Nummer, deine Freundesliste und deine Spielstatistik (Siege, Niederlagen, Elo). Keine E-Mail, kein Passwort, kein Standort. Dein Gerät hat einen geheimen Schlüssel, der Server kennt nur dessen Prüfsumme. Wer Daten löscht oder das Gerät wechselt, verliert den Zugang zum Profil.</p>
+        <button class="btn" id="hubDelete">Profil und alle Daten löschen</button>
+      </details>
+    </div>
+    <p class="status" id="hubStatus" hidden><span class="pulse"></span><span id="hubStatusText"></span></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastText"></span><span class="tbtns" id="toastBtns"></span></div>
+
 <div class="count" id="count" hidden><span id="countNum">3</span></div>
 
 <div class="overlay" id="rules" hidden>
   <div class="card">
-    <h2>Kippe – so geht's</h2>
+    <h2>Tiltrap – so geht's</h2>
     <ul>
       <li>Pro Zug genau eins: <b>Brett kippen</b>, <b>Kugel schubsen</b> oder <b>bauen</b>. Du musst nie kippen.</li>
       <li><b>Kippen</b> bewegt <b>beide</b> Kugeln. Sie rollen, bis sie gegen etwas stoßen.</li>
@@ -1171,7 +1245,7 @@ const isRemote=p=>mode.kind==="online"&&!!net&&p!==net.side;
 const oppName=()=>net&&net.names[1-net.side]||"Gegner";
 const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":mode.kind==="puzzle"?"Gegner":oppName();
 const wins=p=>isMe(p)?"gewinnst":"gewinnt";
-const inputLocked=()=>replaying||countdown||tutBusy||!!analysis||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
+const inputLocked=()=>roundOver||replaying||countdown||tutBusy||!!analysis||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
@@ -1356,6 +1430,7 @@ function doTilt(dir,res,nudge,rp){
   }};
   render();
 }
+let endT=0,endPending=false; // a round just ended and its result is about to show
 function afterMove(out){
   if(mode.kind==="tut"){tutAfter(out);return;}
   if(out.broke){SFX.shatter();buzz(25);
@@ -1363,7 +1438,7 @@ function afterMove(out){
     flash=`<span class="warn">${out.broke.length>1?"Zwei Felder sind":"Ein Feld ist"} eingestürzt.</span>`;}
   if(out.passed)flash=(flash?flash+"<br>":"")+`${name(1-S.turn)} kann nicht ziehen und setzt aus.`;
   render();flash="";
-  if(out.outcome){setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
+  if(out.outcome){roundOver=true;endPending=true;clearTimeout(endT);endT=setTimeout(()=>endRound(out.outcome),out.outcome.draw?200:350);return;}
   if(mode.kind==="puzzle"&&roundLog.filter(x=>x.by===mode.human).length>=2){setTimeout(()=>puzzleEnd(false),350);return;}
   maybeBot();netPump();
 }
@@ -1616,6 +1691,8 @@ function firstMap(field){field=field||mode.field;return field==="pool"?POOL[Math
 // map for the next round: standard stays, the 4-map pool uses the loser's pick (-1 = random), random fields roll a new map
 function nextMap(){return mode.field==="pool"?(pickMap<0?POOL[Math.floor(Math.random()*POOL.length)]:pickMap):mode.field==="rand"?randomMapId():STANDARD;}
 function endRound(o){
+  endPending=false;
+  $("resMenu").onclick=resMenuDefault;delete $("resText").dataset.elo;
   if(mode.kind==="puzzle"){puzzleEnd(!o.draw&&o.winner===mode.human);return;}
   cancelBot();roundOver=true;
   const big=$("resBig"),title=$("resTitle"),text=$("resText"),next=$("resNext"),pick=$("pick");
@@ -1628,10 +1705,10 @@ function endRound(o){
     match.score[o.winner]++;
     const w=o.winner,l=1-w,where=o.off?"über die Kante":"ins Loch",bm=meSide()>=0;
     big.className="big p"+w;
-    big.textContent=o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":o.reason==="time"?"ZEIT UM!":o.reason==="crumble"?"ABGESTÜRZT!":"EIGENTOR!";
+    big.textContent=o.reason==="forfeit"?"AUFGEGEBEN":o.reason==="trap"?"REINGELEGT!":o.reason==="both"?"ZU GIERIG!":o.reason==="time"?"ZEIT UM!":o.reason==="crumble"?"ABGESTÜRZT!":"EIGENTOR!";
     title.textContent=`${name(w)} ${wins(w)} die Runde`;
     const lName=isMe(l)?"Du bist":`${name(l)} ist`;
-    text.textContent=o.reason==="time"?(isMe(l)?"Deine Bedenkzeit ist abgelaufen.":`Die Bedenkzeit von ${name(l)} ist abgelaufen.`):o.reason==="crumble"?(isMe(l)?"Unter deiner Kugel ist das Feld eingestürzt.":`Unter der Kugel von ${name(l)} ist das Feld eingestürzt.`):o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${isMe(l)?"Du hast":name(l)+" hat"} gekippt und ${isMe(l)?"verlierst":"verliert"}.`:`${isMe(l)?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
+    text.textContent=o.reason==="forfeit"?`${isMe(l)?"Du hast":name(l)+" hat"} das Duell verlassen oder war zu lange offline.`:o.reason==="time"?(isMe(l)?"Deine Bedenkzeit ist abgelaufen.":`Die Bedenkzeit von ${name(l)} ist abgelaufen.`):o.reason==="crumble"?(isMe(l)?"Unter deiner Kugel ist das Feld eingestürzt.":`Unter der Kugel von ${name(l)} ist das Feld eingestürzt.`):o.reason==="trap"?`${lName} ${where} gerollt.`:o.reason==="both"?`Beide sind gefallen. ${isMe(l)?"Du hast":name(l)+" hat"} gekippt und ${isMe(l)?"verlierst":"verliert"}.`:`${isMe(l)?"Du hast dich":name(l)+" hat sich"} selbst ${where} gekippt.`;
     if(match.score[w]>=2){
       title.textContent=`${name(w)} ${wins(w)} das Duell ${match.score[w]}:${match.score[l]}`;
       if(bm)big.textContent=isMe(w)?"GEWONNEN!":"VERLOREN";
@@ -1674,7 +1751,7 @@ function drawThumb(c,i,size){
     poses:s.balls.map((b,k)=>({r:b.r,c:b.c,scale:1,alpha:1,phase:k?2.2:.6,ax:0,ay:-1}))});
 }
 function startRound(mapIdx,starter){
-  if(analysis)endAnalysis(true);
+  if(analysis)endAnalysis(true);clearTimeout(endT);endPending=false;
   cancelBot();roundStarter=starter;roundOver=false;roundLog=[];S=newRound(mapIdx,starter);
   $("resNext").disabled=false;
   const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every round
@@ -1965,13 +2042,14 @@ function syncMenu(){
   for(const b of document.querySelectorAll(".mode[data-mode]")){const on=b.dataset.mode===mode.kind;b.classList.toggle("sel",on);b.setAttribute("aria-checked",on);}
   $("botOpts").hidden=mode.kind!=="bot";if(mode.kind==="bot")renderStats();
   $("puzzleOpts").hidden=mode.kind!=="puzzle";const noOpts=mode.kind==="puzzle"||mode.kind==="tut";$("timeOpts").hidden=noOpts;$("helpOpts").hidden=noOpts;$("fieldOpts").hidden=noOpts;
-  {let done=false;try{done=!!localStorage.getItem("kippe-tut");}catch(e){}$("tutSub").textContent=done?"Nochmal alle Züge üben, 6 kurze Lektionen":"In 2 Minuten verstehen, wie Kippe geht";}
+  {let done=false;try{done=!!localStorage.getItem("kippe-tut");}catch(e){}$("tutSub").textContent=done?"Nochmal alle Züge üben, 6 kurze Lektionen":"In 2 Minuten verstehen, wie Tiltrap geht";}
   {const n=solvedSet().size;$("puzzleTip").textContent=`Heute: Rätsel ${dayPuzzle()+1} · ${n} von ${PUZZLES.length} gelöst`;
    $("puzzleSub").textContent=n?`${n} von ${PUZZLES.length} gelöst`:"Finde die Falle, die immer klappt";}
-  $("onlineOpts").hidden=mode.kind!=="online";
-  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":mode.kind==="puzzle"?"Rätsel starten":mode.kind==="tut"?"Tutorial starten":"Spielen";
-  $("playBtn").disabled=mode.kind==="online"&&!onlineReady();
-  $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
+  const srv=srvState==="ok";
+  $("onlineOpts").hidden=mode.kind!=="online"||srv;
+  $("playBtn").textContent=mode.kind==="online"?(srv?"Online-Bereich öffnen":"Duell erstellen"):mode.kind==="puzzle"?"Rätsel starten":mode.kind==="tut"?"Tutorial starten":"Spielen";
+  $("playBtn").disabled=mode.kind==="online"&&!srv&&!onlineReady();
+  $("onlineSub").textContent=srv?"Rangliste, Freunde herausfordern, Einladungslink":onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
   if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
   seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);seg("segTime",mode.time||0);seg("segPuzzle",mode.puzzle||"day");seg("segHelp",mode.help||"on");
@@ -1989,7 +2067,7 @@ $("playBtn").onclick=()=>{
   if(net)netLeave(true);
   if(mode.kind==="tut"){startTutorial(0);return;}
   if(document.body.classList.contains("tut")){const k=mode.kind,l=mode.level;tutExit();mode.kind=k;mode.level=l;}
-  if(mode.kind==="online"){netCreate();return;}
+  if(mode.kind==="online"){if(srvState==="ok"){openHub();return;}netCreate();return;}
   $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
   if(mode.kind==="bot")mode.human=pickColor();
   activeMode={...mode};
@@ -2000,9 +2078,10 @@ $("playBtn").onclick=()=>{
 $("resumeBtn").onclick=()=>{if(activeMode&&mode.kind!=="online"&&!net)mode={...mode,...activeMode};$("menu").hidden=true;syncMenu();if(roundOver&&!net){$("result").hidden=false;render();return;}render();maybeBot();netPump();};
 $("menuRules").onclick=()=>{$("rules").hidden=false;$("rulesOk").focus();};
 for(const el of document.querySelectorAll(".rShrink"))el.textContent=RULES.shrinkStart;
-$("resMenu").onclick=()=>{
+const resMenuDefault=()=>{
   if(mode.kind==="online"&&net){netLeave(false);return;}
   $("result").hidden=true;if(match.score[0]>=2||match.score[1]>=2)gameActive=false;openMenu();};
+$("resMenu").onclick=resMenuDefault;
 $("leaveBtn").onclick=()=>netLeave(false);
 $("menuBtn").onclick=openMenu;
 
@@ -2088,6 +2167,44 @@ async function dbReq(method,path,body){
   throw err;
 }
 const NOW={".sv":"timestamp"};
+// room access for both transports; a rejected write throws an error with .taken (slot used) or .invalid (move refused)
+function roomPut(path,data){
+  if(net&&net.srv)return srvCall({t:"put",path,data}).then(r=>{if(!r.ok){const e=new Error(r.msg||r.err||"abgelehnt");e.taken=r.err==="taken";e.invalid=r.err==="invalid";e.cur=r.data;throw e;}return r;});
+  return dbReq("PUT",`rooms/${net.code}/${path}`,data);
+}
+function roomGet(path){
+  if(net&&net.srv)return srvCall({t:"get",path}).then(r=>r.data);
+  return dbReq("GET",`rooms/${net.code}/${path}`);
+}
+/* server transport for a duel: one WebSocket, the server sends the room and every change as {t:"put",path,data} */
+function srvOpen(){
+  const n=net;if(!n)return;
+  let ws;try{ws=new WebSocket(apiWs(`match/${n.code}`));}catch(e){return;}
+  n.ws=ws;n.calls=n.calls||{};n.rid=n.rid||0;
+  ws.onopen=()=>{if(net!==n||n.ws!==ws)return;
+    srvCall({t:"auth",key:n.srv.key}).then(r=>{if(!r.ok){lobbyStatus(r.err||"Kein Zugang zu diesem Duell.","err");return;}n.conn=true;render();});};
+  ws.onmessage=ev=>{if(net!==n||n.ws!==ws)return;let m;try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.t==="ack"){const f=n.calls[m.rid];delete n.calls[m.rid];if(f)f(m);return;}
+    if(m.t==="put"){n.room=setPath(n.room,m.path,m.data);netRoomChanged();return;}
+    if(m.t==="elo"){n.elo[m.duel]=m.delta[n.side];if(!$("result").hidden)showElo();}
+  };
+  ws.onclose=()=>{if(net!==n||n.ws!==ws)return;n.ws=null;n.conn=false;render();
+    for(const k in n.calls){n.calls[k]({ok:false,err:"offline"});delete n.calls[k];}
+    n.reconnect=setTimeout(()=>{if(net===n)srvOpen();},1500);};
+  clearInterval(n.hb);n.hb=setInterval(()=>{if(net===n&&n.ws&&n.ws.readyState===1)roomPut(`players/p${n.side}/seen`,0).catch(()=>{});netCheckOpp();},15000);
+}
+function srvCall(m){
+  const n=net;
+  return new Promise(res=>{
+    if(!n||!n.ws||n.ws.readyState!==1){res({ok:false,err:"offline"});return;}
+    const rid=++n.rid;n.calls[rid]=res;n.ws.send(JSON.stringify({...m,rid}));
+  });
+}
+function showElo(){
+  if(!net||!net.ranked||!(net.duel in net.elo))return;
+  const d=net.elo[net.duel],el=$("resText");if(el.dataset.elo===String(net.duel))return;el.dataset.elo=net.duel;
+  el.innerHTML+=` <b style="color:${d>=0?"#2fa36b":"var(--warn)"}">${d>=0?"+":""}${d} Elo</b>`;
+}
 function setPath(root,path,data){
   const parts=path.split("/").filter(Boolean);
   if(!parts.length)return data;
@@ -2124,7 +2241,7 @@ async function netCreate(){
 async function netJoinFlow(code){
   netClose();
   showLobby("join");
-  $("lobbyTitle").textContent="Einladung zu Kippe";
+  $("lobbyTitle").textContent="Einladung zu Tiltrap";
   $("lobbyText").textContent="Duell wird geladen …";
   if(!onlineReady()){$("lobbyJoin").hidden=true;$("lobbyText").textContent="";lobbyStatus(onlineWhy(),"err");return;}
   let room;
@@ -2149,9 +2266,12 @@ async function netJoinFlow(code){
     netOpen(code,me);
   };
 }
-function netOpen(code,side){
-  net={code,side,room:null,applied:0,started:false,busy:false,duel:0,voted:-1,rematchSent:-1,names:["Rot","Blau"],oppSeen:0,oppSeenAt:Date.now(),oppOffline:false,lastOutcome:null,duelLoser:0,es:null,hb:null,queue:[]};
+// srv: {key, ranked} = a duel on the Tiltrap server (WebSocket, every move checked there); otherwise Firebase
+function netOpen(code,side,srv){
+  net={code,side,room:null,applied:0,started:false,busy:false,duel:0,voted:-1,rematchSent:-1,names:["Rot","Blau"],oppSeen:0,oppSeenAt:Date.now(),oppOffline:false,lastOutcome:null,duelLoser:0,es:null,hb:null,queue:[],
+    srv:srv||null,ranked:!!(srv&&srv.ranked),elo:{}};
   mode.kind="online";mode.human=side;
+  if(srv){srvOpen();return;}
   const es=new EventSource(`${DB}/rooms/${code}.json`);net.es=es;
   const apply=(ev,fn)=>es.addEventListener(ev,e=>{if(!net||net.es!==es)return;let d;try{d=JSON.parse(e.data);}catch(x){return;}fn(d);netRoomChanged();});
   apply("put",d=>{net.room=setPath(net.room,d.path,d.data);});
@@ -2159,12 +2279,14 @@ function netOpen(code,side){
   es.addEventListener("cancel",()=>{lobbyStatus("Zugriff verweigert.","err");});
   es.onerror=()=>{if(net&&net.started){net.conn=false;render();}};
   es.onopen=()=>{if(net){net.conn=true;render();}};
-  const beat=()=>dbReq("PUT",`rooms/${code}/players/p${side}/seen`,NOW).catch(()=>{});
+  const beat=()=>roomPut(`players/p${side}/seen`,NOW).catch(()=>{});
   beat();net.hb=setInterval(()=>{beat();netCheckOpp();},15000);
 }
 function netClose(){
   if(!net)return;
   try{net.es&&net.es.close();}catch(e){}
+  if(net.ws){const w=net.ws;net.ws=null;try{w.close();}catch(e){}}
+  clearTimeout(net.reconnect);
   clearInterval(net.hb);net=null;
   if(/^#r-/.test(location.hash))window.history.replaceState(null,"",location.pathname);
   if(mode.kind==="online")mode.kind="local";
@@ -2189,7 +2311,7 @@ function netRoomChanged(){
   if(opp&&opp.seen!==net.oppSeen){net.oppSeen=opp.seen;net.oppSeenAt=Date.now();if(net.oppOffline){net.oppOffline=false;render();}}
   if(opp&&opp.left){netOppLeft();return;}
   if(!net.started){
-    if(P.p0&&P.p1)netStart();
+    if(P.p0&&P.p1&&P.p0.seen&&P.p1.seen)netStart();
     else lobbyStatus("Warte auf deinen Gegner …");
     return;
   }
@@ -2208,25 +2330,28 @@ function netVotes(){
     net.rematchSent=net.duel;
     const loser=net.duelLoser,field=(loser?b:a).field||"std";
     const e={k:"rematch",field,map:firstMap(field)};
+    if(net.srv){roomPut(`log/${slot(net.applied)}`,e).catch(()=>{net.rematchSent=-1;}).finally(()=>netPump());return;}
     netSend(e);netNextRound(e,false);render();
   }
 }
 function netLeave(silent){
   if(!net)return;
   const code=net.code,side=net.side;
-  dbReq("PUT",`rooms/${code}/players/p${side}/left`,true).catch(()=>{});
+  const n=net;roomPut(`players/p${side}/left`,true).catch(()=>{}).finally(()=>{if(n.ws){try{n.ws.close();}catch(e){}}});
+  if(n.srv){n.ws=null;LB.call({t:"leave_active",code}).then(()=>LB.send({t:"me"})).then(r=>{if(r&&r.me){LB.me=r.me;hubRender();}});}
   netClose();gameActive=false;
   $("result").hidden=true;$("lobby").hidden=true;
   if(!silent)openMenu();
 }
 function netOppLeft(){
   const who=oppName();
+  if(net&&net.srv)LB.call({t:"leave_active",code:net.code});
   netClose();gameActive=false;
   const big=$("resBig"),next=$("resNext");
   big.className="big";big.textContent="WEG";
   $("resTitle").textContent=`${who} hat das Duell verlassen`;$("resText").textContent="Erstell einfach ein neues Duell, wenn ihr weiterspielen wollt.";
   $("pick").hidden=true;$("reOpts").hidden=true;$("lobby").hidden=true;$("menu").hidden=true;
-  $("resMenu").textContent="Menü";$("resMenu").onclick=()=>{$("result").hidden=true;openMenu();};
+  $("resMenu").textContent="Menü";
   next.disabled=false;next.textContent="Neues Duell";next.onclick=()=>{$("result").hidden=true;mode.kind="online";openMenu();};
   $("result").hidden=false;
 }
@@ -2261,7 +2386,8 @@ function netStart(again){
   let shown=null;
   while(log[slot(net.applied)]){
     const e=log[slot(net.applied)];
-    if(e.k==="timeout"){
+    if(e.k==="forfeit"){const o={winner:1-e.by,reason:"forfeit"};match.score[o.winner]=2;net.lastOutcome=o;shown=o;net.duelLoser=e.by;}
+    else if(e.k==="timeout"){
       if(!net.lastOutcome){const o={winner:1-e.by,reason:"time"};match.score[o.winner]++;net.lastOutcome=o;shown=o;timeoutSent=true;if(match.score[0]>=2||match.score[1]>=2)net.duelLoser=e.by;}
     }else if(e.k==="m"){
       const out=netPlay(S,e);if(!out){net.applied++;continue;}
@@ -2288,11 +2414,12 @@ function netSend(e){
   if(!net)return;
   const at=slot(net.applied++);
   const go=async(tries)=>{
-    try{await dbReq("PUT",`rooms/${net.code}/log/${at}`,e);if(net&&net.sendErr){net.sendErr=false;render();}}
+    try{await roomPut(`log/${at}`,e);if(net&&net.sendErr){net.sendErr=false;render();}}
     catch(x){
+      if(x.invalid){console.warn("Zug abgelehnt:",x.message,JSON.stringify(e));netResync();return;}
       // the slot may already hold the same entry (both pressed "next" at once): that counts as sent
       try{
-        const cur=await dbReq("GET",`rooms/${net.code}/log/${at}`);
+        const cur=x.taken&&x.cur!==undefined?x.cur:await roomGet(`log/${at}`);
         if(cur&&cur.k===e.k&&cur.k!=="m")return;
         if(cur){netResync();return;} // slot taken by something else: rebuild from the shared log
       }catch(y){}if(!net)return;net.sendErr=true;flash=`<span class="warn">Zug wird erneut gesendet …</span>`;render();flash="";setTimeout(()=>go(tries+1),2500);}
@@ -2303,6 +2430,7 @@ async function netPump(){
   if(!net||!net.started||net.busy||anim)return;
   const e=net.room&&net.room.log&&net.room.log[slot(net.applied)];
   if(!e)return;
+  if(e.k!=="m"&&endPending)return; // show this round's result first; endRound pumps again
   net.busy=true;
   try{
     if(e.k==="m"){
@@ -2318,6 +2446,9 @@ async function netPump(){
       net.applied++;
       if(typeof e.tl==="number"&&mode.time>0)clocks[e.by]=e.tl;
       if(e.t==="tilt")doTilt(e.dir,mv.res);else if(e.t==="nudge")doTilt(e.dir,preview.res,{chk:mv});else doBuild(e.r,e.c,e.kind);
+    }else if(e.k==="forfeit"){
+      net.applied++;
+      if($("result").hidden||!net.lastOutcome){cancelBot();preview=null;match.score[1-e.by]=1;endRound({winner:1-e.by,reason:"forfeit"});}
     }else if(e.k==="timeout"){
       net.applied++;
       if($("result").hidden&&!timeoutSent){timeoutSent=true;clocks[e.by]=0;cancelBot();preview=null;endRound({winner:1-e.by,reason:"time"});}
@@ -2355,15 +2486,21 @@ function netResultButtons(o){
     let field=mode.field;
     const seg=$("segReField"),sync=()=>{for(const b of seg.children)b.classList.toggle("sel",b.dataset.v===field);};
     for(const b of seg.children)b.onclick=()=>{field=b.dataset.v;sync();};sync();
-    $("reOpts").hidden=false;
+    $("reOpts").hidden=!!net.ranked;
+    if(net.ranked&&net.duel>=1){ // ranked: one rematch, then everyone looks for a new opponent
+      next.disabled=false;next.textContent="Neuer Gegner";
+      next.onclick=()=>{netLeave(true);hubQueue();};
+      showElo();return;
+    }
     const voted=net.voted===net.duel;
     next.disabled=voted;next.textContent=voted?"Revanche angefragt":"Revanche";
     next.onclick=()=>{
       net.voted=net.duel;next.disabled=true;next.textContent="Revanche angefragt";
-      dbReq("PUT",`rooms/${net.code}/players/p${net.side}/vote`,{n:net.duel,field}).catch(()=>{next.disabled=false;next.textContent="Revanche";});
+      roomPut(`players/p${net.side}/vote`,{n:net.duel,field}).catch(()=>{next.disabled=false;next.textContent="Revanche";});
       netVotes();
     };
-    netVotes();
+    netVotes();showElo();
+    if(net.ranked){$("resMenu").textContent="Neuer Gegner";$("resMenu").onclick=()=>{$("resMenu").onclick=resMenuDefault;netLeave(true);hubQueue();};}
     return;
   }
   const mustPick=!o.draw&&mode.field==="pool";
@@ -2373,12 +2510,19 @@ function netResultButtons(o){
   else next.textContent=o.draw?"Nochmal":"Nächste Runde";
   next.onclick=()=>{
     const e={k:"next",map:o.draw?S.mapIdx:nextMap()};
+    // server: only write it; the round starts when the entry comes back (both may press at once)
+    if(net.srv){next.disabled=true;next.textContent="Gleich geht's weiter …";roomPut(`log/${slot(net.applied)}`,e).catch(()=>{}).finally(()=>netPump());return;}
     netSend(e);netNextRound(e,false);render();
   };
 }
 function netBootFromHash(){
   const m=/^#r-([A-Z0-9]{6})$/.exec(location.hash);
-  if(m){netJoinFlow(m[1]);return true;}
+  if(m){
+    if(net&&net.code===m[1])return true;
+    $("menu").hidden=true;showLobby("join");$("lobbyJoin").hidden=true;$("lobbyTitle").textContent="Einladung zu Tiltrap";$("lobbyText").textContent="";lobbyStatus("Lädt …");
+    srvProbe().then(ok=>ok?srvJoin(m[1]):netJoinFlow(m[1]));return true;}
+  const f=/^#f-([A-Za-z0-9_-]{6,20})$/.exec(location.hash);
+  if(f){srvProbe().then(ok=>{if(ok)srvFriendLink(f[1]);else window.history.replaceState(null,"",location.pathname);});return true;}
   return false;
 }
 $("copyBtn").onclick=async()=>{
@@ -2388,11 +2532,225 @@ $("copyBtn").onclick=async()=>{
 };
 $("shareBtn").onclick=async()=>{
   const url=$("lobbyLink").textContent;
-  if(navigator.share){try{await navigator.share({title:"Kippe",text:"Ich fordere dich zu Kippe heraus!",url});}catch(e){}}
+  if(navigator.share){try{await navigator.share({title:"Tiltrap",text:"Ich fordere dich zu Tiltrap heraus!",url});}catch(e){}}
   else $("copyBtn").click();
 };
-$("lobbyCancel").onclick=()=>{netClose();$("lobby").hidden=true;gameActive=false;openMenu();};
+$("lobbyCancel").onclick=()=>{if(net&&net.srv)netLeave(true);else netClose();$("lobby").hidden=true;gameActive=false;openMenu();};
 window.addEventListener("hashchange",()=>{if(!net||!location.hash.endsWith(net.code))netBootFromHash();});
+
+/* ---------- Tiltrap server: profile, friends, rankings ---------- */
+// The game site on Cloudflare Pages forwards /api to the game server. On other hosts (GitHub Pages, a file)
+// the server is missing and the old Firebase invite links keep working.
+const API=(()=>{let u=null;try{u=localStorage.getItem("tiltrap-api");}catch(e){}return (u||location.origin+"/api").replace(/\/+$/,"");})();
+const apiWs=path=>API.replace(/^http/,"ws")+"/"+path;
+let srvState=IN_ARTIFACT||location.protocol==="file:"?"none":"unknown";
+async function srvProbe(){
+  if(srvState!=="unknown")return srvState==="ok";
+  try{const r=await fetch(API+"/health",{cache:"no-store"});const d=r.ok&&await r.json();srvState=d&&d.ok?"ok":"none";}catch(e){srvState="none";}
+  syncMenu();return srvState==="ok";
+}
+function acct(){try{return JSON.parse(localStorage.getItem("tiltrap-acct")||"null");}catch(e){return null;}}
+function setAcct(a){try{if(a)localStorage.setItem("tiltrap-acct",JSON.stringify(a));else localStorage.removeItem("tiltrap-acct");}catch(e){}}
+// lobby connection: one WebSocket while the app is open, for pushes (challenges, matches, friend requests)
+const LB={ws:null,rid:0,calls:{},me:null,ready:false,tries:0,timer:0,
+  connect(){
+    if(!acct()||srvState!=="ok"||(this.ws&&this.ws.readyState<2))return;
+    let ws;try{ws=new WebSocket(apiWs("lobby"));}catch(e){return;}
+    this.ws=ws;this.ready=false;
+    ws.onopen=()=>{const a=acct();if(!a)return ws.close();
+      this.send({t:"auth",id:a.id,token:a.token}).then(r=>{
+        if(r.err==="auth"){setAcct(null);this.me=null;hubRender();return;}
+        if(r.me){this.ready=true;this.tries=0;this.me=r.me;hubRender();this.flush();}
+      });};
+    ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}
+      if(m.t==="res"){const f=this.calls[m.rid];delete this.calls[m.rid];if(f)f(m);return;}
+      lbPush(m);};
+    ws.onclose=()=>{if(this.ws!==ws)return;this.ws=null;this.ready=false;
+      for(const k in this.calls){this.calls[k]({err:"Keine Verbindung"});delete this.calls[k];}
+      if(acct()&&!document.hidden){clearTimeout(this.timer);this.timer=setTimeout(()=>this.connect(),Math.min(30000,1000*2**this.tries++));}};
+  },
+  send(m){return new Promise(res=>{const ws=this.ws;if(!ws||ws.readyState!==1){res({err:"Keine Verbindung"});return;}const rid=++this.rid;this.calls[rid]=res;ws.send(JSON.stringify({...m,rid}));});},
+  waiting:[],
+  flush(){const w=this.waiting;this.waiting=[];for(const x of w)this.send(x.m).then(x.res);},
+  // waits for the connection (up to 8 s) so callers can just call
+  call(m){
+    if(this.ready)return this.send(m);
+    this.connect();
+    return new Promise(res=>{const x={m,res};this.waiting.push(x);setTimeout(()=>{const i=this.waiting.indexOf(x);if(i>=0){this.waiting.splice(i,1);res({err:"Keine Verbindung zum Server"});}},8000);});
+  }
+};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&acct()&&srvState==="ok"&&!LB.ws)LB.connect();});
+function lbPush(m){
+  if(m.t==="refresh"){LB.send({t:"me"}).then(r=>{if(r.me){LB.me=r.me;hubRender();}});if(m.note)toast(esc(m.note));return;}
+  if(m.t==="challenge"){
+    toast(`<b>${esc(m.from)}</b> fordert dich zu einem Duell heraus!`,[["Ablehnen",()=>answerChallenge(m.code,false)],["Annehmen",()=>answerChallenge(m.code,true),true]],60000);
+    LB.send({t:"me"}).then(r=>{if(r.me){LB.me=r.me;hubRender();}});return;
+  }
+  if(m.t==="declined"){if(net&&net.code===m.code){lobbyStatus(`${m.by} hat abgelehnt.`,"err");}else toast(`${esc(m.by)} hat abgelehnt.`);return;}
+  if(m.t==="match"){hub.searching=false;startSrvDuel(m.code,m.side,m.key,true,`Gegner gefunden: ${m.opp}`);return;}
+}
+let toastT=0;
+function toast(html,btns,ms){
+  const el=$("toast");$("toastText").innerHTML=html;const b=$("toastBtns");b.innerHTML="";
+  for(const [label,fn,primary] of btns||[]){const x=document.createElement("button");x.className="btn"+(primary?" primary":"");x.textContent=label;x.onclick=()=>{el.hidden=true;fn();};b.appendChild(x);}
+  b.hidden=!(btns&&btns.length);el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true;},ms||(btns?20000:3500));
+}
+const hub={board:"friends",searching:false,after:null,boardData:null};
+function hubStatus(text,cls){const el=$("hubStatus");if(!text){el.hidden=true;return;}el.hidden=false;el.className="status"+(cls?" "+cls:"");$("hubStatusText").textContent=text;}
+function hubNote(html,err){const el=$("hubNote");if(!html){el.hidden=true;return;}el.hidden=false;el.className="hubnote"+(err?" err":"");el.innerHTML=html;}
+async function openHub(after){
+  if(net&&net.started){toast("Du bist gerade in einem Duell.");return;}
+  $("menu").hidden=true;$("result").hidden=true;$("lobby").hidden=true;$("hub").hidden=false;hub.after=after||null;hubStatus("");hubNote("");
+  if(!await srvProbe()){hubStatus("Server nicht erreichbar. Online-Profile gibt es auf tiltrap.pages.dev.","err");$("hubSetup").hidden=true;$("hubMain").hidden=true;return;}
+  if(!acct()){hubRender();$("hubName").value=myName();return;}
+  if(!LB.ready){hubStatus("Verbinde …");LB.connect();}
+  hubRender();hubLoadBoard();
+  if(after&&LB.me){hub.after=null;after();}
+}
+function closeHub(){$("hub").hidden=true;}
+$("hubBack").onclick=()=>{if(hub.searching)hubUnqueue();closeHub();openMenu();};
+$("hubCreate").onclick=async()=>{
+  const name=$("hubName").value.trim();$("hubCreate").disabled=true;$("hubSetupMsg").textContent="Lege Profil an …";
+  try{
+    const r=await fetch(API+"/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
+    const d=await r.json();
+    if(!r.ok||!d.token){$("hubSetupMsg").textContent=d.err||"Hat nicht geklappt.";return;}
+    setAcct({id:d.id,token:d.token});saveName(d.user.name);LB.me={user:d.user,friends:[],incoming:[],outgoing:[],challenges:[]};
+    LB.connect();hubRender();hubNote(`Willkommen, <b>${esc(d.user.tag)}</b>! Unter diesem Namen mit Nummer finden dich deine Freunde.`);hubLoadBoard();
+    const after=hub.after;hub.after=null;if(after)after();
+  }catch(e){$("hubSetupMsg").textContent="Keine Verbindung zum Server.";}
+  finally{$("hubCreate").disabled=false;}
+};
+const pct=(w,l)=>w+l?Math.round(100*w/(w+l))+" %":"–";
+function hubRender(){
+  if($("hub").hidden)return;
+  const a=acct();$("hubSetup").hidden=!!a;$("hubMain").hidden=!a;
+  if(!a)return;
+  const me=LB.me;if(!me){return;}
+  hubStatus(LB.ready?"":"Verbinde …");
+  const u=me.user;$("hubTag").textContent=u.tag;
+  $("hubStats").innerHTML=`<span>Elo ${u.elo}</span>${me.rank?`<span>Rang ${me.rank}</span>`:""}<span>Rangliste ${u.rw}:${u.rl}</span><span>Freundschaft ${u.fw}:${u.fl}</span><span>Siegesrate ${pct(u.rw+u.fw,u.rl+u.fl)}</span>`;
+  $("hubActive").hidden=!(me.active&&!net);
+  const rb=$("hubRanked");rb.classList.toggle("searching",hub.searching);
+  rb.textContent=hub.searching?"Suche Gegner … (tippen zum Abbrechen)":"⚔ Rangliste: Gegner suchen";
+  $("hubSettings").textContent=`Einladungen und Herausforderungen: ${{std:"Standardbrett",pool:"4 Karten",rand:"Zufallskarte"}[mode.field]||"Standardbrett"} · ${mode.time?mode.time/60+" Min":"ohne Uhr"} · Farbe ${mode.color==="r"?"Zufall":+mode.color?"Blau":"Rot"} (im Menü änderbar)`;
+  const ch=$("hubChallenges");ch.innerHTML="";
+  for(const c of me.challenges||[]){const d=document.createElement("div");d.className="fr";
+    d.innerHTML=`<span class="who"><b>${esc(c.from)}</b><small>fordert dich heraus</small></span>`;
+    const no=document.createElement("button");no.className="btn";no.textContent="Nein";no.onclick=()=>answerChallenge(c.code,false);
+    const yes=document.createElement("button");yes.className="btn primary";yes.textContent="Spielen";yes.onclick=()=>answerChallenge(c.code,true);
+    d.append(no,yes);ch.appendChild(d);}
+  const rq=$("hubRequests");rq.innerHTML="";
+  for(const x of me.incoming||[]){const d=document.createElement("div");d.className="fr";
+    d.innerHTML=`<span class="who"><b>${esc(x.tag)}</b><small>möchte dein Freund sein</small></span>`;
+    const no=document.createElement("button");no.className="btn";no.textContent="Nein";no.onclick=()=>lbDo({t:"friend_remove",id:x.id});
+    const yes=document.createElement("button");yes.className="btn primary";yes.textContent="Annehmen";yes.onclick=()=>lbDo({t:"friend_accept",id:x.id});
+    d.append(no,yes);rq.appendChild(d);}
+  for(const x of me.outgoing||[]){const d=document.createElement("div");d.className="fr";
+    d.innerHTML=`<span class="who"><b>${esc(x.tag)}</b><small>Anfrage gesendet</small></span>`;
+    const no=document.createElement("button");no.className="btn";no.textContent="Zurückziehen";no.onclick=()=>lbDo({t:"friend_remove",id:x.id});d.appendChild(no);rq.appendChild(d);}
+  const fl=$("hubFriends");fl.innerHTML="";
+  if(!(me.friends||[]).length)fl.innerHTML=`<p class="tip">Noch keine Freunde. Schick deinen Freundes-Link oder gib Name#Nummer oben ein.</p>`;
+  for(const f of (me.friends||[]).slice().sort((a,b)=>b.online-a.online||a.name.localeCompare(b.name))){
+    const d=document.createElement("div");d.className="fr";
+    d.innerHTML=`<span class="on${f.online?" y":""}" title="${f.online?"online":"offline"}"></span><span class="who"><b>${esc(f.tag)}</b><small>Elo ${f.elo} · Siegesrate ${pct(f.rw+f.fw,f.rl+f.fl)} · gegen dich ${f.hl}:${f.hw}</small></span>`;
+    const c=document.createElement("button");c.className="btn primary";c.textContent="Herausfordern";c.onclick=()=>challengeFriend(f);
+    const x=document.createElement("button");x.className="btn";x.textContent="✕";x.title="Freund entfernen";x.setAttribute("aria-label",`${f.tag} entfernen`);
+    x.onclick=()=>{if(confirm(`${f.tag} aus deinen Freunden entfernen?`))lbDo({t:"friend_remove",id:f.id});};
+    d.append(c,x);fl.appendChild(d);}
+  for(const b of $("segBoard").children)b.classList.toggle("sel",b.dataset.v===hub.board);
+  renderBoard();
+}
+function renderBoard(){
+  const box=$("hubBoard"),list=hub.boardData,me=LB.me&&LB.me.user;
+  if(!list){box.innerHTML=`<p class="tip">Lädt …</p>`;return;}
+  if(!list.length){box.innerHTML=`<p class="tip">${hub.board==="all"?"Noch niemand hat ein Ranglistenspiel beendet. Sei der Erste!":"Hier erscheinen du und deine Freunde."}</p>`;return;}
+  box.innerHTML=`<table><thead><tr><th>#</th><th>Spieler</th><th>Elo</th><th>S:N</th><th>Quote</th></tr></thead><tbody>${list.map((x,i)=>{const w=hub.board==="all"?x.rw:x.rw+x.fw,l=hub.board==="all"?x.rl:x.rl+x.fl;
+    return `<tr class="${me&&x.id===me.id?"me":""}"><td>${i+1}</td><td>${esc(x.tag)}</td><td>${x.elo}</td><td>${w}:${l}</td><td>${pct(w,l)}</td></tr>`;}).join("")}</tbody></table>`;
+}
+async function hubLoadBoard(){const r=await LB.call({t:"board",scope:hub.board});if(r.list){hub.boardData=r.list;renderBoard();}}
+for(const b of $("segBoard").children)b.onclick=()=>{hub.board=b.dataset.v;hub.boardData=null;hubRender();hubLoadBoard();};
+async function lbDo(m){const r=await LB.call(m);if(r.err){hubNote(esc(r.err),true);return r;}if(r.me){LB.me=r.me;hubRender();}hubLoadBoard();return r;}
+$("hubAddBtn").onclick=async()=>{
+  const tag=$("hubAdd").value.trim();if(!tag)return;
+  const r=await lbDo({t:"friend_add",tag});
+  if(!r.err){$("hubAdd").value="";hubNote(r.friends?"Ihr seid jetzt Freunde!":r.already?"Ihr seid schon Freunde.":"Anfrage gesendet. Sobald sie angenommen ist, erscheint ihr gegenseitig in der Liste.");}
+};
+$("hubAdd").addEventListener("keydown",e=>{if(e.key==="Enter")$("hubAddBtn").click();});
+$("hubRename").onclick=async()=>{
+  const n=prompt("Neuer Spielername (2–16 Zeichen):",LB.me&&LB.me.user.name||"");if(n==null)return;
+  const r=await lbDo({t:"rename",name:n});if(!r.err){saveName(LB.me.user.name);hubNote(`Du heißt jetzt <b>${esc(LB.me.user.tag)}</b>.`);}
+};
+$("hubDelete").onclick=async()=>{
+  if(!confirm("Profil, Freunde und Statistik endgültig löschen? Das lässt sich nicht rückgängig machen."))return;
+  const r=await LB.call({t:"delete_account"});
+  if(r.deleted){setAcct(null);LB.me=null;try{LB.ws&&LB.ws.close();}catch(e){}hubRender();$("hubSetupMsg").textContent="Dein Profil wurde gelöscht.";}
+  else hubNote(esc(r.err||"Hat nicht geklappt."),true);
+};
+const friendLink=()=>LB.me?location.origin+location.pathname+"#f-"+LB.me.user.id:"";
+$("hubFriendLink").onclick=async()=>{
+  const url=friendLink();if(!url)return;
+  if(navigator.share){try{await navigator.share({title:"Tiltrap",text:`Füg mich bei Tiltrap als Freund hinzu: ${LB.me.user.tag}`,url});return;}catch(e){if(e.name==="AbortError")return;}}
+  try{await navigator.clipboard.writeText(url);hubNote("Freundes-Link kopiert. Wer ihn öffnet, schickt dir eine Freundschaftsanfrage.");}catch(e){hubNote(esc(url));}
+};
+$("hubRanked").onclick=()=>{if(hub.searching)hubUnqueue();else hubQueue();};
+async function hubQueue(){
+  $("result").hidden=true;$("lobby").hidden=true;
+  if($("hub").hidden){await openHub(()=>hubQueue());if(!LB.me)return;}
+  hub.searching=true;hubRender();
+  const r=await LB.call({t:"queue"});
+  if(r.err){hub.searching=false;hubNote(esc(r.err),true);hubRender();}
+}
+function hubUnqueue(){hub.searching=false;LB.call({t:"unqueue"});hubRender();}
+$("hubInvite").onclick=async()=>{
+  const r=await LB.call({t:"invite",field:mode.field,time:mode.time||0,color:mode.color==="r"?"r":+mode.color});
+  if(r.err){hubNote(esc(r.err),true);return;}
+  closeHub();showLobby("host");
+  $("lobbyTitle").textContent="Duell erstellt";
+  $("lobbyText").textContent=`Schick diesen Link an deinen Freund. Sobald er ihn öffnet, geht's los. Du spielst ${["Rot","Blau"][r.side]}, dein Freund fängt an.`;
+  $("lobbyLink").textContent=shareUrl(r.code);$("lobbyCode").textContent=r.code;
+  lobbyStatus("Warte auf deinen Gegner …");
+  window.history.replaceState(null,"","#r-"+r.code);
+  netClose();netOpen(r.code,r.side,{key:r.key,ranked:false});
+};
+async function challengeFriend(f){
+  const r=await LB.call({t:"challenge",id:f.id,field:mode.field,time:mode.time||0,color:mode.color==="r"?"r":+mode.color});
+  if(r.err){hubNote(esc(r.err),true);return;}
+  startSrvDuel(r.code,r.side,r.key,false,`Herausforderung an ${f.tag} gesendet`,`Warte, bis ${f.name} annimmt …`);
+}
+async function answerChallenge(code,accept){
+  const r=await LB.call({t:"challenge_answer",code,accept});
+  if(r.err){toast(esc(r.err));return;}
+  if(!accept){LB.send({t:"me"}).then(x=>{if(x.me){LB.me=x.me;hubRender();}});return;}
+  if(net)netLeave(true);
+  startSrvDuel(r.code,r.side,r.key,false,"Duell wird geladen …");
+}
+function startSrvDuel(code,side,key,ranked,title,status){
+  stopReplay();cancelBot();if(analysis)endAnalysis(true);
+  if(document.body.classList.contains("tut"))tutExit();
+  closeHub();$("result").hidden=true;$("menu").hidden=true;
+  if(net&&net.code!==code)netLeave(true);else if(net)netClose();
+  showLobby("join");$("lobbyJoin").hidden=true;
+  $("lobbyTitle").textContent=title;$("lobbyText").textContent=ranked?"Ranglistenduell: Standardbrett, 5 Minuten, Best of 3.":"";
+  lobbyStatus(status||"Verbinde …");
+  window.history.replaceState(null,"","#r-"+code);
+  netOpen(code,side,{key,ranked});
+}
+$("hubResume").onclick=()=>{const a=LB.me&&LB.me.active;if(a)startSrvDuel(a.code,a.side,a.key,!!a.ranked,"Duell wird fortgesetzt");};
+// invite link on the server; codes that only exist on Firebase fall back to the old flow
+async function srvJoin(code){
+  if(!acct()){openHub(()=>srvJoin(code));hubNote("Leg kurz ein Profil an, dann geht's direkt ins Duell.");return;}
+  showLobby("join");$("lobbyJoin").hidden=true;$("lobbyTitle").textContent="Einladung zu Tiltrap";$("lobbyText").textContent="";lobbyStatus("Trete bei …");
+  const r=await LB.call({t:"join",code});
+  if(r.err){if(/Kein Duell/.test(r.err)&&onlineReady()){netJoinFlow(code);return;}lobbyStatus(r.err,"err");return;}
+  startSrvDuel(code,r.side,r.key,false,"Einladung zu Tiltrap","Verbinde …");
+}
+async function srvFriendLink(id){
+  window.history.replaceState(null,"",location.pathname);
+  const go=async()=>{const r=await lbDo({t:"friend_id",id});if(!r.err)hubNote(r.friends?"Ihr seid jetzt Freunde!":r.already?"Ihr seid schon Freunde.":"Freundschaftsanfrage gesendet.");};
+  if(!acct()){openHub(go);hubNote("Leg ein Profil an, dann wirst du direkt als Freund hinzugefügt.");return;}
+  openHub(go);
+}
 
 /* ---------- clocks ---------- */
 // Chess-style thinking time per round. Online, every move carries the mover's remaining time (tl),
@@ -2450,6 +2808,7 @@ installUI();
 for(const ev of ["gesturestart","gesturechange","gestureend"])document.addEventListener(ev,e=>e.preventDefault(),{passive:false});
 document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
+srvProbe().then(ok=>{if(ok&&acct())LB.connect();});
 if(!netBootFromHash()){let first=false;try{first=!localStorage.getItem("kippe-tut")&&!localStorage.getItem("kippe-seen");}catch(e){}if(first)startTutorial(0);}
 </script>
 </body>

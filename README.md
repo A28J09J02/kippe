@@ -1,14 +1,16 @@
-# Kippe
+# Tiltrap
+
+*(früher „Kippe“)*
 
 1-gegen-1-Strategiespiel fürs Handy: Zwei Kugeln, ein kippbares Brett. Wer am Zug ist, kippt das Brett oder baut einen Stein oder ein Loch. Ziel: die gegnerische Kugel in ein Loch oder über die Kante befördern, ohne selbst zu fallen.
 
 ## Spielen
-**https://a28j09j02.github.io/kippe/** (GitHub Pages aus `main`, installierbar als App). Lokal: `index.html` im Browser öffnen. Im Menü wählen:
+**https://tiltrap.pages.dev** (Cloudflare Pages, mit Profilen, Freunden und Rangliste; Einrichtung: `docs/CLOUDFLARE.md`). Spiegel ohne Server: https://a28j09j02.github.io/kippe/ (GitHub Pages aus `main`). Installierbar als App. Lokal: `index.html` im Browser öffnen. Im Menü wählen:
 - **Zu zweit** an einem Handy
 - **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), als Rot, Blau oder per Zufall
 - **Tutorial**: 6 kurze Lektionen (Kippen, beide Kugeln rollen, Loch, Stein, Schubsen, Kante). Startet beim ersten Besuch automatisch, im Menü jederzeit wiederholbar
 - **Rätsel: Gewinn in 2** (70 geprüfte Stellungen, Rätsel des Tages)
-- **Online gegen Freunde** per Einladungslink (siehe `docs/ONLINE.md`)
+- **Online** (auf tiltrap.pages.dev): Profil mit Name#Nummer ohne E-Mail, Freunde hinzufügen und herausfordern, Einladungslink, **Rangliste** mit Elo und Gegnersuche, Bestenliste unter Freunden und weltweit. Ohne Server (GitHub Pages) gibt es weiter Einladungslinks über Firebase (`docs/ONLINE.md`)
 
 Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wechselnde Karten** (4 Karten, der Verlierer wählt die nächste).
 
@@ -44,6 +46,7 @@ Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die 
 7×7, fast leer: ein Loch in der Mitte, zwei feste Blöcke diagonal, ringsum bröckelnde Randsteine, nur die Ecken sind fest. Rot startet unten links, Blau oben rechts. Ausgewählt aus drei Kandidaten per Bot-gegen-Bot-Test: die meisten Runden enden durch eine gestellte Falle („Reingelegt“), Startvorteil im Test rund 40 %.
 
 ## Aufbau
+- `server/`, `pages/`, `tools/build.js`, `.github/workflows/deploy-cloudflare.yml` – Spielserver und Veröffentlichung auf Cloudflare, siehe `docs/CLOUDFLARE.md`
 - `index.html` – das komplette Spiel in einer Datei:
   - `<script id="logic-src">` Spielregeln als reine Funktionen (`LOGIC START` … `LOGIC END`)
   - `<script id="bot-src">` Bot: Minimax mit Alpha-Beta und Iterative Deepening, läuft im Web Worker (`BOT START` … `BOT END`)
@@ -57,6 +60,7 @@ Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die 
 
 ## Tests
 ```
+node tools/build.js && (cd server && npx wrangler dev) & node server/test/api.test.mjs
 node tools/check-maps.js
 node tools/bot-arena.js hard hard 20 400
 node tools/bot-arena.js medium hard 20 400

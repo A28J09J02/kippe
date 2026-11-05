@@ -1,0 +1,47 @@
+# Publishes Tiltrap to Cloudflare (free plan) on every push to main:
+#   1. the game server Worker "tiltrap-api" (accounts, friends, rankings, online duels)
+#   2. the game site on Cloudflare Pages "tiltrap" (https://tiltrap.pages.dev), which reaches the server under /api
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   CLOUDFLARE_API_TOKEN   an API token with "Workers Scripts: Edit" and "Cloudflare Pages: Edit"
+#   CLOUDFLARE_ACCOUNT_ID  the account ID shown in the Cloudflare dashboard
+# Without them the workflow only runs the checks and skips publishing.
+name: Deploy to Cloudflare
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install wrangler
+        working-directory: server
+        run: npm ci
+      - name: Build (server rules from index.html, static site)
+        run: node tools/build.js
+      - name: Check maps
+        run: node tools/check-maps.js
+      - name: Deploy game server
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: server
+        run: npx wrangler deploy
+      - name: Create Pages project (first run only)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: pages
+        run: ../server/node_modules/.bin/wrangler pages project create tiltrap --production-branch main || echo "Project exists"
+      - name: Deploy game site
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: pages
+        run: ../server/node_modules/.bin/wrangler pages deploy --project-name tiltrap --branch main --commit-dirty=true

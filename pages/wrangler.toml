@@ -1,0 +1,9 @@
+# Cloudflare Pages project for the game site (tiltrap.pages.dev).
+# /api/* is handed to the game server Worker "tiltrap-api" through a service binding (functions/api/[[path]].js).
+name = "tiltrap"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+
+[[services]]
+binding = "API"
+service = "tiltrap-api"
