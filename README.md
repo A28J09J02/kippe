@@ -6,10 +6,16 @@
 **https://a28j09j02.github.io/kippe/** (GitHub Pages aus `main`, installierbar als App). Lokal: `index.html` im Browser öffnen. Im Menü wählen:
 - **Zu zweit** an einem Handy
 - **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), als Rot, Blau oder per Zufall
-- **Rätsel: Gewinn in 2** (40 geprüfte Stellungen, Rätsel des Tages)
+- **Tutorial**: 6 kurze Lektionen (Kippen, beide Kugeln rollen, Loch, Stein, Schubsen, Kante). Startet beim ersten Besuch automatisch, im Menü jederzeit wiederholbar
+- **Rätsel: Gewinn in 2** (70 geprüfte Stellungen, Rätsel des Tages)
 - **Online gegen Freunde** per Einladungslink (siehe `docs/ONLINE.md`)
 
 Spielfeld: **Standard** (immer dieselbe Aufstellung, wie beim Schach) oder **Wechselnde Karten** (4 Karten, der Verlierer wählt die nächste).
+
+## Hilfen für Einsteiger
+- Die Kugel, die am Zug ist, leuchtet und schimmert; in den ersten Zügen steht „DU“ über der eigenen Kugel.
+- Zu Beginn eines Duells erklärt ein Hinweis das Ziel: die andere Kugel ins Loch oder über die Kante bringen.
+- **Analyse** nach jeder Runde: Zug für Zug, Bewertung (Bester Zug, Gut, Ungenau, Fehler, Patzer, Sieg verpasst), der bessere Zug zum Einblenden und eine Leiste neben dem Brett, wer besser steht. Rechnet mit dem starken Bot im Hintergrund.
 
 ## Als App installieren
 Kippe ist eine Web-App (PWA): dieselbe Seite läuft im Browser und lässt sich als App installieren, mit eigenem Icon, im Vollbild und offline gegen den Bot.
@@ -44,6 +50,7 @@ Nach einem Update `VERSION` in `sw.js` hochzählen, damit installierte Apps die 
   - danach Darstellung (Canvas), Ton, Menü und Bedienung
 - `tools/check-maps.js` – Fairness-Prüfung aller Karten (Symmetrie, kein Sofort-Fall, kein erzwungener Sieg in 4 Halbzügen)
 - `tools/bot-arena.js` – Bot gegen Bot, z. B. `node tools/bot-arena.js hard hard 20`
+- `tools/gen-puzzles.js` – sucht neue Rätsel (exakt geprüft: Gewinn in 2, nicht in 1, höchstens 2 Lösungszüge), z. B. `node tools/gen-puzzles.js 20`
 - `tools/artifact.py` – erzeugt `dist/artifact.html` (ohne Dokument-Hülle) für die Claude-Vorschau
 - `manifest.webmanifest`, `sw.js`, `icons/` – App-Installation und Offline-Betrieb (`tools/make-icons.py` zeichnet die Icons)
 - `docs/ONLINE.md` – Plan für Online-Duelle

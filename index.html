@@ -170,6 +170,41 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
 .install{display:flex;flex-direction:column;gap:6px;align-items:stretch}
 .install .tip{margin:0;font-size:13px;color:var(--muted);text-align:center;line-height:1.4}
 @media (prefers-reduced-motion:reduce){.think i{animation:none;opacity:.8}}
+/* analysis */
+.evalbar{position:relative;width:14px;flex:none;margin-right:8px;border-radius:7px;overflow:hidden;background:var(--p1);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.evfill{position:absolute;left:0;right:0;bottom:0;height:50%;background:var(--p0);transition:height .35s ease}
+.evmid{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(255,255,255,.7)}
+body.analysing .tilt{width:min(calc(100% - 22px),470px,calc(100dvh - 380px))}
+body.analysing .controls,body.analysing .foot,body.analysing .clocks{display:none}
+body.analysing #moveInfo{visibility:hidden}
+.ananav{display:flex;flex-direction:column;gap:8px}
+.ananav .row .btn{padding:10px 6px;font-weight:800}
+.ananav #anaBest.on{background:#2fa36b;color:#fff;border-color:transparent}
+.anainfo{font-size:13px;color:var(--muted);text-align:center;line-height:1.35;min-height:18px}
+.tagq{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:1px 7px;color:#fff;margin-left:4px;vertical-align:1px}
+.q-best{background:#2fa36b}.q-good{background:#5f9e7a}.q-ok{background:#b08a2e}.q-bad{background:#d8402b}.q-miss{background:#a3195b}.q-wait{background:var(--muted)}
+/* tutorial */
+.tutbox{background:var(--panel);border:2px solid var(--accentN);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.tuthead{display:flex;align-items:center;gap:8px}
+.tuthead .lbl{flex:none}
+.tutdots{flex:1;display:flex;gap:4px}
+.tutdots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.tutdots i.on{background:var(--accentN)}
+.tutbox b#tutTitle{font-family:var(--display);font-weight:400;font-size:19px;line-height:1.15}
+.tutbox p{margin:0;font-size:14px;line-height:1.4;color:var(--ink)}
+.tutbox p .ok{color:#2fa36b;font-weight:800}.tutbox p .bad{color:var(--warn);font-weight:800}
+.btn.small{padding:5px 9px;font-size:12px}
+body.tut .sub,body.tut .clocks,body.tut #undoBtn{display:none}
+/* goal banner at the start of a duel */
+.goal{position:absolute;z-index:4;left:50%;top:34%;transform:translate(-50%,-50%);width:min(86%,360px);box-sizing:border-box;background:rgba(18,14,10,.88);color:#fff;
+  border-radius:16px;padding:14px 16px;text-align:center;line-height:1.35;font-size:15px;box-shadow:0 12px 30px rgba(0,0,0,.35);animation:goalIn .35s ease-out both;pointer-events:none}
+.goal b.big2{display:block;font-family:var(--display);font-weight:400;font-size:22px;margin-bottom:4px;letter-spacing:.02em}
+.goal .c0{color:#ff8a76;font-weight:800}.goal .c1{color:#8fb0ff;font-weight:800}
+.goal small{display:block;margin-top:6px;color:rgba(255,255,255,.7);font-size:12px}
+.goal.out{animation:goalOut .3s ease-in both}
+@keyframes goalIn{from{opacity:0;transform:translate(-50%,-40%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes goalOut{to{opacity:0;transform:translate(-50%,-56%)}}
+@media (prefers-reduced-motion:reduce){.goal,.goal.out{animation:none}}
 </style>
 </head>
 <body>
@@ -188,15 +223,27 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
   </header>
   <div class="turn p0" id="turn"><span id="turnText">Rot ist dran</span><span class="think" aria-hidden="true"><i></i><i></i><i></i></span></div>
   <div class="clocks" id="clocks" hidden><span class="clk p0" id="clk0">5:00</span><span class="clk p1" id="clk1">5:00</span></div>
+  <div class="tutbox" id="tutBox" hidden>
+    <div class="tuthead"><span class="lbl" id="tutStep">Tutorial 1/6</span><span class="tutdots" id="tutDots"></span><button class="btn small" id="tutSkip">Überspringen</button></div>
+    <b id="tutTitle"></b>
+    <p id="tutText"></p>
+  </div>
   <div class="sub"><span id="roundInfo">Runde 1 · Standard</span><span id="moveInfo" style="text-align:right">Zug 0</span></div>
   <div class="stage" id="stage">
+    <div class="evalbar" id="evalBar" hidden aria-hidden="true"><div class="evfill" id="evFill"></div><i class="evmid"></i></div>
     <div class="tilt" id="tilt"><canvas id="cv" aria-label="Spielbrett"></canvas></div>
+    <div class="goal" id="goal" hidden></div>
     <div class="pop" id="pop" hidden>
       <button id="popS" data-kind="S"><span>Stein</span><small></small></button>
       <button id="popH" data-kind="H"><span>Loch</span><small></small></button>
     </div>
   </div>
   <div class="hint" id="hint"></div>
+  <div class="ananav" id="anaNav" hidden>
+    <div class="anainfo" id="anaInfo"></div>
+    <div class="row"><button class="btn" id="anaPrev" aria-label="Zug zurück">◀ Zurück</button><button class="btn" id="anaBest">Besten Zug zeigen</button><button class="btn" id="anaNext" aria-label="Nächster Zug">Weiter ▶</button></div>
+    <button class="btn primary" id="anaDone">Analyse beenden</button>
+  </div>
   <div class="controls" id="controls">
     <button class="dir" data-dir="left" aria-label="Nach links kippen">◀</button>
     <button class="dir" data-dir="up" aria-label="Nach oben kippen">▲</button>
@@ -215,9 +262,13 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
     <div class="hero">
       <canvas id="heroCv" aria-hidden="true"></canvas>
       <p class="logo">KIPPE</p>
-      <p class="tag">Kipp das Brett. Leg deinen Gegner rein.</p>
+      <p class="tag">Kipp das Brett. Bring die andere Kugel zu Fall.</p>
     </div>
     <div class="modes" role="radiogroup" aria-label="Spielart">
+      <button class="mode" id="mTut" role="radio" data-mode="tut">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg></span>
+        <span><b>Tutorial</b><small id="tutSub">In 2 Minuten verstehen, wie Kippe geht</small></span>
+      </button>
       <button class="mode" id="mLocal" role="radio" data-mode="local">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 19c0-3 2.5-5 5-5s5 2 5 5M11 19c0-3 2.5-5 5-5s5 2 5 5"/></svg></span>
         <span><b>Zu zweit</b><small>Ein Handy, abwechselnd ziehen</small></span>
@@ -312,7 +363,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <li>Mit Bedenkzeit: Läuft deine Uhr ab, verlierst du die Runde. Der Bot hat auch eine Uhr und denkt bei langer Bedenkzeit gründlicher.</li>
     </ul>
     <p>Jeder Zug wird erst angezeigt, nochmal tippen führt ihn aus. Wer zuerst 2 Runden gewinnt, gewinnt das Duell. Wer eine Runde verliert, fängt die nächste an.</p>
-    <button class="btn primary" id="rulesOk">Verstanden</button>
+    <div class="row"><button class="btn" id="rulesTut">Tutorial spielen</button><button class="btn primary" id="rulesOk">Verstanden</button></div>
   </div>
 </div>
 
@@ -330,7 +381,7 @@ button:focus-visible{outline:3px solid var(--p1);outline-offset:2px}
       <div class="seg" id="segReField"><button class="btn" data-v="std">Standard</button><button class="btn" data-v="pool">4 Karten</button><button class="btn" data-v="rand">Zufall</button></div>
       <p class="tip" id="reStatus"></p>
     </div>
-    <button class="btn" id="resReplay">▶ Replay: die letzten 3 Züge</button>
+    <div class="row"><button class="btn" id="resReplay">▶ Replay</button><button class="btn" id="resAnalyse">🔍 Analyse</button></div>
     <div class="row"><button class="btn" id="resMenu">Menü</button><button class="btn primary" id="resNext">Nächste Runde</button></div>
   </div>
 </div>
@@ -773,6 +824,33 @@ function chooseMove(s,level,style,opts){
   for(const x of pool){r-=x.w;if(r<=0)return x.m;}
   return pool[0].m;
 }
+// Analysis: every root move scored with the strong search (values within 600 of the best are exact).
+// extra = a move that must be scored even if the search would skip it (the move actually played).
+function analyzePos(s,ms,extra){
+  const ctx={nodes:0,deadline:Infinity,maxNodes:Infinity,sense:1,smart:true,killer:[]},stop=Date.now()+ms;
+  let cand=botMoves(s,false);
+  if(extra&&!cand.some(m=>moveKey(m)===moveKey(extra))){const x=listMoves(s).find(m=>moveKey(m)===moveKey(extra));if(x)cand.push(x);}
+  if(!cand.length)cand=listMoves(s);
+  if(!cand.length)return null;
+  let moves=cand.map(m=>({m,v:0})),scored=null,depth=0;
+  for(let d=1;d<=16;d++){
+    const full=d<=2;ctx.deadline=full?Infinity:stop;
+    if(!full&&Date.now()>stop)break;
+    try{
+      const cur=[];let alpha=-Infinity;
+      for(const x of moves){
+        const out=playMove(s,x.m),lo=alpha-600;let v;
+        if(out.outcome)v=outcomeValue(out,s.turn,0);
+        else if(out.state.turn===s.turn)v=negamax(out.state,d-1,lo,Infinity,1,ctx);
+        else v=-negamax(out.state,d-1,-Infinity,-lo,1,ctx);
+        if(v>alpha)alpha=v;cur.push({m:x.m,v});
+      }
+      cur.sort((a,b)=>b.v-a.v);scored=cur;moves=cur;depth=d;
+      if(d>=4&&(cur[0].v>=WIN-50||cur.every(x=>x.v<=-WIN+50)))break;
+    }catch(e){if(e!==ABORT)throw e;break;}
+  }
+  return {list:(scored||moves).map(x=>({m:{type:x.m.type,dir:x.m.dir,r:x.m.r,c:x.m.c,kind:x.m.kind},v:x.v})),depth};
+}
 // ===== BOT END =====
 </script>
 <script id="fair-src">
@@ -784,7 +862,7 @@ const FAIR_SEEDS=[13345,21264,29183,37102,45021,52940,68778,100454,108373,116292
 // "Gewinn in 2": positions where the side to move forces a win within its next 2 moves (but not at once).
 // Found by gen_puzzles.js (bot games + exact search). Cells: . H W · a/b/c Bröckelwand mit 1–3 Treffern übrig ·
 // p/q/r Stein Rot, x/y/z Stein Blau (1–3 übrig). Edges top,right,bottom,left with W O a b c.
-const PUZZLES=[{"m":0,"t":1,"mv":21,"lt":"","si":0,"b":[[6,1],[2,6]],"st":[0,2,0,0],"g":"..r..H..H.......WH......H..xHr..W.H..H...........","e":"WcccccWWcbcccWWbccccWWcccccW"},{"m":2,"t":1,"mv":27,"lt":"","si":0,"b":[[6,6],[1,6]],"st":[0,0,0,0],"g":"...HzH....WHy..H...Wx.c.H.cH.W...Hp..HWrH....HHq.","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":29,"lt":"","si":0,"b":[[1,5],[0,5]],"st":[0,0,1,0],"g":"....x.r....q...HW...z...H...H...WHH.........r..H.","e":"WccccbWWbccccWWcccccWWcccccW"},{"m":0,"t":1,"mv":33,"lt":"right","si":2,"b":[[6,2],[1,6]],"st":[0,0,1,0],"g":"HH.H.z..z.......W...x...H..HHHp.W......rH....p.HH","e":"WcccccWWbccccWWbbcccWWccbcbW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"H......rc...H.z..H..HHW.c.W....H....Hr.zcH..Hz.Hr","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":8,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[1,2,2,2],"g":"....H...c...Hr...H....W.c.W....H..r.H...czH......","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[1,1]],"st":[3,0,0,0],"g":"...H.zz..H..W.HH.W.HzHH.c....H.W....W..H...H.....","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":35,"lt":"","si":3,"b":[[5,0],[2,0]],"st":[2,2,0,3],"g":"HHHzH...c..Hb...W...H...H..c.p..W...aHH.c....bHHH","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":2,"t":1,"mv":32,"lt":"","si":3,"b":[[6,1],[1,2]],"st":[0,0,0,0],"g":"HyHHH.....WH...Hx..W..c.H.cz.W...H.H.HWr.H...pHHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":1,"t":1,"mv":28,"lt":"up","si":0,"b":[[4,6],[0,6]],"st":[0,0,2,1],"g":".z.cH...c..Ha...W..z.c..H.rb..z.WH..cHrp.......H.","e":"WcWWWWWWWWWWaWWWWWWcWWcWWWWW"},{"m":3,"t":0,"mv":28,"lt":"","si":0,"b":[[3,0],[0,2]],"st":[0,0,0,1],"g":"...xH....H..W.q.HW.HH.y.c..r.H.W...HW..H....p..H.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":1,"mv":4,"lt":"","si":0,"b":[[6,0],[6,6]],"st":[3,2,2,2],"g":"........c...H.H..H....W.c.W....H..H.H...c.....z..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":25,"lt":"","si":0,"b":[[6,0],[4,0]],"st":[1,0,2,2],"g":"..H.....c...H...zH....W.c.W...qH....H...c...r.H..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWbWW"},{"m":2,"t":0,"mv":5,"lt":"","si":0,"b":[[6,0],[2,6]],"st":[3,2,1,2],"g":".H....H...WH..HH...W..c.H.cy.W...H...HW..........","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":31,"lt":"","si":1,"b":[[5,0],[5,4]],"st":[2,2,2,1],"g":"H......H........W....r..H..H....W...........Hy..H","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":8,"lt":"","si":0,"b":[[0,0],[0,1]],"st":[2,2,2,0],"g":"...Hz....H..W.H..W.H....c....H.W....W..H....H.rH.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":0,"mv":6,"lt":"up","si":0,"b":[[4,0],[0,4]],"st":[3,3,3,2],"g":"..Ha....c..Hc...W....b..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":3,"t":1,"mv":15,"lt":"up","si":0,"b":[[0,6],[0,5]],"st":[3,2,2,3],"g":"..H.x....H..W....W.H....c....H.W....W..H.........","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":19,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[2,2,1,0],"g":"...aHz..cH.Hb...W....c..H..c.rH.W...aH..c.HH.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":6,"lt":"","si":0,"b":[[5,6],[0,6]],"st":[2,2,3,1],"g":"....z.....WH...H...W.rc.H.c.HW...H...HW.......H..","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":10,"lt":"","si":0,"b":[[6,0],[6,1]],"st":[1,2,1,3],"g":"..rH...z..WH.H.H...W..c.H.c..W...H...HW......r...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":12,"lt":"up","si":0,"b":[[3,2],[0,2]],"st":[3,2,0,1],"g":".y...H.........HW.......H.......W.......HHH......","e":"WcbcccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":9,"lt":"down","si":0,"b":[[6,2],[1,6]],"st":[3,2,2,3],"g":".........H..W....W.Hy...c....H.W....W..H.H.......","e":"WWWWcWWWWWWWWWWWbWWWWWWWWWWW"},{"m":3,"t":1,"mv":28,"lt":"down","si":0,"b":[[6,6],[5,6]],"st":[1,0,0,0],"g":"......H..H..WHz..W.H.H..c..H.H.W...rW.zHH...rzH..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":31,"lt":"down","si":1,"b":[[6,0],[6,1]],"st":[0,1,0,2],"g":"z..H..rHa..Hc...W...Ha..H.zc..rrW....H..c...Hc..H","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":4,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[0,1]],"st":[0,1,2,2],"g":"......H.c...H....H..r.W.c.W.r..H....H...c.z.r..H.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":0,"t":1,"mv":28,"lt":"","si":0,"b":[[0,4],[0,6]],"st":[0,1,1,0],"g":".......Hz......HW...x...H..H....Wq..........rH.H.","e":"WccccOWWbccccWWcccccWWcccccW"},{"m":1,"t":0,"mv":28,"lt":"","si":0,"b":[[2,0],[1,0]],"st":[3,2,1,1],"g":"..Hz....c..Hc...W...HHH.H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":19,"lt":"","si":0,"b":[[3,0],[6,2]],"st":[1,2,1,1],"g":"..H...HH.HWH...H...W..c.H.c.pW...H...HW..z.......","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":3,"t":1,"mv":36,"lt":"","si":4,"b":[[0,5],[1,6]],"st":[0,0,1,1],"g":"HHHy.....H.qW.r..W.HxH..c..H.H.W..H.W..H....HHHHz","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":20,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[0,0,0,0],"g":"...cHz..c.rHa.rHWrHz.b..H..c....WHH.aH.zc..H.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":0,"mv":28,"lt":"","si":0,"b":[[0,1],[1,0]],"st":[0,0,0,0],"g":"..Hr.zz..HWH.z.H...WHHc.H.c.HW...H.r.HW...r.H....","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":35,"lt":"","si":3,"b":[[6,0],[0,5]],"st":[1,2,2,1],"g":"HHHz......WH...H...W.rc.H.c.HW...H...HW.....r.HHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":29,"lt":"","si":0,"b":[[5,0],[3,0]],"st":[0,3,2,0],"g":"...............rW.......H.......W.H..qH....HH....","e":"WcccccWWcccccWWcccccWWccccbW"},{"m":0,"t":0,"mv":6,"lt":"","si":0,"b":[[0,5],[0,6]],"st":[3,3,2,1],"g":"................W...H...H....H..W.......H........","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":4,"t":1,"mv":7,"lt":"","si":0,"b":[[6,0],[6,5]],"st":[1,2,1,3],"g":".H......c...H.H..H....W.c.W.r..H....H.r.c.....y..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":22,"lt":"","si":0,"b":[[1,6],[0,6]],"st":[0,0,0,2],"g":".HzHx....H.HW.H..W.H....c..zrH.W....W..H......r..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":0,"mv":15,"lt":"","si":0,"b":[[1,6],[0,5]],"st":[0,0,0,0],"g":".rzHH...czHrH.H..H....W.c.WH...H..H.H...cr......z","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"z......Hc...H.z..H..HHW.c.W....H....HzrrcH..H.rH.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":1,"t":0,"mv":16,"lt":"","si":0,"b":[[5,0],[0,5]],"st":[3,2,1,3],"g":".Hz.....c..Ha...W...Hc..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"}];
+const PUZZLES=[{"m":0,"t":1,"mv":21,"lt":"","si":0,"b":[[6,1],[2,6]],"st":[0,2,0,0],"g":"..r..H..H.......WH......H..xHr..W.H..H...........","e":"WcccccWWcbcccWWbccccWWcccccW"},{"m":2,"t":1,"mv":27,"lt":"","si":0,"b":[[6,6],[1,6]],"st":[0,0,0,0],"g":"...HzH....WHy..H...Wx.c.H.cH.W...Hp..HWrH....HHq.","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":29,"lt":"","si":0,"b":[[1,5],[0,5]],"st":[0,0,1,0],"g":"....x.r....q...HW...z...H...H...WHH.........r..H.","e":"WccccbWWbccccWWcccccWWcccccW"},{"m":0,"t":1,"mv":33,"lt":"right","si":2,"b":[[6,2],[1,6]],"st":[0,0,1,0],"g":"HH.H.z..z.......W...x...H..HHHp.W......rH....p.HH","e":"WcccccWWbccccWWbbcccWWccbcbW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"H......rc...H.z..H..HHW.c.W....H....Hr.zcH..Hz.Hr","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":8,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[1,2,2,2],"g":"....H...c...Hr...H....W.c.W....H..r.H...czH......","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[1,1]],"st":[3,0,0,0],"g":"...H.zz..H..W.HH.W.HzHH.c....H.W....W..H...H.....","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":35,"lt":"","si":3,"b":[[5,0],[2,0]],"st":[2,2,0,3],"g":"HHHzH...c..Hb...W...H...H..c.p..W...aHH.c....bHHH","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":2,"t":1,"mv":32,"lt":"","si":3,"b":[[6,1],[1,2]],"st":[0,0,0,0],"g":"HyHHH.....WH...Hx..W..c.H.cz.W...H.H.HWr.H...pHHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":1,"t":1,"mv":28,"lt":"up","si":0,"b":[[4,6],[0,6]],"st":[0,0,2,1],"g":".z.cH...c..Ha...W..z.c..H.rb..z.WH..cHrp.......H.","e":"WcWWWWWWWWWWaWWWWWWcWWcWWWWW"},{"m":3,"t":0,"mv":28,"lt":"","si":0,"b":[[3,0],[0,2]],"st":[0,0,0,1],"g":"...xH....H..W.q.HW.HH.y.c..r.H.W...HW..H....p..H.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":1,"mv":4,"lt":"","si":0,"b":[[6,0],[6,6]],"st":[3,2,2,2],"g":"........c...H.H..H....W.c.W....H..H.H...c.....z..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":0,"mv":25,"lt":"","si":0,"b":[[6,0],[4,0]],"st":[1,0,2,2],"g":"..H.....c...H...zH....W.c.W...qH....H...c...r.H..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWbWW"},{"m":2,"t":0,"mv":5,"lt":"","si":0,"b":[[6,0],[2,6]],"st":[3,2,1,2],"g":".H....H...WH..HH...W..c.H.cy.W...H...HW..........","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":31,"lt":"","si":1,"b":[[5,0],[5,4]],"st":[2,2,2,1],"g":"H......H........W....r..H..H....W...........Hy..H","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":8,"lt":"","si":0,"b":[[0,0],[0,1]],"st":[2,2,2,0],"g":"...Hz....H..W.H..W.H....c....H.W....W..H....H.rH.","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":0,"mv":6,"lt":"up","si":0,"b":[[4,0],[0,4]],"st":[3,3,3,2],"g":"..Ha....c..Hc...W....b..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":3,"t":1,"mv":15,"lt":"up","si":0,"b":[[0,6],[0,5]],"st":[3,2,2,3],"g":"..H.x....H..W....W.H....c....H.W....W..H.........","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":19,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[2,2,1,0],"g":"...aHz..cH.Hb...W....c..H..c.rH.W...aH..c.HH.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":6,"lt":"","si":0,"b":[[5,6],[0,6]],"st":[2,2,3,1],"g":"....z.....WH...H...W.rc.H.c.HW...H...HW.......H..","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":10,"lt":"","si":0,"b":[[6,0],[6,1]],"st":[1,2,1,3],"g":"..rH...z..WH.H.H...W..c.H.c..W...H...HW......r...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":12,"lt":"up","si":0,"b":[[3,2],[0,2]],"st":[3,2,0,1],"g":".y...H.........HW.......H.......W.......HHH......","e":"WcbcccWWcccccWWcccccWWcccccW"},{"m":3,"t":1,"mv":9,"lt":"down","si":0,"b":[[6,2],[1,6]],"st":[3,2,2,3],"g":".........H..W....W.Hy...c....H.W....W..H.H.......","e":"WWWWcWWWWWWWWWWWbWWWWWWWWWWW"},{"m":3,"t":1,"mv":28,"lt":"down","si":0,"b":[[6,6],[5,6]],"st":[1,0,0,0],"g":"......H..H..WHz..W.H.H..c..H.H.W...rW.zHH...rzH..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":31,"lt":"down","si":1,"b":[[6,0],[6,1]],"st":[0,1,0,2],"g":"z..H..rHa..Hc...W...Ha..H.zc..rrW....H..c...Hc..H","e":"WcWWWWWWWWWWcWWWWWWcWWaWWWWW"},{"m":4,"t":1,"mv":27,"lt":"","si":0,"b":[[1,0],[0,1]],"st":[0,1,2,2],"g":"......H.c...H....H..r.W.c.W.r..H....H...c.z.r..H.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":0,"t":1,"mv":28,"lt":"","si":0,"b":[[0,4],[0,6]],"st":[0,1,1,0],"g":".......Hz......HW...x...H..H....Wq..........rH.H.","e":"WccccOWWbccccWWcccccWWcccccW"},{"m":1,"t":0,"mv":28,"lt":"","si":0,"b":[[2,0],[1,0]],"st":[3,2,1,1],"g":"..Hz....c..Hc...W...HHH.H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":19,"lt":"","si":0,"b":[[3,0],[6,2]],"st":[1,2,1,1],"g":"..H...HH.HWH...H...W..c.H.c.pW...H...HW..z.......","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":3,"t":1,"mv":36,"lt":"","si":4,"b":[[0,5],[1,6]],"st":[0,0,1,1],"g":"HHHy.....H.qW.r..W.HxH..c..H.H.W..H.W..H....HHHHz","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":1,"t":1,"mv":20,"lt":"up","si":0,"b":[[4,0],[0,6]],"st":[0,0,0,0],"g":"...cHz..c.rHa.rHWrHz.b..H..c....WHH.aH.zc..H.c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":0,"mv":28,"lt":"","si":0,"b":[[0,1],[1,0]],"st":[0,0,0,0],"g":"..Hr.zz..HWH.z.H...WHHc.H.c.HW...H.r.HW...r.H....","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":2,"t":0,"mv":35,"lt":"","si":3,"b":[[6,0],[0,5]],"st":[1,2,2,1],"g":"HHHz......WH...H...W.rc.H.c.HW...H...HW.....r.HHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":29,"lt":"","si":0,"b":[[5,0],[3,0]],"st":[0,3,2,0],"g":"...............rW.......H.......W.H..qH....HH....","e":"WcccccWWcccccWWcccccWWccccbW"},{"m":0,"t":0,"mv":6,"lt":"","si":0,"b":[[0,5],[0,6]],"st":[3,3,2,1],"g":"................W...H...H....H..W.......H........","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":4,"t":1,"mv":7,"lt":"","si":0,"b":[[6,0],[6,5]],"st":[1,2,1,3],"g":".H......c...H.H..H....W.c.W.r..H....H.r.c.....y..","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":3,"t":1,"mv":22,"lt":"","si":0,"b":[[1,6],[0,6]],"st":[0,0,0,2],"g":".HzHx....H.HW.H..W.H....c..zrH.W....W..H......r..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":0,"mv":15,"lt":"","si":0,"b":[[1,6],[0,5]],"st":[0,0,0,0],"g":".rzHH...czHrH.H..H....W.c.WH...H..H.H...cr......z","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":4,"t":1,"mv":15,"lt":"","si":0,"b":[[6,1],[5,0]],"st":[0,0,0,0],"g":"z......Hc...H.z..H..HHW.c.W....H....HzrrcH..H.rH.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":1,"t":0,"mv":16,"lt":"","si":0,"b":[[5,0],[0,5]],"st":[3,2,1,3],"g":".Hz.....c..Ha...W...Hc..H..c....W...cH..c....c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":4,"t":0,"mv":6,"lt":"","si":0,"b":[[6,5],[0,6]],"st":[2,2,2,2],"g":"r...H...c...H....H....W.c.W....H.z..H...c...H....","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":1,"t":1,"mv":38,"lt":"","si":6,"b":[[5,0],[4,5]],"st":[0,0,0,0],"g":"HHHczH..cHHHa.r.W....c..H....HzHW...aHHrbq.HHbHHH","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":0,"mv":10,"lt":"","si":0,"b":[[6,5],[6,6]],"st":[1,1,3,0],"g":".r..z.....WH...H...W.Hc.H.c.HW...H...HW.r...zH...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":3,"t":0,"mv":13,"lt":"","si":0,"b":[[6,1],[0,5]],"st":[0,1,1,0],"g":"zz.......H..W..H.W.HH..Hc..r.HHW....W..H....pH..r","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":0,"mv":6,"lt":"","si":0,"b":[[1,0],[0,0]],"st":[2,1,2,3],"g":"........cz..Hr...H....W.c.W....H....H..Hc.......z","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":1,"t":1,"mv":27,"lt":"","si":0,"b":[[4,0],[2,6]],"st":[0,0,0,0],"g":"..zc...rcHHHc.rrWH.x.c..H..a....W...aHH.c..H.bz.H","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":1,"t":1,"mv":6,"lt":"down","si":0,"b":[[6,0],[2,6]],"st":[3,2,1,1],"g":"z..c....c..Hc...W....c..H..bH.HHW...cH..c....cH..","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":0,"mv":10,"lt":"","si":0,"b":[[5,6],[0,0]],"st":[2,0,1,3],"g":"..y..H....WH...H.z.W.zc.H.cH.W...Hr..HW..........","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":9,"lt":"left","si":0,"b":[[6,0],[5,3]],"st":[2,2,1,1],"g":"................W...H...H..HH...W....y......r..H.","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":4,"t":1,"mv":26,"lt":"up","si":0,"b":[[0,0],[0,1]],"st":[0,0,0,0],"g":"..y.H.H.b...H..q.H...HW.c.W..z.H....H.rzcH....HH.","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":2,"t":1,"mv":29,"lt":"up","si":0,"b":[[5,6],[1,5]],"st":[0,0,0,0],"g":"...Hzqq.HHWH...H...Wx.c.H.cH.W...Hp..HW...H...H..","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":11,"lt":"","si":0,"b":[[6,0],[6,1]],"st":[2,2,1,0],"g":"H..H...H.....H..W....H..H..zr...W................","e":"WcccccWWcccccWWbccccWWcccccW"},{"m":1,"t":0,"mv":36,"lt":"","si":6,"b":[[4,0],[1,6]],"st":[0,0,0,0],"g":"zHHcpH..c..Hb.rzWH...a..H..c.y..W.H.cH.HcH.HHcHHH","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":3,"t":0,"mv":18,"lt":"up","si":0,"b":[[5,0],[0,5]],"st":[0,0,0,1],"g":".H.x.....H..W.r..W.HH...c.H.yH.W..r.WH.H....rHz..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":2,"t":0,"mv":16,"lt":"","si":0,"b":[[3,0],[0,0]],"st":[0,0,2,0],"g":"....rHz...WH...H...W..czH.cH.W...H...HW.....r.zHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":3,"t":0,"mv":11,"lt":"","si":0,"b":[[6,0],[2,4]],"st":[3,1,0,1],"g":"..HyH....H..W....W.H....cx.HHH.W....W..H.....H...","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":0,"t":0,"mv":9,"lt":"right","si":0,"b":[[6,1],[0,6]],"st":[2,2,0,0],"g":"................W....HH.H...rH..W.......H...yH.H.","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":1,"t":1,"mv":41,"lt":"","si":7,"b":[[4,1],[2,5]],"st":[0,0,0,0],"g":"HHHcHHH.cr.Hc.H.W.......H.zb..q.WHr.aHzHcHHHHbHHH","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":0,"t":1,"mv":8,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[1,1,1,2],"g":"Hz..z........r..W..Hr...H...H...W................","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":1,"t":1,"mv":9,"lt":"","si":0,"b":[[4,0],[0,4]],"st":[3,3,2,2],"g":".......Hc..Hc...W....b..H..c....W...cH..c.H..c...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":1,"t":1,"mv":20,"lt":"","si":0,"b":[[6,1],[2,6]],"st":[0,0,0,0],"g":"..rcz...cH.Hc.r.WHzH.c.rH..bHz..WH..cH..c.H..b...","e":"WcWWWWWWWWWWcWWWWWWcWWcWWWWW"},{"m":2,"t":1,"mv":9,"lt":"","si":0,"b":[[1,0],[0,6]],"st":[0,2,2,1],"g":"..Hr.r....WH...H...WH.c.H.c.HW...H...HW..r...z...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":1,"mv":15,"lt":"","si":0,"b":[[5,0],[3,0]],"st":[0,0,0,1],"g":"..H.......Hr....W.......H.z.....W.....H.HHz.r.z..","e":"WcccccWWcccccWWcccccWWcccccW"},{"m":2,"t":1,"mv":37,"lt":"down","si":5,"b":[[6,0],[5,0]],"st":[0,0,0,0],"g":"HHyHH....HWHr..H...W..c.H.c..Wz..HH..HWr.H.xHrHHH","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":0,"t":0,"mv":11,"lt":"","si":0,"b":[[6,0],[5,5]],"st":[2,1,1,2],"g":"........z.......W...H...H.......W.z.........r.H.H","e":"WcccccWWcccccWWccccaWWcccccW"},{"m":3,"t":0,"mv":20,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[0,0,0,0],"g":".HH.x..r.HHHW....W.Hy...c....H.W..HHW..Hq.z...r..","e":"WWWWcWWWWWWWWWWWcWWWWWWWWWWW"},{"m":4,"t":0,"mv":7,"lt":"up","si":0,"b":[[4,0],[0,0]],"st":[2,1,1,3],"g":"..H....zc...H....H..HqW.c.W....H....H...c...z....","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":2,"t":0,"mv":6,"lt":"right","si":0,"b":[[0,5],[0,6]],"st":[0,2,3,3],"g":"..........WH...H...W..c.H.cr.Wz..Hr..HW......r...","e":"WWWOWWWWWWcWWWWWWOWWWWWWcWWW"},{"m":4,"t":0,"mv":6,"lt":"","si":0,"b":[[6,0],[0,6]],"st":[2,1,2,2],"g":"r.......c.H.H....H....W.c.Wz...H..H.H...c..y.....","e":"WWOOOWWWWcWcWWWWOOOWWWWcWcWW"},{"m":0,"t":1,"mv":9,"lt":"","si":0,"b":[[6,6],[0,6]],"st":[2,2,0,0],"g":"..HHz........r..WH.H.H..H...H...W................","e":"WcccccWWcccccWWcccccWWcccccW"}];
 function decodePuzzle(p){
   const tile=ch=>({a:{t:"C",hp:1},b:{t:"C",hp:2},c:{t:"C",hp:3},p:{t:"S",o:0,hp:1},q:{t:"S",o:0,hp:2},r:{t:"S",o:0,hp:3},x:{t:"S",o:1,hp:1},y:{t:"S",o:1,hp:2},z:{t:"S",o:1,hp:3}})[ch]||{t:ch};
   const cells=[];for(let r=0;r<N;r++){cells.push([]);for(let c=0;c<N;c++)cells[r].push(tile(p.g[r*N+c]));}
@@ -924,11 +1002,17 @@ function drawScene(g,cs,F,o){
     if(!wn.next)g.setLineDash([cs*.08,cs*.08]);
     rr(g,x+2,y+2,w-4,h-4,cs*.06);g.stroke();g.restore();
   });
+  // tutorial: fields to build on
+  for(const [r,c] of o.marks||[]){
+    const x=F+c*cs,y=F+r*cs;g.save();g.strokeStyle="#ffb020";g.lineWidth=Math.max(2,cs*.08);g.globalAlpha=.55+.45*pulse;
+    g.setLineDash([cs*.12,cs*.08]);rr(g,x+cs*.08,y+cs*.08,cs*.84,cs*.84,cs*.14);g.stroke();
+    g.globalAlpha=.18+.12*pulse;g.fillStyle="#ffb020";g.fill();g.restore();
+  }
   // tilt preview
   if(o.preview&&(o.preview.type==="tilt"||o.preview.type==="nudge"))drawPreview(g,cs,F,o.preview,o.pc,pulse,o);
   if(o.nudgeTargets)for(const [r,c] of o.nudgeTargets){const [x,y]=pathPt([r,c],cs,F);g.save();g.globalAlpha=.85;g.strokeStyle=o.pc[o.active].base;g.lineWidth=Math.max(2,cs*.06);g.setLineDash([cs*.06,cs*.06]);g.beginPath();g.arc(x,y,cs*(.22+.08*pulse),0,7);g.stroke();g.restore();}
   // balls
-  (o.poses||[]).forEach((p,i)=>{if(p)drawBall(g,cs,F,p,o.pc[i],o.active===i);});
+  (o.poses||[]).forEach((p,i)=>{if(p)drawBall(g,cs,F,p,o.pc[i],o.active===i,{now:o.glow?now:0,label:o.labels&&o.labels[i]});});
   g.restore();
 }
 function pathPt(p,cs,F){
@@ -970,12 +1054,19 @@ function drawHit(g,cs,F,hit,st){
   g.fillStyle=last?"rgba(216,64,43,.95)":"rgba(20,14,8,.85)";rr(g,hx-tw/2,hy-fs*.62,tw,fs*1.24,fs*.4);g.fill();
   g.fillStyle="#fff";g.fillText(txt,hx,hy+fs*.04);g.restore();
 }
-function drawBall(g,cs,F,p,col,active){
+// fx: {now, label} — the ball whose turn it is gets a pulsing halo and a light sweep; label = small tag above it ("DU")
+function drawBall(g,cs,F,p,col,active,fx){
   const cx=ctr(p.c,cs,F),cy=ctr(p.r,cs,F),R=cs*.36*p.scale;
   if(R<.5||p.alpha<=0)return;
   g.save();
-  const sa=(p.shadow??1)*p.alpha;
+  const sa=(p.shadow??1)*p.alpha,now=fx&&fx.now||0,pulse=.5+.5*Math.sin(now/260);
   if(sa>0){const sx=p.sx??cx,sy=p.sy??cy;g.globalAlpha=sa;g.fillStyle="rgba(30,15,0,.38)";g.beginPath();g.ellipse(sx+cs*.05,sy+cs*.09,cs*.36*Math.max(p.scale,.5),cs*.3*Math.max(p.scale,.5),0,0,7);g.fill();}
+  if(active&&now){ // halo in the player's colour, breathing
+    g.globalAlpha=p.alpha*(.35+.35*pulse);
+    const hg=g.createRadialGradient(cx,cy,R*.9,cx,cy,R*(1.55+.2*pulse));
+    hg.addColorStop(0,col.base);hg.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=hg;g.beginPath();g.arc(cx,cy,R*(1.55+.2*pulse),0,7);g.fill();
+  }
   g.globalAlpha=p.alpha;
   const gr=g.createRadialGradient(cx-R*.35,cy-R*.4,R*.06,cx,cy,R);
   gr.addColorStop(0,col.hi);gr.addColorStop(.42,col.base);gr.addColorStop(1,col.lo);
@@ -991,7 +1082,23 @@ function drawBall(g,cs,F,p,col,active){
   g.restore();
   g.fillStyle="rgba(255,255,255,.75)";g.beginPath();g.ellipse(cx-R*.36,cy-R*.42,R*.18,R*.12,-.6,0,7);g.fill();
   if(p.dark){g.fillStyle=`rgba(0,0,0,${p.dark})`;g.beginPath();g.arc(cx,cy,R,0,7);g.fill();}
-  if(active){g.lineWidth=Math.max(2,cs*.055);g.strokeStyle="#fff";g.beginPath();g.arc(cx,cy,R+cs*.07,0,7);g.stroke();}
+  if(active&&now){ // light sweep across the ball every ~2 s
+    const t=(now%2200)/2200;
+    if(t<.45){const k=t/.45,bx=cx-R*1.6+k*R*3.2;
+      g.save();g.beginPath();g.arc(cx,cy,R,0,7);g.clip();
+      const sg=g.createLinearGradient(bx-R*.5,cy-R,bx+R*.5,cy+R);
+      sg.addColorStop(0,"rgba(255,255,255,0)");sg.addColorStop(.5,"rgba(255,255,255,.55)");sg.addColorStop(1,"rgba(255,255,255,0)");
+      g.fillStyle=sg;g.fillRect(cx-R,cy-R,R*2,R*2);g.restore();}
+  }
+  if(active){g.lineWidth=Math.max(2,cs*.055);g.strokeStyle="#fff";g.beginPath();g.arc(cx,cy,R+cs*(.07+(now?.03*pulse:0)),0,7);g.stroke();}
+  if(fx&&fx.label&&p.alpha>.5){
+    const fs=Math.max(9,cs*.26);g.font=`800 ${fs}px Figtree, system-ui, sans-serif`;g.textAlign="center";g.textBaseline="middle";
+    const tw=g.measureText(fx.label).width+fs*.9,ty=cy-R-cs*.12-fs*.6-(now?cs*.04*pulse:0);
+    const top=ty<F*.2?cy+R+cs*.12+fs*.6:ty; // no room above: put it below
+    g.fillStyle=col.base;rr(g,cx-tw/2,top-fs*.62,tw,fs*1.24,fs*.62);g.fill();
+    g.strokeStyle="#fff";g.lineWidth=Math.max(1.5,cs*.03);g.stroke();
+    g.fillStyle="#fff";g.fillText(fx.label,cx,top+fs*.05);
+  }
   g.restore();
 }
 
@@ -1058,13 +1165,13 @@ const timeLimit=()=>mode.kind==="puzzle"?0:(mode.time||0);
 let countdown=false;
 const pickColor=()=>mode.color==="r"?(Math.random()<.5?0:1):+mode.color;
 const randomMapId=()=>FAIR_SEEDS[Math.floor(Math.random()*FAIR_SEEDS.length)];
-const meSide=()=>vsAI()?mode.human:mode.kind==="online"&&net?net.side:-1;
+const meSide=()=>vsAI()||mode.kind==="tut"?mode.human:mode.kind==="online"&&net?net.side:-1;
 const isMe=p=>p===meSide();
 const isRemote=p=>mode.kind==="online"&&!!net&&p!==net.side;
 const oppName=()=>net&&net.names[1-net.side]||"Gegner";
 const name=p=>mode.kind==="local"?(p?"Blau":"Rot"):isMe(p)?"Du":mode.kind==="bot"?"Bot":mode.kind==="puzzle"?"Gegner":oppName();
 const wins=p=>isMe(p)?"gewinnst":"gewinnt";
-const inputLocked=()=>replaying||countdown||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
+const inputLocked=()=>replaying||countdown||tutBusy||!!analysis||!!anim||bot.thinking||isBot(S.turn)||isRemote(S.turn)||(mode.kind==="online"&&(!net||net.busy))||!$("result").hidden||!$("menu").hidden||!$("lobby").hidden;
 function readColors(){const s=getComputedStyle(document.documentElement),v=n=>s.getPropertyValue(n).trim();
   return [{base:v("--p0"),hi:v("--p0-hi"),lo:v("--p0-lo")},{base:v("--p1"),hi:v("--p1-hi"),lo:v("--p1-lo")}];}
 let PC=readColors();
@@ -1090,8 +1197,18 @@ function frame(now){
   for(const p of particles){p.life-=dt;p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}
   particles=particles.filter(p=>p.life>0);
   paint(now);
-  const pulsing=(preview&&preview.type==="tilt"&&preview.res.some(b=>b.fell))||warnList().length||(flashCell&&now<flashCell.until);
+  const pulsing=(preview&&preview.type==="tilt"&&preview.res.some(b=>b.fell))||warnList().length||(flashCell&&now<flashCell.until)||glowOn();
   if(anim||particles.length||now<shakeT+160||pulsing)kick();else lastNow=0;
+}
+// the active ball breathes while the board waits for a move (paused in the menu and in background tabs)
+function glowOn(){return !RM.matches&&gameActive&&!roundOver&&!document.hidden&&$("menu").hidden&&$("result").hidden;}
+// "DU" over your own ball in the first moves of a round (always in the tutorial and in the analysis)
+function ballLabels(){
+  if(mode.kind==="tut"||analysis)return analysis?null:[mode.human===0?"DU":"",mode.human===1?"DU":""];
+  if(roundOver||S.moves>=6)return null;
+  const me=meSide();
+  if(me>=0)return [me===0?"DU":"",me===1?"DU":""];
+  return [S.turn===0?"DRAN":"",S.turn===1?"DRAN":""];
 }
 function warnList(){
   if(anim||!shrinkOn()||S.moves<RULES.shrinkStart-6)return [];
@@ -1101,7 +1218,7 @@ function paint(now){
   g.setTransform(geo.dpr,0,0,geo.dpr,0,0);g.clearRect(0,0,geo.size,geo.size);
   if(!RM.matches&&now<shakeT+140){const k=1-(now-shakeT)/140;g.translate((Math.random()-.5)*5*k,(Math.random()-.5)*5*k);}
   const src=anim?anim.vis:S;
-  drawScene(g,geo.cs,geo.F,{cells:src.cells,edges:src.edges,poses:poses(now),pc:PC,active:anim?-1:S.turn,
+  drawScene(g,geo.cs,geo.F,{cells:src.cells,edges:src.edges,poses:poses(now),pc:PC,active:anim?-1:analysis?S.turn:roundOver?-1:S.turn,glow:glowOn(),labels:anim?null:ballLabels(),marks:anim||mode.kind!=="tut"?null:tutMarks(),
     preview:anim?null:preview,warn:warnList(),now,flashCell,nudgeTargets:anim?null:nudgeTargets(),
     ghost:!anim&&preview&&preview.type==="build"?{r:preview.r,c:preview.c,kind:preview.kind,player:S.turn}:null});
   for(const p of particles){g.globalAlpha=Math.max(0,p.life/p.max);g.fillStyle=p.color;
@@ -1240,6 +1357,7 @@ function doTilt(dir,res,nudge,rp){
   render();
 }
 function afterMove(out){
+  if(mode.kind==="tut"){tutAfter(out);return;}
   if(out.broke){SFX.shatter();buzz(25);
     for(const x of out.broke)breakFx({kind:"cell",r:x.r,c:x.c});
     flash=`<span class="warn">${out.broke.length>1?"Zwei Felder sind":"Ein Feld ist"} eingestürzt.</span>`;}
@@ -1322,6 +1440,19 @@ function initWorker(){
     worker.onerror=()=>{worker=null;if(botWait){const w=botWait;botWait=null;w.resolve(chooseMove(w.state,w.level,w.style,{ms:Math.min(w.ms,900)}));}};
   }catch(e){worker=null;}
 }
+let anWorker=null,anReq=0;const anWait={};
+function analyse(state,ms,extra){
+  return new Promise(resolve=>{
+    const id=++anReq;
+    if(!anWorker){try{
+      const src=$("logic-src").textContent+"\n"+$("bot-src").textContent+"\nonmessage=e=>{const {id,state,ms,extra}=e.data;postMessage({id,r:analyzePos(state,ms,extra)});};";
+      anWorker=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
+      anWorker.onmessage=e=>{const f=anWait[e.data.id];delete anWait[e.data.id];if(f)f(e.data.r);};
+    }catch(e){anWorker=false;}}
+    if(anWorker){anWait[id]=resolve;anWorker.postMessage({id,state,ms,extra});}
+    else setTimeout(()=>resolve(analyzePos(state,Math.min(ms,500),extra)),20);
+  });
+}
 function askBot(state,level,style,ms){
   return new Promise(resolve=>{
     const id=++botReq;
@@ -1393,7 +1524,7 @@ function dangerFor(s){
   for(const d of Object.keys(DIRS)){const L=tiltLegal(t,d);if(L.ok&&L.res[me].fell&&!L.res[1-me].fell)v.threats.push(d);}
   dangerCache={s,v};return v;
 }
-const helpOn=()=>mode.help!=="off"&&mode.kind!=="puzzle"&&!replaying&&!isBot(S.turn)&&!isRemote(S.turn)&&!roundOver;
+const helpOn=()=>mode.help!=="off"&&mode.kind!=="puzzle"&&mode.kind!=="tut"&&!replaying&&!isBot(S.turn)&&!isRemote(S.turn)&&!roundOver;
 
 /* ---------- DOM render ---------- */
 function render(){
@@ -1401,7 +1532,7 @@ function render(){
   const t=$("turn"),botTurn=isBot(S.turn);
   t.className="turn p"+S.turn+(bot.thinking?" thinking":"");
   if(mode.kind==="online")t.classList.toggle("thinking",isRemote(S.turn)&&!preview);
-  $("turnText").textContent=replaying?"Replay":botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
+  $("turnText").textContent=analysis?`Analyse · ${name(S.turn)==="Du"?"du bist":name(S.turn)+" ist"} am Zug`:replaying?"Replay":botTurn?(bot.thinking&&!preview?"Bot überlegt":"Bot ist dran"):isMe(S.turn)?"Du bist dran":name(S.turn)+" ist dran";
   const what=mode.kind==="puzzle"?`Rätsel ${puzzle.i+1}`:mode.kind==="bot"?`Bot ${BOT_LEVELS[mode.level].name}`:mode.kind==="online"?`gegen ${oppName()}`:getMap(S.mapIdx).name;
   $("roundInfo").innerHTML=`${mode.kind==="puzzle"?"":`Runde ${match.round+1} · `}${esc(what)}${mode.kind!=="local"&&S.mapIdx!==STANDARD?" · "+esc(getMap(S.mapIdx).name):""}${netBadge()}`;
   const m=S.moves,left=upcoming(S,1).length;
@@ -1438,6 +1569,7 @@ function render(){
 }
 function renderHint(){
   const h=$("hint");
+  if(analysis){h.innerHTML=anaHint();return;}
   if(flash){h.innerHTML=flash;return;}
   if(anim){h.innerHTML="&nbsp;";return;}
   if(isRemote(S.turn)){
@@ -1460,10 +1592,12 @@ function renderHint(){
     const blocked=!RULES.backTilt&&S.lastTilt?` · <b>${ARW[OPP[S.lastTilt]]}</b> gesperrt`:"";
     const dz=helpOn()?dangerFor(S):null;
     const warnT=dz&&dz.threats.length?`<span class="warn">Achtung:</span> ${mode.kind==="local"?esc(name(1-S.turn)):"Der Gegner"} droht mit ${dz.threats.map(d=>`<b>${ARW[d]}</b>`).join(" oder ")}. Weich aus oder blockiere.`:"";
+    if(mode.kind==="tut"&&!nudgeMode){h.innerHTML=popCell?"Stein oder Loch wählen":"&nbsp;";return;}
     if(nudgeMode){h.innerHTML=(warnT?warnT+"<br>":"")+`<b>Schubsen:</b> Richtung wählen. Nur deine Kugel rollt ein Feld, gegen einen hellen Stein gibt's einen Treffer.`;return;}
     if(mode.kind==="puzzle"&&!popCell){const n=2-roundLog.filter(x=>x.by===mode.human).length;
       h.innerHTML=`<b>Rätsel:</b> Gewinne mit ${n===2?"deinen nächsten 2 Zügen":"diesem Zug"}, egal was der Gegner macht.${blocked}`;return;}
-    h.innerHTML=warnT&&!popCell?warnT:(popCell?"Stein oder Loch wählen":`Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`);return;
+    const opp=1-S.turn,goalTxt=S.moves<4?`Ziel: <b style="color:var(--p${opp})">${opp?"Blau":"Rot"}</b> ins Loch oder über die Kante kippen.<br>`:"";
+    h.innerHTML=warnT&&!popCell?warnT:(popCell?"Stein oder Loch wählen":`${goalTxt}Wischen: Brett kippen · Auf deiner Kugel wischen: schubsen · Feld antippen: bauen${blocked}`);return;
   }
   if(preview.type==="build"){h.innerHTML=`${KIND[preview.kind]}-Vorschau · <b>nochmal tippen</b> zum Setzen`;return;}
   if(preview.type==="nudge"){h.innerHTML=`Schubs-Vorschau · <b>${ARW[preview.dir]} nochmal</b> zum Schubsen`+(preview.chk.hit?`<br>Deine Kugel stößt dagegen: ein Treffer.`:"");return;}
@@ -1471,7 +1605,7 @@ function renderHint(){
   let msg=`Vorschau · <b>${ARW[preview.dir]} nochmal tippen</b> zum Kippen`;
   if(me.fell&&op.fell)msg+=`<br><span class="warn">Beide fallen, du verlierst!</span>`;
   else if(me.fell)msg+=`<br><span class="warn">Achtung: Du fällst selbst!</span>`;
-  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":mode.kind==="puzzle"?"der Gegner":esc(name(1-S.turn))}.</b>`;
+  else if(op.fell)msg+=`<br><b>Damit fällt ${mode.kind==="bot"?"der Bot":mode.kind==="puzzle"?"der Gegner":mode.kind==="tut"?"Blau":esc(name(1-S.turn))}.</b>`;
   else if(preview.res.some(b=>b.hit))msg+=`<br>Ein Treffer an einem Stein.`;
   h.innerHTML=msg;
 }
@@ -1516,7 +1650,7 @@ function endRound(o){
   if(mode.kind==="bot"&&!o.draw){const badge=recordBotRound(o.winner===mode.human,match.score[0]>=2||match.score[1]>=2);if(badge)text.textContent+=" "+badge;}
   $("s0").textContent=match.score[0];$("s1").textContent=match.score[1];
   $("reOpts").hidden=true;$("resMenu").textContent="Menü";
-  $("resReplay").hidden=!roundLog.length||mode.kind==="online";
+  $("resReplay").hidden=!roundLog.length||mode.kind==="online";$("resAnalyse").hidden=!roundLog.length;
   if(mode.kind==="online"&&net)netResultButtons(o);
   else if(match.score[0]>=2||match.score[1]>=2)gameActive=false;
   $("result").hidden=false;next.disabled||next.focus();
@@ -1540,12 +1674,28 @@ function drawThumb(c,i,size){
     poses:s.balls.map((b,k)=>({r:b.r,c:b.c,scale:1,alpha:1,phase:k?2.2:.6,ax:0,ay:-1}))});
 }
 function startRound(mapIdx,starter){
+  if(analysis)endAnalysis(true);
   cancelBot();roundStarter=starter;roundOver=false;roundLog=[];S=newRound(mapIdx,starter);
   $("resNext").disabled=false;
   const styles=Object.keys(BOT_STYLES);bot.style=styles[Math.floor(Math.random()*styles.length)]; // a fresh plan every round
   history=[];preview=null;flash="";nudgeMode=false;closePop();resetClocks();
-  gameActive=true;render();maybeBot();
+  gameActive=true;render();
+  if(match.round===0&&mode.kind!=="online")showGoal();
+  maybeBot();
 }
+/* ---------- goal banner ---------- */
+let goalT=0;
+const colName=p=>`<span class="c${p}">${p?"Blau":"Rot"}</span>`;
+function showGoal(after){
+  const me=meSide(),el=$("goal");clearTimeout(goalT);
+  el.innerHTML=me>=0
+    ?`<b class="big2">Du bist ${colName(me)}</b>Kipp das Brett so, dass ${colName(1-me)} ins Loch oder über die Kante rollt. Fällst du selbst, verlierst du.<small>Deine Kugel leuchtet, wenn du dran bist.</small>`
+    :`<b class="big2">Das Ziel</b>Bring die andere Kugel ins Loch oder über die Kante. Wer selbst fällt, verliert.<small>Die Kugel, die dran ist, leuchtet.</small>`;
+  el.className="goal";el.hidden=false;
+  goalT=setTimeout(hideGoal,after||4200);
+}
+function hideGoal(){const el=$("goal");if(el.hidden)return;clearTimeout(goalT);el.classList.add("out");goalT=setTimeout(()=>{el.hidden=true;},300);}
+document.addEventListener("pointerdown",()=>{if(!$("goal").hidden)hideGoal();},true);
 /* ---------- bot record on this device ---------- */
 // rounds won/lost per level and map (random maps count as one), duels per level; badges for beating a level on every map
 const STAT_COLS=[[0,"Std","Standard"],[1,"Kreu","Kreuzung"],[2,"Schl","Schleuse"],[3,"Zick","Zickzack"],[4,"Abbr","Abbruch"],["rand","Zuf","Zufallskarten"]];
@@ -1574,6 +1724,215 @@ function renderStats(){
   box.innerHTML=`<span class="lbl">Deine Bilanz</span>`+t;
 }
 
+/* ---------- analysis ---------- */
+// After a round: step through every move. For each position the strong engine scores all moves;
+// the played move is rated against the best one, and the bar beside the board shows who stands better.
+let analysis=null;
+const AN_MS=900;
+const logMove=e=>e.kind==="build"?{type:"build",r:e.r,c:e.c,kind:e.k}:{type:e.kind,dir:e.dir};
+const DIRW={up:"nach oben",down:"nach unten",left:"nach links",right:"nach rechts"};
+function moveText(m){return m.type==="build"?`${m.kind==="S"?"Stein":"Loch"} setzen`:`${m.type==="tilt"?"kippen":"schubsen"} ${ARW[m.dir]}`;}
+// value v is from the side to move; returns red's share of the bar (0..1) and a text
+function evalView(v,turn){
+  const red=turn===0?v:-v;
+  if(Math.abs(red)>=WIN-200){const ply=WIN-Math.abs(red),n=Math.floor(ply/2)+1,w=red>0?0:1;
+    return {f:red>0?1:0,txt:`<b style="color:var(--p${w})">${w?"Blau":"Rot"}</b> gewinnt erzwungen${n>1?` in ${n} Zügen`:" mit dem nächsten Zug"}`};}
+  const f=.5+.5*Math.tanh(red/450),lead=Math.abs(red)<25?null:red>0?0:1;
+  return {f,txt:lead==null?"Ausgeglichen":`<b style="color:var(--p${lead})">${lead?"Blau":"Rot"}</b> steht besser`};
+}
+function rate(res,played){
+  if(!res)return null;
+  const best=res.list[0].v,key=moveKey(played),me=res.list.find(x=>moveKey(x.m)===key);
+  if(!me)return {cls:"q-ok",t:"?"};
+  const p=me.v,same=moveKey(res.list[0].m)===key;
+  if(best>=WIN-200&&p<WIN-200)return {cls:"q-miss",t:"Sieg verpasst"};
+  if(p<=-WIN+200&&best>-WIN+200)return {cls:"q-bad",t:"Patzer"};
+  if(same||best-p<=8)return {cls:"q-best",t:"Bester Zug"};
+  if(best-p<=40)return {cls:"q-good",t:"Gut"};
+  if(best-p<=140)return {cls:"q-ok",t:"Ungenau"};
+  return {cls:"q-bad",t:"Fehler"};
+}
+function startAnalysis(){
+  if(!roundLog.length||anim)return;
+  stopReplay();cancelBot();
+  analysis={log:roundLog.slice(),final:S,idx:0,res:[],best:false,token:0};
+  $("result").hidden=true;document.body.classList.add("analysing");
+  $("anaNav").hidden=false;$("evalBar").hidden=false;
+  anaShow(0);anaWork();
+}
+async function anaWork(){
+  const a=analysis,tk=++a.token;
+  for(;;){
+    if(analysis!==a||a.token!==tk)return;
+    // the shown position first, then the rest in order
+    let k=a.res[a.idx]===undefined&&a.idx<a.log.length?a.idx:a.log.findIndex((x,i)=>a.res[i]===undefined);
+    if(k<0){anaRender();return;}
+    a.res[k]=null;
+    const r=await analyse(a.log[k].pre,AN_MS,logMove(a.log[k]));
+    if(analysis!==a)return;
+    a.res[k]=r||{list:[{m:logMove(a.log[k]),v:0}],depth:0};
+    anaRender();
+  }
+}
+function anaShow(k){
+  const a=analysis;if(!a)return;
+  a.idx=Math.max(0,Math.min(a.log.length,k));a.best=false;anaRender();
+}
+function anaRender(){
+  const a=analysis;if(!a)return;
+  const k=a.idx,n=a.log.length;
+  nudgeMode=false;closePop();
+  if(k<n){
+    const e=a.log[k],r=a.res[k],m=a.best&&r?r.list[0].m:logMove(e);
+    S=e.pre;preview=null;
+    if(m.type==="tilt"){const L=tiltLegal(S,m.dir);if(L.ok)preview={type:"tilt",dir:m.dir,res:L.res};}
+    else if(m.type==="nudge"){const C=nudgeCheck(S,m.dir);if(C.ok)preview={type:"nudge",dir:m.dir,chk:C,res:nudgeRes(S,m.dir,C)};}
+    else preview={type:"build",r:m.r,c:m.c,kind:m.kind};
+    const ev=r?evalView(r.list[0].v,S.turn):null;
+    $("evFill").style.height=(ev?ev.f*100:50)+"%";
+  }else{S=a.final;preview=null;
+    const last=a.log[n-1],out=playMove(last.pre,logMove(last)).outcome;
+    $("evFill").style.height=out&&!out.draw?(out.winner===0?100:0)+"%":"50%";}
+  $("anaPrev").disabled=k<=0;$("anaNext").disabled=k>=n;
+  $("anaBest").disabled=k>=n||!a.res[k];$("anaBest").classList.toggle("on",a.best);
+  $("anaBest").textContent=a.best?"Gespielten Zug zeigen":"Besten Zug zeigen";
+  // summary once everything is scored
+  const done=a.res.filter(Boolean).length;
+  if(done<n)$("anaInfo").textContent=`Engine rechnet … ${done}/${n} Stellungen`;
+  else{
+    const cnt=[0,1].map(p=>{const c={bad:0,ok:0,miss:0};a.log.forEach((e,i)=>{if(e.by!==p)return;const q=rate(a.res[i],logMove(e));if(!q)return;if(q.cls==="q-bad")c.bad++;else if(q.cls==="q-ok")c.ok++;else if(q.cls==="q-miss")c.miss++;});return c;});
+    const part=p=>{const c=cnt[p],x=[];if(c.miss)x.push(`${c.miss} Sieg verpasst`);if(c.bad)x.push(`${c.bad} Fehler`);if(c.ok)x.push(`${c.ok} ungenau`);
+      return `<b style="color:var(--p${p})">${esc(name(p))}</b>: ${x.length?x.join(", "):"keine Fehler"}`;};
+    $("anaInfo").innerHTML=`${part(0)} · ${part(1)}`;
+  }
+  render();
+}
+function anaHint(){
+  const a=analysis,k=a.idx,n=a.log.length;
+  if(k>=n){const last=a.log[n-1],out=playMove(last.pre,logMove(last)).outcome;
+    return `<b>Ende der Runde.</b> `+(out&&!out.draw?`<b style="color:var(--p${out.winner})">${esc(name(out.winner))}</b> ${wins(out.winner)}.`:"Unentschieden.");}
+  const e=a.log[k],r=a.res[k],who=`<b style="color:var(--p${e.by})">${esc(name(e.by))}</b>`;
+  let h=`Zug ${k+1}/${n} · ${who}: ${moveText(logMove(e))}`;
+  const q=rate(r,logMove(e));
+  h+=q?` <span class="tagq ${q.cls}">${q.t}</span>`:` <span class="tagq q-wait">…</span>`;
+  if(r){
+    const best=r.list[0],ev=evalView(best.v,e.pre.turn);
+    if(a.best)h+=`<br>Besser: <b>${moveText(best.m)}</b>`;
+    else if(q&&q.cls!=="q-best")h+=`<br>Besser wäre: <b>${moveText(best.m)}</b> <span style="font-size:13px">(„Besten Zug zeigen“)</span>`;
+    h+=`<br><span style="font-size:13px">${ev.txt}</span>`;
+  }
+  return h;
+}
+function endAnalysis(silent){
+  const a=analysis;if(!a)return;a.token++;analysis=null;
+  S=a.final;preview=null;document.body.classList.remove("analysing");$("anaNav").hidden=true;$("evalBar").hidden=true;
+  render();if(!silent)$("result").hidden=false;
+}
+$("resAnalyse").onclick=startAnalysis;
+$("anaPrev").onclick=()=>analysis&&anaShow(analysis.idx-1);
+$("anaNext").onclick=()=>analysis&&anaShow(analysis.idx+1);
+$("anaBest").onclick=()=>{if(!analysis)return;analysis.best=!analysis.best;anaRender();};
+$("anaDone").onclick=()=>endAnalysis(false);
+document.addEventListener("keydown",e=>{if(!analysis)return;if(e.key==="ArrowLeft"){e.preventDefault();anaShow(analysis.idx-1);}else if(e.key==="ArrowRight"){e.preventDefault();anaShow(analysis.idx+1);}else if(e.key==="Escape")endAnalysis(false);});
+
+/* ---------- tutorial ---------- */
+// Six short lessons on hand-made boards. The opponent never moves; each lesson is one goal, sometimes in two steps.
+// Wrong moves are explained and the lesson restarts. Starts on the first visit, can be replayed from the menu.
+const W28="WWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+const isTilt=e=>e.kind==="tilt";
+const TUT=[
+  {t:"Das bist du",pos:{g:"..........................H......................",e:W28,b:[[6,0],[3,2]]},steps:[
+    {txt:`Du bist <b style="color:var(--p0)">Rot</b>, deine Kugel leuchtet. Du gewinnst, wenn <b style="color:var(--p1)">Blau</b> ins Loch fällt. Tipp <b>▶</b> oder wisch nach rechts: erst kommt eine Vorschau, nochmal <b>▶</b> kippt das Brett.`,
+     miss:"Blau ist nicht ins Loch gerollt. Schau, in welcher Reihe das Loch liegt."}]},
+  {t:"Beide Kugeln rollen",pos:{g:"........H..............................H.........",e:W28,b:[[5,1],[1,3]]},steps:[
+    {txt:`Kippen bewegt <b>beide</b> Kugeln, bis sie gegen etwas stoßen. Zwei Richtungen werfen <b>dich</b> ins Loch, nur eine Blau. Schau dir die Vorschau genau an!`,
+     miss:"Blau steht noch. Probier eine andere Richtung."}]},
+  {t:"Loch bauen",pos:{g:".................................................",e:W28,b:[[6,0],[2,4]]},steps:[
+    {txt:`Statt zu kippen darfst du <b>bauen</b>. Tipp auf das gelbe Feld, wähle <b>Loch</b> und tipp nochmal zum Setzen.`,mark:[2,1],
+     ok:e=>e.kind==="build"&&e.k==="H"&&e.r===2&&e.c===1,bad:"Setz das Loch genau auf das gelbe Feld."},
+    {txt:`Das Loch liegt jetzt in Blaus Weg. Kipp nach <b>◀</b>!`,miss:"Kipp in die Richtung, in der das Loch vor Blau liegt."}]},
+  {t:"Stein als Bremse",pos:{g:".H...............................................",e:W28,b:[[6,1],[2,1]]},steps:[
+    {txt:`Kippst du jetzt <b>▲</b>, fallen beide. Dann verliert, wer gekippt hat! Setz einen <b>Stein</b> auf das gelbe Feld, er bremst deine Kugel.`,mark:[3,1],
+     ok:e=>e.kind==="build"&&e.k==="S"&&e.r===3&&e.c===1,bad:"Setz den Stein genau auf das gelbe Feld."},
+    {txt:`Jetzt <b>▲</b> kippen: Blau fällt, du bleibst am Stein hängen.`,miss:"Kipp nach ▲, dann rollt Blau ins Loch."}]},
+  {t:"Schubsen",pos:{g:"...........................H.....................",e:W28,b:[[3,0],[3,5]]},steps:[
+    {txt:`<b>▶</b> würde euch beide ins Loch rollen. <b>Schubsen</b> bewegt nur deine Kugel ein Feld: wisch auf deiner Kugel nach oben, oder unten „Schubsen“ und dann <b>▲</b>.`,
+     ok:e=>e.kind==="nudge"&&e.dir==="up",bad:"Schubs deine Kugel nach oben, raus aus Blaus Reihe."},
+    {txt:`Du bist aus der Reihe. Jetzt <b>▶</b> kippen!`,miss:"Kipp nach ▶, dann rollt Blau ins Loch."}]},
+  {t:"Über die Kante",pos:{g:".................................................",e:"WWWWWWWWWWWWWWWWWWWWWWWWOWWW",b:[[6,6],[3,3]]},steps:[
+    {txt:`Wo der Rand fehlt, ist ein <b>Abgrund</b>. Auch da fällt eine Kugel runter. Helle Randsteine brechen nach 3 Treffern und werden auch zum Abgrund. Wirf Blau über die Kante!`,
+     miss:"Blau steht noch. Die Lücke im Rand ist links."}]}
+];
+let tut={i:0,step:0},tutBusy=false;
+function tutState(p){
+  const cells=[];for(let r=0;r<N;r++){cells.push([]);for(let c=0;c<N;c++)cells[r].push(parseTile(p.g[r*N+c]));}
+  const edges={};SIDES.forEach((k,i)=>{edges[k]=[...p.e.slice(i*N,i*N+N)].map(ch=>parseTile(ch));});
+  return {mapIdx:STANDARD,cells,edges,balls:p.b.map(([r,c])=>({r,c,alive:true})),turn:0,stock:{S:[RULES.stones,RULES.stones],H:[RULES.holes,RULES.holes]},nudged:[false,false],lastTilt:null,moves:0,shrinkIdx:0};
+}
+function tutMarks(){const st=TUT[tut.i]&&TUT[tut.i].steps[tut.step];return st&&st.mark&&!preview?[st.mark]:null;}
+function tutRender(note){
+  const L=TUT[tut.i],st=L.steps[tut.step];
+  $("tutStep").textContent=`Tutorial ${tut.i+1}/${TUT.length}`;
+  $("tutDots").innerHTML=TUT.map((x,k)=>`<i class="${k<=tut.i?"on":""}"></i>`).join("");
+  $("tutTitle").textContent=L.t;
+  $("tutText").innerHTML=(note?note+"<br>":"")+st.txt;
+}
+function startTutorial(i){
+  stopReplay();cancelBot();if(net)netLeave(true);
+  mode.kind="tut";mode.human=0;activeMode={...mode};
+  $("menu").hidden=true;$("result").hidden=true;$("rules").hidden=true;hideGoal();
+  document.body.classList.add("tut");$("tutBox").hidden=false;
+  bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
+  tutLesson(i||0);
+}
+function tutLesson(i,note){
+  if(analysis)endAnalysis(true);
+  tut={i,step:0};tutBusy=false;
+  S=tutState(TUT[i].pos);roundStarter=0;roundOver=false;roundLog=[];history=[];preview=null;flash="";nudgeMode=false;closePop();
+  match={score:[0,0],round:0};resetClocks();gameActive=true;tutRender(note);render();
+}
+function tutRetry(msg){
+  tutBusy=true;$("tutText").innerHTML=`<span class="bad">${msg}</span> Gleich nochmal …`;render();
+  setTimeout(()=>{if(mode.kind==="tut")tutLesson(tut.i);},1700);
+}
+function tutAfter(out){
+  render();flash="";
+  const L=TUT[tut.i],st=L.steps[tut.step],last=roundLog[roundLog.length-1],final=tut.step===L.steps.length-1;
+  if(out.outcome){
+    if(!out.outcome.draw&&out.outcome.winner===0&&final){
+      roundOver=true;tutBusy=true;SFX.place();buzz(30);
+      $("tutText").innerHTML=`<span class="ok">✓ Geschafft!</span> ${tut.i===TUT.length-1?"Das war's schon.":"Weiter geht's …"}`;
+      setTimeout(()=>{if(mode.kind!=="tut")return;if(tut.i<TUT.length-1)tutLesson(tut.i+1);else tutDone();},1300);
+      return;
+    }
+    const o=out.outcome;
+    tutRetry(o.draw?"Unentschieden.":o.reason==="both"?"Beide sind gefallen, und wer kippt, verliert!":o.winner===1?"Eigentor! Du bist selbst gefallen.":"Das war nicht die Aufgabe.");
+    return;
+  }
+  if(final){tutRetry(st.miss||"Noch nicht geschafft.");return;}
+  if(st.ok&&!st.ok(last)){tutRetry(st.bad||"Das war nicht die Aufgabe.");return;}
+  // the opponent never moves in the tutorial: hand the turn straight back
+  S={...S,turn:0,lastTilt:null};tut.step++;tutRender(`<span class="ok">✓ Gut!</span>`);render();
+}
+function tutExit(){
+  tutBusy=false;document.body.classList.remove("tut");$("tutBox").hidden=true;
+  try{localStorage.setItem("kippe-tut","1");localStorage.setItem("kippe-seen","1");}catch(e){}
+  gameActive=false;mode.kind="bot";mode.level="easy";
+}
+function tutDone(){
+  tutExit();roundOver=true;
+  const big=$("resBig"),next=$("resNext");$("pick").hidden=true;$("reOpts").hidden=true;$("resReplay").hidden=true;$("resAnalyse").hidden=true;
+  big.className="big p0";big.textContent="BEREIT!";
+  $("resTitle").textContent="Du kennst jetzt alle Züge";
+  $("resText").innerHTML=`<b>Zum Merken:</b> Jeder hat pro Runde 3 Steine und 3 Löcher. Direkt zurückkippen ist gesperrt. Ab Zug ${RULES.shrinkStart} bricht der Boden von außen ein. Wer zuerst 2 Runden gewinnt, gewinnt das Duell.<br><br>Der Trick: Bau Fallen, die der Gegner nicht sieht, und lass ihn selbst reinkippen.`;
+  next.textContent="Gegen den Bot (Leicht)";
+  next.onclick=()=>{$("result").hidden=true;mode.kind="bot";mode.level="easy";mode.human=pickColor();activeMode={...mode};try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}newMatch(0);};
+  $("resMenu").textContent="Menü";
+  $("result").hidden=false;next.focus();
+}
+$("tutSkip").onclick=()=>{tutExit();openMenu();};
+$("rulesTut").onclick=()=>startTutorial(0);
+
 /* ---------- puzzles ---------- */
 let puzzle={i:0};
 function solvedSet(){try{return new Set(JSON.parse(localStorage.getItem("kippe-solved")||"[]"));}catch(e){return new Set();}}
@@ -1581,6 +1940,7 @@ function markSolved(i){const s=solvedSet();s.add(i);try{localStorage.setItem("ki
 const dayPuzzle=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5)%PUZZLES.length;
 function nextPuzzle(from){const s=solvedSet();for(let k=0;k<PUZZLES.length;k++){const i=(from+k)%PUZZLES.length;if(!s.has(i))return i;}return from%PUZZLES.length;}
 function startPuzzle(i){
+  if(analysis)endAnalysis(true);
   cancelBot();puzzle={i};mode.human=PUZZLES[i].t;
   S=decodePuzzle(PUZZLES[i]);roundStarter=S.turn;roundOver=false;roundLog=[];history=[];preview=null;flash="";nudgeMode=false;closePop();
   match={score:[0,0],round:0};resetClocks();gameActive=true;$("resNext").disabled=false;render();
@@ -1594,7 +1954,7 @@ function puzzleEnd(ok){
   $("resText").textContent=(ok?"Sauber reingelegt: Der Gegner hatte keine Rettung. ":"Der Gegner konnte sich retten. Schau dir das Replay an und versuch es nochmal. ")+`${solvedSet().size} von ${PUZZLES.length} Rätseln gelöst.`;
   next.textContent=ok?"Nächstes Rätsel":"Nochmal";
   next.onclick=()=>{$("result").hidden=true;startPuzzle(ok?nextPuzzle(puzzle.i+1):puzzle.i);};
-  $("resMenu").textContent="Menü";$("resReplay").hidden=!roundLog.length;
+  $("resMenu").textContent="Menü";$("resReplay").hidden=!roundLog.length;$("resAnalyse").hidden=!roundLog.length;
   $("result").hidden=false;next.focus();
 }
 function newMatch(starter){match={score:[0,0],round:0};startRound(firstMap(),starter);}
@@ -1604,28 +1964,31 @@ function drawHero(){const c=$("heroCv");if(c.clientWidth)drawThumb(c,STANDARD,c.
 function syncMenu(){
   for(const b of document.querySelectorAll(".mode[data-mode]")){const on=b.dataset.mode===mode.kind;b.classList.toggle("sel",on);b.setAttribute("aria-checked",on);}
   $("botOpts").hidden=mode.kind!=="bot";if(mode.kind==="bot")renderStats();
-  $("puzzleOpts").hidden=mode.kind!=="puzzle";$("timeOpts").hidden=mode.kind==="puzzle";$("helpOpts").hidden=mode.kind==="puzzle";$("fieldOpts").hidden=mode.kind==="puzzle";
+  $("puzzleOpts").hidden=mode.kind!=="puzzle";const noOpts=mode.kind==="puzzle"||mode.kind==="tut";$("timeOpts").hidden=noOpts;$("helpOpts").hidden=noOpts;$("fieldOpts").hidden=noOpts;
+  {let done=false;try{done=!!localStorage.getItem("kippe-tut");}catch(e){}$("tutSub").textContent=done?"Nochmal alle Züge üben, 6 kurze Lektionen":"In 2 Minuten verstehen, wie Kippe geht";}
   {const n=solvedSet().size;$("puzzleTip").textContent=`Heute: Rätsel ${dayPuzzle()+1} · ${n} von ${PUZZLES.length} gelöst`;
    $("puzzleSub").textContent=n?`${n} von ${PUZZLES.length} gelöst`:"Finde die Falle, die immer klappt";}
   $("onlineOpts").hidden=mode.kind!=="online";
-  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":mode.kind==="puzzle"?"Rätsel starten":"Spielen";
+  $("playBtn").textContent=mode.kind==="online"?"Duell erstellen":mode.kind==="puzzle"?"Rätsel starten":mode.kind==="tut"?"Tutorial starten":"Spielen";
   $("playBtn").disabled=mode.kind==="online"&&!onlineReady();
   $("onlineSub").textContent=onlineReady()?"Link schicken, Freund tippt drauf, los geht's":onlineWhy();
   if(!$("nameInput").value)$("nameInput").value=myName();
   const seg=(id,val)=>{for(const b of $(id).children)b.classList.toggle("sel",b.dataset.v===String(val));};
   seg("segLevel",mode.level);seg("segColor",mode.color);seg("segField",mode.field);seg("segTime",mode.time||0);seg("segPuzzle",mode.puzzle||"day");seg("segHelp",mode.help||"on");
-  $("colorOpts").hidden=mode.kind==="local"||mode.kind==="puzzle";
+  $("colorOpts").hidden=mode.kind==="local"||mode.kind==="puzzle"||mode.kind==="tut";
   $("fieldTip").textContent={std:"Immer dieselbe Aufstellung, wie beim Schach.",pool:"Vier feste Karten, der Verlierer wählt die nächste.",rand:"Jede Runde eine neue, zufällig gebaute Karte."}[mode.field]||"";
   $("leaveBtn").hidden=!(net&&net.started);
   $("resumeBtn").hidden=!gameActive;
 }
-function openMenu(){stopReplay();cancelBot();$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
+function openMenu(){stopReplay();cancelBot();if(analysis)endAnalysis(true);$("menu").hidden=false;syncMenu();requestAnimationFrame(drawHero);render();}
 for(const b of document.querySelectorAll(".mode[data-mode]"))b.onclick=()=>{mode.kind=b.dataset.mode;syncMenu();};
 for(const [id,key] of [["segHelp","help"],["segPuzzle","puzzle"],["segLevel","level"],["segColor","color"],["segField","field"],["segTime","time"]])
   for(const b of $(id).children)b.onclick=()=>{const v=b.dataset.v;mode[key]=/^\d+$/.test(v)?+v:v;syncMenu();};
 $("playBtn").onclick=()=>{
   try{localStorage.setItem("kippe-mode",JSON.stringify(mode));}catch(e){}
   if(net)netLeave(true);
+  if(mode.kind==="tut"){startTutorial(0);return;}
+  if(document.body.classList.contains("tut")){const k=mode.kind,l=mode.level;tutExit();mode.kind=k;mode.level=l;}
   if(mode.kind==="online"){netCreate();return;}
   $("menu").hidden=true;bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];
   if(mode.kind==="bot")mode.human=pickColor();
@@ -1893,7 +2256,7 @@ function netStart(again){
   $("lobby").hidden=true;$("menu").hidden=true;$("result").hidden=true;
   match={score:[0,0],round:0};bv=[{phase:.6,ax:0,ay:-1},{phase:2.2,ax:0,ay:1}];net.duel=0;
   startRound(typeof net.room.map==="number"?net.room.map:STANDARD,typeof net.room.first==="number"?net.room.first:1);
-  if(!again&&!net.room.log)showCountdown();
+  if(!again&&!net.room.log)showCountdown(()=>showGoal(3600));
   const log=net.room.log||{};
   let shown=null;
   while(log[slot(net.applied)]){
@@ -2087,7 +2450,7 @@ installUI();
 for(const ev of ["gesturestart","gesturechange","gestureend"])document.addEventListener(ev,e=>e.preventDefault(),{passive:false});
 document.addEventListener("touchmove",e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
 initWorker();muteUI();layout();syncMenu();render();requestAnimationFrame(drawHero);
-if(!netBootFromHash()){try{if(!localStorage.getItem("kippe-seen")){localStorage.setItem("kippe-seen","1");$("rules").hidden=false;}}catch(e){}}
+if(!netBootFromHash()){let first=false;try{first=!localStorage.getItem("kippe-tut")&&!localStorage.getItem("kippe-seen");}catch(e){}if(first)startTutorial(0);}
 </script>
 </body>
 </html>
