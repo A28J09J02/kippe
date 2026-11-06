@@ -21,7 +21,7 @@ export {RULES,MAPS,STANDARD,N,DIRS,FAIR_SEEDS,newRound,getMap,tiltLegal,applyTil
 const dist=path.join(root,"pages","dist");
 fs.rmSync(dist,{recursive:true,force:true});
 fs.mkdirSync(path.join(dist,"icons"),{recursive:true});
-for(const f of ["index.html","manifest.webmanifest","sw.js"])fs.copyFileSync(path.join(root,f),path.join(dist,f));
+for(const f of ["index.html","manifest.webmanifest","sw.js","robots.txt","sitemap.xml"])fs.copyFileSync(path.join(root,f),path.join(dist,f));
 for(const f of fs.readdirSync(path.join(root,"icons")))fs.copyFileSync(path.join(root,"icons",f),path.join(dist,"icons",f));
 fs.copyFileSync(path.join(root,"pages","_headers"),path.join(dist,"_headers"));
 console.log("built server/src/logic.js and pages/dist");
