@@ -20,6 +20,13 @@ export {RULES,MAPS,STANDARD,N,DIRS,FAIR_SEEDS,newRound,getMap,tiltLegal,applyTil
 // 2. static site
 const dist=path.join(root,"pages","dist");
 fs.rmSync(dist,{recursive:true,force:true});
+if(fs.existsSync(path.join(root,"OFFLINE"))){
+  // Paused: publish only a notice page, no game, no app files.
+  fs.mkdirSync(dist,{recursive:true});
+  for(const f of fs.readdirSync(path.join(root,"pages","offline")))fs.copyFileSync(path.join(root,"pages","offline",f),path.join(dist,f));
+  console.log("OFFLINE: built server/src/logic.js and the pause page in pages/dist");
+  process.exit(0);
+}
 fs.mkdirSync(path.join(dist,"icons"),{recursive:true});
 for(const f of ["index.html","manifest.webmanifest","sw.js","robots.txt","sitemap.xml"])fs.copyFileSync(path.join(root,f),path.join(dist,f));
 for(const f of fs.readdirSync(path.join(root,"icons")))fs.copyFileSync(path.join(root,"icons",f),path.join(dist,"icons",f));

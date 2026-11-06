@@ -42,6 +42,7 @@ function cors(req){
 }
 export default {
   async fetch(req,env){
+    if(env.OFFLINE==="1")return json({err:"Tiltrap ist pausiert"},503,{}); // paused: no accounts, no duels
     const url=new URL(req.url),p=url.pathname,h=cors(req);
     if(req.method==="OPTIONS")return new Response(null,{status:204,headers:h});
     const lobby=()=>env.LOBBY.get(env.LOBBY.idFromName("main"));

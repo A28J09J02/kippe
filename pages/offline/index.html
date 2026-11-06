@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Tiltrap – pausiert</title>
+<style>
+:root{color-scheme:light dark}
+body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,sans-serif;background:#f4f4f2;color:#222;padding:16px;box-sizing:border-box}
+@media (prefers-color-scheme:dark){body{background:#151515;color:#eee}}
+main{max-width:420px;text-align:center}
+h1{font-size:28px;margin:0 0 8px}
+p{line-height:1.5;margin:0}
+</style>
+</head>
+<body>
+<main>
+<h1>Tiltrap ist pausiert</h1>
+<p>Das Spiel ist gerade nicht öffentlich erreichbar.</p>
+</main>
+<script>
+// Remove the old app's service worker and cached files from devices that installed it.
+if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister())).catch(()=>{});
+if(window.caches)caches.keys().then(k=>k.forEach(n=>caches.delete(n))).catch(()=>{});
+</script>
+</body>
+</html>
