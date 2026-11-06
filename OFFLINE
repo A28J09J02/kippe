@@ -1,3 +1,4 @@
 Tiltrap ist offline (pausiert seit 06.11.2026).
 Solange diese Datei existiert, veröffentlicht der Build nur eine „Pausiert“-Seite und der Server nimmt keine Verbindungen an.
+Das Spiel selbst liegt in _app/ (wird von GitHub Pages nie veröffentlicht).
 Zum Wiedereinschalten: diese Datei löschen und in server/wrangler.toml OFFLINE auf "0" setzen.

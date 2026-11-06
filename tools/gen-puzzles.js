@@ -5,7 +5,7 @@ const L=require("./load")();
 const {N,listMoves,playMove,chooseMove,newRound}=L;
 const fs=require("fs"),path=require("path");
 const want=+process.argv[2]||20,budget=(+process.argv[3]||600)*1000,t0=Date.now();
-const html=fs.readFileSync(path.join(__dirname,"..","index.html"),"utf8");
+const html=fs.readFileSync(path.join(__dirname,"..","_app","index.html"),"utf8");
 const known=JSON.parse(html.split("const PUZZLES=")[1].split(";\n")[0]);
 const seen=new Set(known.map(p=>p.g+JSON.stringify(p.b)));
 let nodes=0;const LIMIT=4e6,ABORT={};

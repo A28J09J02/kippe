@@ -4,7 +4,7 @@
 // Usage: node tools/build.js
 const fs=require("fs"),path=require("path");
 const root=path.join(__dirname,"..");
-const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+const html=fs.readFileSync(path.join(root,"_app","index.html"),"utf8");
 const part=(a,b)=>html.split(a)[1].split(b)[0];
 
 // 1. server logic
@@ -28,7 +28,7 @@ if(fs.existsSync(path.join(root,"OFFLINE"))){
   process.exit(0);
 }
 fs.mkdirSync(path.join(dist,"icons"),{recursive:true});
-for(const f of ["index.html","manifest.webmanifest","sw.js","robots.txt","sitemap.xml"])fs.copyFileSync(path.join(root,f),path.join(dist,f));
-for(const f of fs.readdirSync(path.join(root,"icons")))fs.copyFileSync(path.join(root,"icons",f),path.join(dist,"icons",f));
+for(const f of ["index.html","manifest.webmanifest","sw.js","robots.txt","sitemap.xml"])fs.copyFileSync(path.join(root,"_app",f),path.join(dist,f));
+for(const f of fs.readdirSync(path.join(root,"_app","icons")))fs.copyFileSync(path.join(root,"_app","icons",f),path.join(dist,"icons",f));
 fs.copyFileSync(path.join(root,"pages","_headers"),path.join(dist,"_headers"));
 console.log("built server/src/logic.js and pages/dist");

@@ -1,7 +1,7 @@
 # Draws the app icons (wooden tilt board with a hole, a red and a blue ball) into icons/.
 from PIL import Image, ImageDraw, ImageFilter
 import pathlib
-out=pathlib.Path(__file__).resolve().parent.parent/"icons"; out.mkdir(exist_ok=True)
+out=pathlib.Path(__file__).resolve().parent.parent/"_app"/"icons"; out.mkdir(exist_ok=True)
 def icon(size, maskable=False, bg=True):
     S=size*4  # supersample
     im=Image.new("RGBA",(S,S),(0,0,0,0)); d=ImageDraw.Draw(im)

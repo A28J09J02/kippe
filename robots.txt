@@ -1,5 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /api/
-
-Sitemap: https://tiltrap.pages.dev/sitemap.xml
+Disallow: /

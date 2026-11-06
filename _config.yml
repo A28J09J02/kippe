@@ -1,0 +1,4 @@
+# GitHub Pages (a28j09j02.github.io/kippe) shows only the pause page.
+# The game lives in _app/ (folders starting with "_" are never published by GitHub Pages);
+# Cloudflare gets it from tools/build.js.
+exclude: [docs, tools, server, pages, README.md, OFFLINE, .github]

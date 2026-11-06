@@ -5,7 +5,7 @@
 1-gegen-1-Strategiespiel fürs Handy: Zwei Kugeln, ein kippbares Brett. Wer am Zug ist, kippt das Brett oder baut einen Stein oder ein Loch. Ziel: die gegnerische Kugel in ein Loch oder über die Kante befördern, ohne selbst zu fallen.
 
 ## Spielen
-**https://tiltrap.pages.dev** (Cloudflare Pages, mit Profilen, Freunden und Rangliste; Einrichtung: `docs/CLOUDFLARE.md`). Spiegel ohne Server: https://a28j09j02.github.io/kippe/ (GitHub Pages aus `main`). Installierbar als App. Lokal: `index.html` im Browser öffnen. Im Menü wählen:
+**Pausiert seit 06.11.2026** – siehe Datei `OFFLINE`. Das Spiel liegt in `_app/index.html` (lokal im Browser öffnen).
 - **Zu zweit** an einem Handy
 - **Gegen den Bot** in drei Stufen (Leicht, Mittel, Schwer), als Rot, Blau oder per Zufall
 - **Tutorial**: 6 kurze Lektionen (Kippen, beide Kugeln rollen, Loch, Stein, Schubsen, Kante). Startet beim ersten Besuch automatisch, im Menü jederzeit wiederholbar
